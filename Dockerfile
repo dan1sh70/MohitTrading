@@ -3,6 +3,17 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Runtime stage
+FROM node:20-alpine
+
+WORKDIR /app
+
 # Set default environment variables
 ENV NODE_ENV=production
 ENV PORT=4000
@@ -21,17 +32,6 @@ ENV TRADER_PASSWORD=Trader123!
 ENV ALPHA_VANTAGE_API_KEY=demo
 ENV DHANHQ_API_KEY=demo
 ENV ENABLE_CRYPTO_POLLING=false
-
-# Copy package files
-COPY package*.json ./
-
-# Install dependencies
-RUN npm install
-
-# Runtime stage
-FROM node:20-alpine
-
-WORKDIR /app
 
 # Install dumb-init to handle signals properly
 RUN apk add --no-cache dumb-init
