@@ -65,24 +65,21 @@ import {
 const loginLimiter = rateLimit({
   windowMs: 60 * 1000,
   limit: 10,
-  message: { message: "Too many login attempts. Try again shortly." },
-  trustProxy: true
+  message: { message: "Too many login attempts. Try again shortly." }
 });
 
 // Rate limiter for crypto trading (5 requests per minute)
 const cryptoTradingLimiter = rateLimit({
   windowMs: 60 * 1000,
   limit: 5,
-  message: { message: "Too many trading requests. Try again shortly." },
-  trustProxy: true
+  message: { message: "Too many trading requests. Try again shortly." }
 });
 
 // Rate limiter for crypto price queries (30 requests per minute)
 const cryptoPriceLimiter = rateLimit({
   windowMs: 60 * 1000,
   limit: 30,
-  message: { message: "Too many price requests. Try again shortly." },
-  trustProxy: true
+  message: { message: "Too many price requests. Try again shortly." }
 });
 
 export const apiRouter = Router();
