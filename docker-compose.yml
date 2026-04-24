@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   mysql:
@@ -53,32 +53,32 @@ services:
       # Node environment
       NODE_ENV: ${NODE_ENV:-production}
       PORT: 4000
-      
+
       # Database configuration
       DB_HOST: mysql
       DB_PORT: 3306
       DB_USER: ${DB_USER:-paper_user}
       DB_PASSWORD: ${DB_PASSWORD:-paperpass123}
       DB_NAME: ${DB_NAME:-paper_trading}
-      
+
       # Redis configuration
       REDIS_URL: redis://redis:6379
-      
+
       # JWT and security
       JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-1d}
-      
+
       # Client configuration
       CLIENT_ORIGIN: ${CLIENT_ORIGIN:-http://localhost:5173}
-      
+
       # Admin/Trader credentials (change in production)
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@papertrading.local}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin123!}
       TRADER_PASSWORD: ${TRADER_PASSWORD:-Trader123!}
-      
+
       # Optional: Enable crypto polling service
       ENABLE_CRYPTO_POLLING: ${ENABLE_CRYPTO_POLLING:-false}
-      
+
       # API Keys (add if using external services)
       ALPHA_VANTAGE_API_KEY: ${ALPHA_VANTAGE_API_KEY:-}
       DHANHQ_API_KEY: ${DHANHQ_API_KEY:-}
@@ -90,7 +90,15 @@ services:
     networks:
       - paper-trading-network
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:4000/health"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://localhost:4000/health",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3

@@ -1,9 +1,11 @@
 # Docker Setup Guide
 
 ## Overview
+
 This application is now fully dockerized with MySQL, Redis, and the Node.js backend running in containers using Docker Compose.
 
 ## Prerequisites
+
 - Docker Desktop or Docker Engine installed
 - Docker Compose installed (comes with Docker Desktop)
 - Git
@@ -11,18 +13,22 @@ This application is now fully dockerized with MySQL, Redis, and the Node.js back
 ## Quick Start
 
 ### 1. Clone and Setup
+
 ```bash
 git clone https://github.com/mrakmondal6612/PapperTradingServer.git
 cd PapperTradingServer
 ```
 
 ### 2. Configure Environment
+
 Copy the example environment file and update with your values:
+
 ```bash
 cp .env.example .env
 ```
 
 Edit `.env` and update the following for production:
+
 - `JWT_SECRET` - Strong random string
 - `ADMIN_PASSWORD` - Strong password
 - `TRADER_PASSWORD` - Strong password
@@ -31,6 +37,7 @@ Edit `.env` and update the following for production:
 - API keys if needed
 
 ### 3. Start Services
+
 ```bash
 # Build and start all services
 docker-compose up -d
@@ -40,6 +47,7 @@ docker-compose logs -f backend
 ```
 
 ### 4. Initialize Database (if needed)
+
 ```bash
 # The database will auto-initialize on first run using schema.sql
 # If you need to reinitialize:
@@ -47,6 +55,7 @@ docker-compose exec mysql mysql -u root -p$MYSQL_ROOT_PASSWORD -D paper_trading 
 ```
 
 ### 5. Verify Services
+
 ```bash
 # Check service health
 docker-compose ps
@@ -64,6 +73,7 @@ docker-compose exec redis redis-cli
 ## Common Commands
 
 ### Development
+
 ```bash
 # Start services
 docker-compose up
@@ -80,6 +90,7 @@ docker-compose logs -f [service-name]
 ```
 
 ### Database Management
+
 ```bash
 # Access MySQL
 docker-compose exec mysql mysql -u paper_user -ppaperpass123 paper_trading
@@ -92,6 +103,7 @@ docker-compose exec -T mysql mysql -u paper_user -ppaperpass123 paper_trading < 
 ```
 
 ### Redis Management
+
 ```bash
 # Access Redis CLI
 docker-compose exec redis redis-cli
@@ -101,6 +113,7 @@ docker-compose exec redis redis-cli MONITOR
 ```
 
 ### View Volumes and Data
+
 ```bash
 # List volumes
 docker volume ls
@@ -112,6 +125,7 @@ docker volume inspect paper-trading-network_mysql_data
 ## Troubleshooting
 
 ### Containers won't start
+
 ```bash
 # Check logs
 docker-compose logs
@@ -123,17 +137,21 @@ docker-compose up
 ```
 
 ### Database connection fails
+
 - Ensure MySQL container is healthy: `docker-compose ps`
 - Check if port 3306 is available
 - Verify DB credentials in `.env`
 
 ### Redis connection fails
+
 - Check if Redis container is running: `docker-compose ps`
 - Verify `REDIS_URL` in `.env`
 - Ensure port 6379 is available
 
 ### Port already in use
+
 Modify ports in `.env`:
+
 ```
 MYSQL_PORT=3307      # instead of 3306
 REDIS_PORT=6380      # instead of 6379
@@ -145,6 +163,7 @@ Then restart services: `docker-compose down && docker-compose up -d`
 ## Production Deployment
 
 ### Security Checklist
+
 - [ ] Change all default passwords in `.env`
 - [ ] Use strong `JWT_SECRET` (min 32 characters)
 - [ ] Set `NODE_ENV=production`
@@ -155,7 +174,9 @@ Then restart services: `docker-compose down && docker-compose up -d`
 - [ ] Use secrets management (AWS Secrets, HashiCorp Vault, etc.)
 
 ### Environment Variables for Production
+
 Update these before deployment:
+
 ```env
 NODE_ENV=production
 JWT_SECRET=<very-long-random-string>
@@ -168,13 +189,16 @@ ENABLE_CRYPTO_POLLING=true  # if needed
 ```
 
 ### Scaling
+
 For production scaling, consider:
+
 - Using managed databases (AWS RDS, Google Cloud SQL)
 - Using managed Redis (AWS ElastiCache, Redis Cloud)
 - Using container orchestration (Kubernetes, Docker Swarm)
 - Load balancing between multiple backend instances
 
 ### Docker Hub (Optional)
+
 ```bash
 # Build and push to registry
 docker build -t your-registry/paper-trading-backend:latest .
@@ -186,6 +210,7 @@ docker push your-registry/paper-trading-backend:latest
 ```
 
 ## File Structure
+
 ```
 ├── Dockerfile              # Node.js application image
 ├── docker-compose.yml      # Orchestration for all services
@@ -201,6 +226,7 @@ docker push your-registry/paper-trading-backend:latest
 ## Service Details
 
 ### Backend
+
 - **Image**: Node.js 20 Alpine (multi-stage build)
 - **Port**: 4000 (configurable via PORT env)
 - **Health Check**: Every 30s
@@ -208,12 +234,14 @@ docker push your-registry/paper-trading-backend:latest
 - **User**: Non-root for security
 
 ### MySQL
+
 - **Image**: MySQL 8.0
 - **Port**: 3306 (configurable via MYSQL_PORT env)
 - **Auto-init**: Loads `schema.sql` on first run
 - **Volume**: Persistent `mysql_data`
 
 ### Redis
+
 - **Image**: Redis 7 Alpine
 - **Port**: 6379 (configurable via REDIS_PORT env)
 - **Persistence**: Enabled (AOF)
@@ -222,16 +250,19 @@ docker push your-registry/paper-trading-backend:latest
 ## Cleanup
 
 ### Remove everything (keep volumes)
+
 ```bash
 docker-compose down
 ```
 
 ### Remove everything including volumes (⚠️ data loss)
+
 ```bash
 docker-compose down -v
 ```
 
 ### Remove specific service
+
 ```bash
 docker-compose down [service-name]
 ```
