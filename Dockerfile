@@ -17,12 +17,12 @@ WORKDIR /app
 # Set default environment variables
 ENV NODE_ENV=production
 ENV PORT=4000
-ENV DB_HOST=mysql
-ENV DB_PORT=3306
+ENV DB_HOST=72.62.192.34
+ENV DB_PORT=8965
 ENV DB_USER=mysql
 ENV DB_PASSWORD=r1Wk6teTIRAsFp89tBNkkl30M3FosEEkn7cXyTPFtz74Jeqn5IfRMmhiq2gLoGQK
 ENV DB_NAME=default
-ENV REDIS_URL=redis://redis:6379
+ENV REDIS_URL=redis://localhost:6379
 ENV JWT_SECRET=replace_with_a_long_secret
 ENV JWT_EXPIRES_IN=1d
 ENV CLIENT_ORIGIN=http://localhost:5173
