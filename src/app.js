@@ -7,6 +7,9 @@ import { apiRouter } from "./routes/index.js";
 
 export const app = express();
 
+// Trust proxy for Render and other reverse proxy environments
+app.set('trust proxy', 1);
+
 app.use(
   helmet({
     contentSecurityPolicy: {

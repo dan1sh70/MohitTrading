@@ -1,5 +1,18 @@
 # Render Deployment Guide
 
+## 🔧 Recent Fixes Applied (April 24, 2026)
+
+### Issues Fixed:
+1. **✅ Crypto API returning empty data** 
+   - Root cause: Binance API blocking Render's IP with Error 451 (geographic restriction)
+   - Solution: Switched to CoinGecko API as primary with Binance fallback
+   - Result: Crypto prices now work reliably on Render
+   
+2. **✅ Rate limiter X-Forwarded-For error**
+   - Root cause: Express needed to trust proxy headers in Render environment
+   - Solution: Added `trustProxy: true` to all rate limiters
+   - Result: No more rate limiting configuration errors
+
 ## Prerequisites
 
 - Render.com account
