@@ -16,7 +16,7 @@ WORKDIR /app
 
 # Set default environment variables
 ENV NODE_ENV=production
-ENV PORT=4000
+ENV PORT=3000
 ENV DB_HOST=72.62.192.34
 ENV DB_PORT=8965
 ENV DB_USER=mysql
@@ -33,8 +33,8 @@ ENV ALPHA_VANTAGE_API_KEY=demo
 ENV DHANHQ_API_KEY=demo
 ENV ENABLE_CRYPTO_POLLING=false
 
-# Install dumb-init to handle signals properly
-RUN apk add --no-cache dumb-init
+# Install dumb-init and wget for healthchecks
+RUN apk add --no-cache dumb-init wget
 
 # Copy from builder
 COPY --from=builder /app/node_modules ./node_modules
@@ -47,11 +47,11 @@ RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
 USER nodejs
 
 # Expose port
-EXPOSE 4000
+EXPOSE 3000
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:4000/health', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD wget --quiet --tries=1 --spider http://localhost:3000/health || exit 1
 
 # Use dumb-init to handle signals
 ENTRYPOINT ["dumb-init", "--"]
