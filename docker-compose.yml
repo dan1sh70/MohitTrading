@@ -1,4 +1,3 @@
-
 version: "3.8"
 
 services:
@@ -51,170 +50,43 @@ services:
       redis:
         condition: service_healthy
     environment:
-      # Node environment
-      NODE_ENV: production
-      PORT: 3000
-
-      # Database configuration
-      DB_HOST: mysql
-      DB_PORT: 3306
-      DB_USER: mysql
-      DB_PASSWORD: r1Wk6teTIRAsFp89tBNkkl30M3FosEEkn7cXyTPFtz74Jeqn5IfRMmhiq2gLoGQK
-      DB_NAME: default
-
-      # Redis configuration
-      REDIS_URL: redis://redis:6379
-
-      # JWT and security
-      JWT_SECRET: replace_with_a_long_secret
-      JWT_EXPIRES_IN: 1d
-
-      # Client configuration
-      CLIENT_ORIGIN: http://localhost:5173
-
-      # Admin/Trader credentials
-      ADMIN_EMAIL: admin@papertrading.local
-      ADMIN_PASSWORD: Admin123!
-      TRADER_PASSWORD: Trader123!
-
-      # Optional: Enable crypto polling service
-      ENABLE_CRYPTO_POLLING: false
-
-      # API Keys
-      ALPHA_VANTAGE_API_KEY: demo
-      DHANHQ_API_KEY: demo
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./src:/app/src
-      - /app/node_modules
-    networks:
-      - paper-trading-network
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "wget",
-          "--quiet",
-          "--tries=1",
-          "--spider",
-          "http://localhost:3000/api/health",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
-
-volumes:
-  mysql_data:
-    driver: local
-  redis_data:
-    driver: local
-
-networks:
-  paper-trading-network:
-    driver: bridge
-=======
-services:
-  mysql:
-    image: mysql:8.0
-    container_name: paper-trading-mysql
-    restart: unless-stopped
-    environment:
-      MYSQL_ROOT_PASSWORD: r1Wk6teTIRAsFp89tBNkkl30M3FosEEkn7cXyTPFtz74Jeqn5IfRMmhiq2gLoGQK
-      MYSQL_DATABASE: default
-      MYSQL_USER: mysql
-      MYSQL_PASSWORD: r1Wk6teTIRAsFp89tBNkkl30M3FosEEkn7cXyTPFtz74Jeqn5IfRMmhiq2gLoGQK
-    volumes:
-      - mysql_data:/var/lib/mysql
-      - ./src/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
-    ports:
-      - "3306:3306"
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      timeout: 20s
-      retries: 10
-    networks:
-      - paper-trading-network
-
-  redis:
-    image: redis:7-alpine
-    container_name: paper-trading-redis
-    restart: unless-stopped
-    command: redis-server --appendonly yes
-    volumes:
-      - redis_data:/data
-    ports:
-      - "6379:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      timeout: 3s
-      retries: 5
-    networks:
-      - paper-trading-network
-
-  backend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: paper-trading-backend
-    restart: unless-stopped
-    depends_on:
-      mysql:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    environment:
-      # Node environment
       NODE_ENV: production
       PORT: 4000
 
-      # Database configuration
       DB_HOST: mysql
       DB_PORT: 3306
       DB_USER: mysql
       DB_PASSWORD: r1Wk6teTIRAsFp89tBNkkl30M3FosEEkn7cXyTPFtz74Jeqn5IfRMmhiq2gLoGQK
       DB_NAME: default
 
-      # Redis configuration
       REDIS_URL: redis://redis:6379
 
-      # JWT and security
       JWT_SECRET: replace_with_a_long_secret
       JWT_EXPIRES_IN: 1d
 
-      # Client configuration
       CLIENT_ORIGIN: http://localhost:5173
 
-      # Admin/Trader credentials
       ADMIN_EMAIL: admin@papertrading.local
       ADMIN_PASSWORD: Admin123!
       TRADER_PASSWORD: Trader123!
 
-      # Optional: Enable crypto polling service
       ENABLE_CRYPTO_POLLING: true
 
-      # API Keys
       ALPHA_VANTAGE_API_KEY: demo
       DHANHQ_API_KEY: demo
+
     ports:
       - "4000:4000"
+
     volumes:
       - ./src:/app/src
       - /app/node_modules
+
     networks:
       - paper-trading-network
+
     healthcheck:
-      test:
-        [
-          "CMD",
-          "wget",
-          "--quiet",
-          "--tries=1",
-          "--spider",
-          "http://localhost:4000/health",
-        ]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:4000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -222,11 +94,8 @@ services:
 
 volumes:
   mysql_data:
-    driver: local
   redis_data:
-    driver: local
 
 networks:
   paper-trading-network:
     driver: bridge
-
