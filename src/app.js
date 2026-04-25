@@ -7,6 +7,8 @@ import { apiRouter } from "./routes/index.js";
 
 export const app = express();
 
+app.set("trust proxy", 1);
+
 app.use(
   helmet({
     contentSecurityPolicy: {
@@ -25,6 +27,11 @@ app.use(
 );
 app.use(express.json());
 app.use(morgan("dev"));
+
+// Health check endpoint
+app.get("/health", (req, res) => {
+  res.json({ status: "ok", timestamp: Date.now() });
+});
 
 app.use("/api", apiRouter);
 
