@@ -70,11 +70,6 @@ services:
 
     ports:
       - "8808:8808"
-
-    volumes:
-      - ./src:/app/src
-      - /app/node_modules
-
     healthcheck:
       test:
         [
