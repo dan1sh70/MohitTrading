@@ -163,6 +163,32 @@ apiRouter.get("/news/crypto", newsLimiter, getCryptoNewsHandler);
 apiRouter.get("/news/stocks", newsLimiter, getStockNewsHandler);
 apiRouter.get("/news/advanced", newsLimiter, getAdvancedNewsHandler);
 
+// Image proxy endpoint to bypass CORS
+apiRouter.get("/proxy-image", async (req, res) => {
+  const imageUrl = req.query.url;
+  if (!imageUrl) {
+    return res.status(400).json({ error: "URL parameter required" });
+  }
+  
+  try {
+    const response = await fetch(imageUrl);
+    if (!response.ok) {
+      return res.status(502).json({ error: "Failed to fetch image" });
+    }
+    
+    const buffer = await response.arrayBuffer();
+    const contentType = response.headers.get('content-type') || 'image/jpeg';
+    
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.setHeader('Content-Type', contentType);
+    res.send(Buffer.from(buffer));
+  } catch (error) {
+    console.error('[Image Proxy] Error:', error.message);
+    res.status(500).json({ error: "Failed to proxy image" });
+  }
+});
+
 // Admin endpoints (authenticated + admin required)
 apiRouter.use(requireAuth, requireAdmin);
 
