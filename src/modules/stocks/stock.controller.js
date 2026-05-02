@@ -30,20 +30,59 @@ export async function getUSStockPrice(req, res) {
 }
 
 /**
- * Get all supported US stocks
+ * Get all supported US stocks / Global Indices
  */
 export function getStocks(req, res) {
   try {
     const stocks = getSupportedStocks();
+    
+    // Add mock price data for global indices
+    const stocksWithPrices = stocks.map(stock => ({
+      ...stock,
+      currentPrice: _getMockIndexPrice(stock.symbol),
+      priceChange: _getMockIndexChange(stock.symbol),
+      priceChangePercent: _getMockIndexChangePercent(stock.symbol),
+      lastUpdate: new Date().toISOString()
+    }));
+    
     res.json({
-      data: stocks,
-      count: stocks.length,
+      data: stocksWithPrices,
+      count: stocksWithPrices.length,
       timestamp: Date.now()
     });
   } catch (error) {
     console.error("Error fetching stocks:", error.message);
     res.status(500).json({ message: "Failed to fetch stocks" });
   }
+}
+
+// Mock global indices price functions
+function _getMockIndexPrice(symbol) {
+  const basePrices = {
+    'SPX': 4521.85,
+    'NDX': 14285.30,
+    'DJI': 35678.45,
+    'FTSE': 7521.85,
+    'N225': 33245.80,
+    'DAX': 16850.20,
+    'CAC': 7320.50,
+    'SHANGHAI': 3125.80,
+    'NIKKEI': 33245.80,
+    'TSX': 19850.75
+  };
+  const random = Date.now() % 100;
+  const basePrice = basePrices[symbol] || 1000.0;
+  return basePrice + (random * 0.5);
+}
+
+function _getMockIndexChange(symbol) {
+  const random = Date.now() % 100;
+  return (random - 50) * 1.0;
+}
+
+function _getMockIndexChangePercent(symbol) {
+  const random = Date.now() % 100;
+  return (random - 50) * 0.01;
 }
 
 /**
@@ -158,9 +197,19 @@ export function getForexPairs(req, res) {
 export function getTestedForex(req, res) {
   try {
     const pairs = getTestedForexPairs();
+    
+    // Add mock price data for forex pairs
+    const pairsWithPrices = pairs.map(pair => ({
+      ...pair,
+      currentPrice: _getMockForexPrice(pair.pair),
+      priceChange: _getMockForexChange(pair.pair),
+      priceChangePercent: _getMockForexChangePercent(pair.pair),
+      lastUpdate: new Date().toISOString()
+    }));
+    
     res.json({
-      data: pairs,
-      count: pairs.length,
+      data: pairsWithPrices,
+      count: pairsWithPrices.length,
       tier: "free (tested)",
       timestamp: Date.now()
     });
@@ -168,6 +217,33 @@ export function getTestedForex(req, res) {
     console.error("Error fetching tested forex pairs:", error.message);
     res.status(500).json({ message: "Failed to fetch tested forex pairs" });
   }
+}
+
+// Mock forex price functions
+function _getMockForexPrice(pair) {
+  const basePrices = {
+    'EUR/USD': 1.0856,
+    'GBP/USD': 1.2745,
+    'USD/JPY': 148.25,
+    'USD/CHF': 0.8956,
+    'AUD/USD': 0.6584,
+    'USD/CAD': 1.3650,
+    'NZD/USD': 0.6150,
+    'EUR/GBP': 0.8520
+  };
+  const random = Date.now() % 100;
+  const basePrice = basePrices[pair] || 1.0;
+  return basePrice + (random * 0.001);
+}
+
+function _getMockForexChange(pair) {
+  const random = Date.now() % 100;
+  return (random - 50) * 0.0001;
+}
+
+function _getMockForexChangePercent(pair) {
+  const random = Date.now() % 100;
+  return (random - 50) * 0.01;
 }
 
 /**

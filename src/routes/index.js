@@ -132,26 +132,26 @@ apiRouter.get("/crypto/trades", requireAuth, getUserTrades);
 
 // ========== STOCKS & FOREX ENDPOINTS ==========
 
-// US Stocks (Alpha Vantage)
-apiRouter.get("/stocks/us", cryptoPriceLimiter, getStocks);
-apiRouter.get("/stocks/us/:symbol", cryptoPriceLimiter, getUSStockPrice);
-apiRouter.get("/stocks/us/:symbol/daily", cryptoPriceLimiter, getStockDailyData);
-apiRouter.get("/stocks/us/:symbol/sma", cryptoPriceLimiter, getStockSMAIndicator);
-apiRouter.get("/stocks/us/:symbol/rsi", cryptoPriceLimiter, getStockRSIIndicator);
+// US Stocks (Alpha Vantage) - No rate limiter for development
+apiRouter.get("/stocks/us", getStocks);
+apiRouter.get("/stocks/us/:symbol", getUSStockPrice);
+apiRouter.get("/stocks/us/:symbol/daily", getStockDailyData);
+apiRouter.get("/stocks/us/:symbol/sma", getStockSMAIndicator);
+apiRouter.get("/stocks/us/:symbol/rsi", getStockRSIIndicator);
 
-// Forex (Alpha Vantage)
-apiRouter.get("/forex/pairs", cryptoPriceLimiter, getForexPairs);
-apiRouter.get("/forex/pairs/tested", cryptoPriceLimiter, getTestedForex);
-apiRouter.get("/forex/pairs/upcoming", cryptoPriceLimiter, getUpcomingForex);
-apiRouter.get("/forex/rate/:from/:to", cryptoPriceLimiter, getExchangeRate);
+// Forex (Alpha Vantage) - No rate limiter for development
+apiRouter.get("/forex/pairs", getForexPairs);
+apiRouter.get("/forex/pairs/tested", getTestedForex);
+apiRouter.get("/forex/pairs/upcoming", getUpcomingForex);
+apiRouter.get("/forex/rate/:from/:to", getExchangeRate);
 
-// Indian Stocks (DhanHQ)
-apiRouter.get("/stocks/in", cryptoPriceLimiter, getIndianStocks);
-apiRouter.get("/stocks/in/top", cryptoPriceLimiter, getTopIndian);
-apiRouter.get("/stocks/in/batch", cryptoPriceLimiter, getIndianStocksBatch);
-apiRouter.get("/stocks/in/:symbol", cryptoPriceLimiter, getIndianStock);
-apiRouter.get("/stocks/in/:symbol/intraday", cryptoPriceLimiter, getIndianStockIntradayData);
-apiRouter.get("/stocks/in/:symbol/daily", cryptoPriceLimiter, getIndianStockDailyData);
+// Indian Stocks (DhanHQ) - No rate limiter for development
+apiRouter.get("/stocks/in", getIndianStocks);
+apiRouter.get("/stocks/in/:symbol", getIndianStock);
+apiRouter.get("/stocks/in/top", getTopIndian);
+apiRouter.get("/stocks/in/batch", getIndianStocksBatch);
+apiRouter.get("/stocks/in/:symbol/intraday", getIndianStockIntradayData);
+apiRouter.get("/stocks/in/:symbol/daily", getIndianStockDailyData);
 
 // ========== NEWS ENDPOINTS (MarketAux) ==========
 
