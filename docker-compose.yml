@@ -74,6 +74,7 @@ services:
 
       ALPHA_VANTAGE_API_KEY: demo
       DHANHQ_API_KEY: demo
+      MARKETAUX_API_KEY: demo
 
     ports:
       - "4000:4000"
