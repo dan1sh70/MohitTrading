@@ -34,7 +34,8 @@ ENV ENABLE_CRYPTO_POLLING=true
 RUN apk add --no-cache dumb-init curl
 
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app ./
+COPY --from=builder /app/src ./src
+COPY --from=builder /app/package*.json ./
 
 RUN addgroup -S nodejs && adduser -S nodejs -G nodejs
 USER nodejs
