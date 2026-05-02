@@ -55,10 +55,11 @@ import {
 } from "../modules/stocks/stock.controller.js";
 import {
   getIndianStock,
+  getTopIndian,
   getIndianStocks,
+  getIndianStocksBatch,
   getIndianStockIntradayData,
-  getIndianStockDailyData,
-  getTopIndian
+  getIndianStockDailyData
 } from "../modules/stocks/indian.controller.js";
 import {
   getLatestNewsHandler,
@@ -147,6 +148,7 @@ apiRouter.get("/forex/rate/:from/:to", cryptoPriceLimiter, getExchangeRate);
 // Indian Stocks (DhanHQ)
 apiRouter.get("/stocks/in", cryptoPriceLimiter, getIndianStocks);
 apiRouter.get("/stocks/in/top", cryptoPriceLimiter, getTopIndian);
+apiRouter.get("/stocks/in/batch", cryptoPriceLimiter, getIndianStocksBatch);
 apiRouter.get("/stocks/in/:symbol", cryptoPriceLimiter, getIndianStock);
 apiRouter.get("/stocks/in/:symbol/intraday", cryptoPriceLimiter, getIndianStockIntradayData);
 apiRouter.get("/stocks/in/:symbol/daily", cryptoPriceLimiter, getIndianStockDailyData);

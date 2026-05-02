@@ -43,6 +43,48 @@ export function getIndianStocks(req, res) {
 }
 
 /**
+ * Get batch Indian stocks with prices
+ */
+export async function getIndianStocksBatch(req, res) {
+  try {
+    const stocks = getSupportedIndianStocks();
+    const limit = parseInt(req.query.limit) || 10; // Default to 10 stocks
+    const limitedStocks = stocks.slice(0, limit);
+    
+    // Fetch prices for all stocks in parallel
+    const stocksWithPrices = await Promise.allSettled(
+      limitedStocks.map(async (stock) => {
+        try {
+          const priceData = await getIndianStockPrice(stock.symbol);
+          return {
+            ...stock,
+            ...priceData
+          };
+        } catch (error) {
+          console.error(`Error fetching price for ${stock.symbol}:`, error.message);
+          // Return stock without price data
+          return stock;
+        }
+      })
+    );
+    
+    const results = stocksWithPrices
+      .filter(result => result.status === 'fulfilled')
+      .map(result => result.value);
+    
+    res.json({
+      data: results,
+      count: results.length,
+      timestamp: Date.now(),
+      source: "DhanHQ"
+    });
+  } catch (error) {
+    console.error("Error fetching batch Indian stocks:", error.message);
+    res.status(500).json({ message: "Failed to fetch batch Indian stocks" });
+  }
+}
+
+/**
  * Get intraday candlestick data for Indian stock
  */
 export async function getIndianStockIntradayData(req, res) {
