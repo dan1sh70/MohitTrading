@@ -2,8 +2,8 @@ import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import { validateBody } from "../middleware/validate.js";
 import { requireAdmin, requireAuth } from "../middleware/auth.js";
-import { loginSchema } from "../modules/auth/auth.schema.js";
-import { login } from "../modules/auth/auth.controller.js";
+import { loginSchema, registerSchema } from "../modules/auth/auth.schema.js";
+import { login, register } from "../modules/auth/auth.controller.js";
 import {
   createUser,
   getPositions,
@@ -106,6 +106,7 @@ apiRouter.get("/health", (_req, res) => {
 });
 
 apiRouter.post("/auth/login", loginLimiter, validateBody(loginSchema), login);
+apiRouter.post("/auth/register", loginLimiter, validateBody(registerSchema), register);
 
 // Crypto price endpoints (public, rate limited)
 apiRouter.get("/crypto/prices", cryptoPriceLimiter, getAllPrices);

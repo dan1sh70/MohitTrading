@@ -43,3 +43,52 @@ export async function login(req, res) {
     }
   });
 }
+
+export async function register(req, res) {
+  const { fullName, email, password, role } = req.validatedBody;
+
+  const existingUser = await sql(
+    `SELECT id FROM users WHERE email = $1`,
+    [email]
+  );
+
+  if (existingUser.rows.length > 0) {
+    return res.status(409).json({ message: "User already exists with this email" });
+  }
+
+  const passwordHash = await bcrypt.hash(password, 12);
+  const balance = role === "trader" ? 100000 : 0;
+
+  const result = await sql(
+    `INSERT INTO users (full_name, email, role, password_hash, balance)
+     VALUES ($1, $2, $3, $4, $5)`,
+    [fullName, email, role, passwordHash, balance]
+  );
+
+  const newUserResult = await sql(
+    `SELECT id, full_name, email, role FROM users WHERE email = $1`,
+    [email]
+  );
+
+  const newUser = newUserResult.rows[0];
+  const token = signAdminToken({ id: newUser.id, email: newUser.email, role: newUser.role });
+
+  await writeAuditLog({
+    actorUserId: newUser.id,
+    action: "USER_REGISTER",
+    targetType: "user",
+    targetId: String(newUser.id),
+    details: { email: newUser.email, role: newUser.role }
+  });
+
+  return res.status(201).json({
+    message: "User registered successfully",
+    token,
+    user: {
+      id: newUser.id,
+      name: newUser.full_name,
+      email: newUser.email,
+      role: newUser.role
+    }
+  });
+}

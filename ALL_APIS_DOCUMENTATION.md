@@ -3,7 +3,7 @@
 **Backend URL:** `http://localhost:8808`  
 **Version:** 2.1  
 **Status:** ✅ Production Ready  
-**Total Endpoints:** 47 ✨
+**Total Endpoints:** 48 ✨
 
 ---
 
@@ -17,11 +17,12 @@
 
 ## 📊 QUICK REFERENCE TABLE (Category-wise)
 
-### 🔐 Authentication (1)
+### 🔐 Authentication (2)
 
-| #   | Endpoint          | Method | Auth | Rate Limit | Purpose       |
-| --- | ----------------- | ------ | ---- | ---------- | ------------- |
-| 1   | `/api/auth/login` | POST   | ❌   | 10/min     | Get JWT token |
+| #   | Endpoint            | Method | Auth | Rate Limit | Purpose       |
+| --- | ------------------- | ------ | ---- | ---------- | ------------- |
+| 1   | `/api/auth/login`   | POST   | ❌   | 10/min     | Get JWT token |
+| 2   | `/api/auth/register`| POST   | ❌   | 10/min     | Register user |
 
 ### 💹 Crypto APIs (16)
 
