@@ -60,6 +60,16 @@ import {
   getIndianStockDailyData,
   getTopIndian
 } from "../modules/stocks/indian.controller.js";
+import {
+  getLatestNewsHandler,
+  searchNewsHandler,
+  getNewsBySymbolsHandler,
+  getTrendingNewsHandler,
+  getNewsByDateRangeHandler,
+  getCryptoNewsHandler,
+  getStockNewsHandler,
+  getAdvancedNewsHandler
+} from "../modules/news/news.controller.js";
 
 // Rate limiters
 const loginLimiter = rateLimit({
@@ -80,6 +90,13 @@ const cryptoPriceLimiter = rateLimit({
   windowMs: 60 * 1000,
   limit: 30,
   message: { message: "Too many price requests. Try again shortly." }
+});
+
+// Rate limiter for news queries (40 requests per minute)
+const newsLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 40,
+  message: { message: "Too many news requests. Try again shortly." }
 });
 
 export const apiRouter = Router();
@@ -132,6 +149,18 @@ apiRouter.get("/stocks/in/top", cryptoPriceLimiter, getTopIndian);
 apiRouter.get("/stocks/in/:symbol", cryptoPriceLimiter, getIndianStock);
 apiRouter.get("/stocks/in/:symbol/intraday", cryptoPriceLimiter, getIndianStockIntradayData);
 apiRouter.get("/stocks/in/:symbol/daily", cryptoPriceLimiter, getIndianStockDailyData);
+
+// ========== NEWS ENDPOINTS (MarketAux) ==========
+
+// Financial news endpoints (public, rate limited)
+apiRouter.get("/news/latest", newsLimiter, getLatestNewsHandler);
+apiRouter.get("/news/search", newsLimiter, searchNewsHandler);
+apiRouter.get("/news/symbols", newsLimiter, getNewsBySymbolsHandler);
+apiRouter.get("/news/trending", newsLimiter, getTrendingNewsHandler);
+apiRouter.get("/news/date-range", newsLimiter, getNewsByDateRangeHandler);
+apiRouter.get("/news/crypto", newsLimiter, getCryptoNewsHandler);
+apiRouter.get("/news/stocks", newsLimiter, getStockNewsHandler);
+apiRouter.get("/news/advanced", newsLimiter, getAdvancedNewsHandler);
 
 // Admin endpoints (authenticated + admin required)
 apiRouter.use(requireAuth, requireAdmin);

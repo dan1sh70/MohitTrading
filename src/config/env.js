@@ -40,5 +40,8 @@ export const env = {
   jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? "1d",
   adminEmail: process.env.ADMIN_EMAIL ?? "admin@papertrading.local",
   adminPassword: process.env.ADMIN_PASSWORD ?? "Admin123!",
-  traderPassword: process.env.TRADER_PASSWORD ?? "Trader123!"
+  traderPassword: process.env.TRADER_PASSWORD ?? "Trader123!",
+  alphaVantageApiKey: process.env.ALPHA_VANTAGE_API_KEY ?? "demo",
+  dhanHqApiKey: process.env.DHANHQ_API_KEY ?? "demo",
+  marketauxApiKey: process.env.MARKETAUX_API_KEY ?? "demo"
 };

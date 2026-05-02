@@ -1,9 +1,9 @@
-# 🎯 Complete API Documentation (Crypto, Stocks, Forex, Admin)
+# 🎯 Complete API Documentation (Crypto, Stocks, Forex, News, Admin)
 
 **Backend URL:** `http://localhost:4000`  
-**Version:** 2.0  
+**Version:** 2.1  
 **Status:** ✅ Production Ready  
-**Total Endpoints:** 39 ✨
+**Total Endpoints:** 47 ✨
 
 ---
 
@@ -72,24 +72,37 @@
 | 29  | `/api/stocks/in/:symbol/intraday` | GET    | ❌   | 30/min     | Intraday data        |
 | 30  | `/api/stocks/in/:symbol/daily`    | GET    | ❌   | 30/min     | Daily OHLCV          |
 
+### � News APIs (8 - MarketAux)
+
+| #   | Endpoint                   | Method | Auth | Rate Limit | Purpose                      |
+| --- | -------------------------- | ------ | ---- | ---------- | ---------------------------- |
+| 31  | `/api/news/latest`         | GET    | ❌   | 40/min     | Latest financial news        |
+| 32  | `/api/news/search`         | GET    | ❌   | 40/min     | Search news by keyword       |
+| 33  | `/api/news/symbols`        | GET    | ❌   | 40/min     | News for specific symbols    |
+| 34  | `/api/news/trending`       | GET    | ❌   | 40/min     | Top trending articles        |
+| 35  | `/api/news/date-range`     | GET    | ❌   | 40/min     | News by date range           |
+| 36  | `/api/news/crypto`         | GET    | ❌   | 40/min     | Cryptocurrency news          |
+| 37  | `/api/news/stocks`         | GET    | ❌   | 40/min     | Stock market news            |
+| 38  | `/api/news/advanced`       | GET    | ❌   | 40/min     | Advanced search with filters |
+
 ### 🛡️ Admin APIs (8)
 
 | #   | Endpoint                      | Method | Auth | Rate Limit | Purpose          |
 | --- | ----------------------------- | ------ | ---- | ---------- | ---------------- |
-| 31  | `/api/admin/stats`            | GET    | ✅   | -          | Admin statistics |
-| 32  | `/api/admin/audit-logs`       | GET    | ✅   | -          | Audit logs       |
-| 33  | `/api/admin/users`            | GET    | ✅   | -          | All users        |
-| 34  | `/api/admin/users`            | POST   | ✅   | -          | Create user      |
-| 35  | `/api/admin/positions`        | GET    | ✅   | -          | All positions    |
-| 36  | `/api/admin/trades`           | GET    | ✅   | -          | All trades       |
-| 37  | `/api/admin/trades`           | POST   | ✅   | -          | Create trade     |
-| 38  | `/api/admin/trades/:id/close` | PATCH  | ✅   | -          | Close trade      |
+| 39  | `/api/admin/stats`            | GET    | ✅   | -          | Admin statistics |
+| 40  | `/api/admin/audit-logs`       | GET    | ✅   | -          | Audit logs       |
+| 41  | `/api/admin/users`            | GET    | ✅   | -          | All users        |
+| 42  | `/api/admin/users`            | POST   | ✅   | -          | Create user      |
+| 43  | `/api/admin/positions`        | GET    | ✅   | -          | All positions    |
+| 44  | `/api/admin/trades`           | GET    | ✅   | -          | All trades       |
+| 45  | `/api/admin/trades`           | POST   | ✅   | -          | Create trade     |
+| 46  | `/api/admin/trades/:id/close` | PATCH  | ✅   | -          | Close trade      |
 
 ### 🏥 Health Check (1)
 
 | #   | Endpoint      | Method | Auth | Rate Limit | Purpose           |
 | --- | ------------- | ------ | ---- | ---------- | ----------------- |
-| 39  | `/api/health` | GET    | ❌   | -          | API health status |
+| 47  | `/api/health` | GET    | ❌   | -          | API health status |
 
 ---
 
@@ -140,6 +153,33 @@
 - ✅ Historical OHLCV data
 - ⚡ **Redis Caching:** Auto-update every 2 seconds
 - ✅ Top 3 famous, Top 10 trending, Top 10 ranked (cached)
+
+---
+
+### 📰 MarketAux Service (Financial News)
+
+**Coverage:**
+- ✅ Global stock market & finance news from 5,000+ quality sources
+- ✅ 30+ languages supported
+- ✅ Over 200,000 entities tracked (stocks, crypto, ETFs, commodities, etc.)
+- ✅ Advanced sentiment analysis & NLP processing
+- ✅ Real-time news from major financial news providers
+
+**Features:**
+- 📰 Latest financial news (paginated)
+- 🔍 Search news by keyword
+- 📊 News filtered by stock symbols (e.g., AAPL, TSLA, BTC, etc.)
+- 📈 Trending financial articles
+- 📅 News by date range
+- 🪙 Crypto-specific news (BTC, ETH, BNB, SOL, XRP, DOGE)
+- 💼 Stock market news (AAPL, MSFT, GOOGL, AMZN, TSLA, META)
+- 🔗 Advanced search with multiple filters
+- ✅ Mock data fallback for free tier
+
+**API Key:**
+- Get free key at: [marketaux.com/register](https://www.marketaux.com/register)
+- Free tier: 100 API calls/day
+- Paid plans: Up to 10,000+ calls/day
 
 ---
 
@@ -1562,6 +1602,369 @@ useEffect(() => {
 
 ---
 
+## 📰 FINANCIAL NEWS APIs (8 - MarketAux)
+
+### 31. Get Latest Financial News
+
+```
+GET /api/news/latest
+```
+
+**Rate Limit:** 40 requests/minute  
+**Authentication:** Not required
+
+**Query Parameters:**
+
+| Parameter | Type   | Default | Max | Description              |
+| --------- | ------ | ------- | --- | ------------------------ |
+| limit     | number | 20      | 100 | Number of articles       |
+| page      | number | 1       | -   | Page number (pagination) |
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "meta": {
+    "found": 5474,
+    "returned": 20,
+    "limit": 20,
+    "page": 1
+  },
+  "data": [
+    {
+      "uuid": "7be57f71-7af5-42ca-ad19-7c7f6f22b574",
+      "title": "Tech Stock Surge: AAPL & MSFT Lead Market Rally",
+      "description": "Apple and Microsoft shares rally on strong earnings reports...",
+      "url": "https://example.com/article",
+      "image_url": "https://example.com/image.jpg",
+      "published_at": "2026-05-02T08:21:33.000000Z",
+      "source": "cnbc.com",
+      "language": "en",
+      "entities": [
+        {
+          "symbol": "AAPL",
+          "name": "Apple Inc.",
+          "sentiment_score": 0.75
+        }
+      ]
+    }
+  ],
+  "timestamp": "2026-05-02T08:30:00.000Z"
+}
+```
+
+**cURL Example:**
+
+```bash
+curl "http://localhost:4000/api/news/latest?limit=20&page=1"
+```
+
+---
+
+### 32. Search News by Keyword
+
+```
+GET /api/news/search
+```
+
+**Rate Limit:** 40 requests/minute  
+**Authentication:** Not required
+
+**Query Parameters:**
+
+| Parameter | Type   | Required | Description          |
+| --------- | ------ | -------- | -------------------- |
+| q         | string | ✅       | Search query keyword |
+| limit     | number | ❌       | Results per page     |
+| page      | number | ❌       | Page number          |
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "meta": {
+    "found": 456,
+    "returned": 10,
+    "limit": 10,
+    "page": 1
+  },
+  "data": [...]
+}
+```
+
+**Error Response (400):**
+
+```json
+{
+  "message": "Search query (q) is required"
+}
+```
+
+**cURL Example:**
+
+```bash
+curl "http://localhost:4000/api/news/search?q=Tesla%20earnings&limit=10"
+```
+
+---
+
+### 33. Get News for Specific Symbols
+
+```
+GET /api/news/symbols
+```
+
+**Rate Limit:** 40 requests/minute  
+**Authentication:** Not required
+
+**Query Parameters:**
+
+| Parameter | Type   | Required | Description                    |
+| --------- | ------ | -------- | ------------------------------ |
+| symbols   | string | ✅       | Comma-separated symbols (e.g., AAPL,MSFT,TSLA,BTC) |
+| limit     | number | ❌       | Results per page               |
+| page      | number | ❌       | Page number                    |
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "meta": {
+    "found": 234,
+    "returned": 15,
+    "limit": 15,
+    "page": 1
+  },
+  "data": [...]
+}
+```
+
+**cURL Example:**
+
+```bash
+curl "http://localhost:4000/api/news/symbols?symbols=AAPL,MSFT,TSLA&limit=15"
+```
+
+---
+
+### 34. Get Trending News
+
+```
+GET /api/news/trending
+```
+
+**Rate Limit:** 40 requests/minute  
+**Authentication:** Not required
+
+**Response:** Top 50 most trending financial news articles
+
+```json
+{
+  "success": true,
+  "meta": {
+    "found": 5474,
+    "returned": 50,
+    "limit": 50,
+    "page": 1
+  },
+  "data": [...]
+}
+```
+
+**cURL Example:**
+
+```bash
+curl "http://localhost:4000/api/news/trending"
+```
+
+---
+
+### 35. Get News by Date Range
+
+```
+GET /api/news/date-range
+```
+
+**Rate Limit:** 40 requests/minute  
+**Authentication:** Not required
+
+**Query Parameters:**
+
+| Parameter | Type   | Required | Format              | Description        |
+| --------- | ------ | -------- | ------------------- | ------------------ |
+| startDate | string | ✅       | ISO 8601 datetime   | Start date         |
+| endDate   | string | ✅       | ISO 8601 datetime   | End date           |
+| limit     | number | ❌       | 1-100               | Results per page   |
+| page      | number | ❌       | Positive integer    | Page number        |
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "meta": {
+    "found": 120,
+    "returned": 10,
+    "limit": 10,
+    "page": 1
+  },
+  "data": [...]
+}
+```
+
+**cURL Example:**
+
+```bash
+curl "http://localhost:4000/api/news/date-range?startDate=2026-04-01T00:00:00Z&endDate=2026-05-02T23:59:59Z&limit=20"
+```
+
+---
+
+### 36. Get Cryptocurrency News
+
+```
+GET /api/news/crypto
+```
+
+**Rate Limit:** 40 requests/minute  
+**Authentication:** Not required
+
+**Query Parameters:**
+
+| Parameter | Type   | Default | Description      |
+| --------- | ------ | ------- | ----------------- |
+| limit     | number | 20      | Results per page |
+| page      | number | 1       | Page number      |
+
+**Included Symbols:** BTC, ETH, BNB, SOL, XRP, DOGE
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "meta": {
+    "found": 892,
+    "returned": 20,
+    "limit": 20,
+    "page": 1
+  },
+  "data": [...]
+}
+```
+
+**cURL Example:**
+
+```bash
+curl "http://localhost:4000/api/news/crypto?limit=20"
+```
+
+---
+
+### 37. Get Stock Market News
+
+```
+GET /api/news/stocks
+```
+
+**Rate Limit:** 40 requests/minute  
+**Authentication:** Not required
+
+**Query Parameters:**
+
+| Parameter | Type   | Default | Description      |
+| --------- | ------ | ------- | ----------------- |
+| limit     | number | 20      | Results per page |
+| page      | number | 1       | Page number      |
+
+**Included Symbols:** AAPL, MSFT, GOOGL, AMZN, TSLA, META
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "meta": {
+    "found": 1234,
+    "returned": 20,
+    "limit": 20,
+    "page": 1
+  },
+  "data": [...]
+}
+```
+
+**cURL Example:**
+
+```bash
+curl "http://localhost:4000/api/news/stocks?limit=20&page=1"
+```
+
+---
+
+### 38. Advanced News Search with Filters
+
+```
+GET /api/news/advanced
+```
+
+**Rate Limit:** 40 requests/minute  
+**Authentication:** Not required
+
+**Query Parameters:**
+
+| Parameter | Type   | Required | Description                        |
+| --------- | ------ | -------- | ---------------------------------- |
+| query     | string | ❌       | Search keyword                     |
+| symbols   | string | ❌       | Comma-separated symbols            |
+| startDate | string | ❌       | ISO 8601 start date                |
+| endDate   | string | ❌       | ISO 8601 end date                  |
+| limit     | number | ❌       | Results per page (default: 10)     |
+| page      | number | ❌       | Page number (default: 1)           |
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "meta": {
+    "found": 567,
+    "returned": 15,
+    "limit": 15,
+    "page": 1
+  },
+  "data": [...]
+}
+```
+
+**Combined Request Example:**
+
+```bash
+curl "http://localhost:4000/api/news/advanced?query=earnings&symbols=AAPL,MSFT&startDate=2026-04-01T00:00:00Z&endDate=2026-05-02T23:59:59Z&limit=20"
+```
+
+---
+
+## ✨ NEWS API FEATURE HIGHLIGHTS
+
+✅ Global financial news from 5,000+ quality sources  
+✅ 30+ languages supported  
+✅ Advanced sentiment analysis  
+✅ Real-time news feed  
+✅ Search by keyword  
+✅ Filter by stock symbols or crypto  
+✅ Date range filtering  
+✅ Trending articles  
+✅ Entity extraction & matching  
+✅ 40 requests/minute rate limit  
+✅ Simple pagination  
+✅ Production ready  
+
+---
+
 ## ✨ FEATURE HIGHLIGHTS
 
 ✅ Real-time Binance price feeds  
@@ -1584,6 +1987,6 @@ useEffect(() => {
 
 ---
 
-**Status:** ✅ All 17 endpoints tested and production ready  
-**Last Updated:** April 15, 2026  
-**Version:** 1.0.0
+**Status:** ✅ All 47 endpoints tested and production ready  
+**Last Updated:** May 2, 2026  
+**Version:** 2.1
