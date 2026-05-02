@@ -164,6 +164,14 @@ apiRouter.get("/news/stocks", newsLimiter, getStockNewsHandler);
 apiRouter.get("/news/advanced", newsLimiter, getAdvancedNewsHandler);
 
 // Image proxy endpoint to bypass CORS
+apiRouter.options("/proxy-image", (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Max-Age', '86400');
+  res.status(204).send();
+});
+
 apiRouter.get("/proxy-image", async (req, res) => {
   const imageUrl = req.query.url;
   if (!imageUrl) {
