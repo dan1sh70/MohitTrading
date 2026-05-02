@@ -85,10 +85,10 @@ const cryptoTradingLimiter = rateLimit({
   message: { message: "Too many trading requests. Try again shortly." }
 });
 
-// Rate limiter for crypto price queries (30 requests per minute)
+// Rate limiter for crypto price queries (100 requests per minute for dev)
 const cryptoPriceLimiter = rateLimit({
   windowMs: 60 * 1000,
-  limit: 30,
+  limit: 100,
   message: { message: "Too many price requests. Try again shortly." }
 });
 
