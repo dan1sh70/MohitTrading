@@ -74,16 +74,16 @@
 
 ### � News APIs (8 - MarketAux)
 
-| #   | Endpoint                   | Method | Auth | Rate Limit | Purpose                      |
-| --- | -------------------------- | ------ | ---- | ---------- | ---------------------------- |
-| 31  | `/api/news/latest`         | GET    | ❌   | 40/min     | Latest financial news        |
-| 32  | `/api/news/search`         | GET    | ❌   | 40/min     | Search news by keyword       |
-| 33  | `/api/news/symbols`        | GET    | ❌   | 40/min     | News for specific symbols    |
-| 34  | `/api/news/trending`       | GET    | ❌   | 40/min     | Top trending articles        |
-| 35  | `/api/news/date-range`     | GET    | ❌   | 40/min     | News by date range           |
-| 36  | `/api/news/crypto`         | GET    | ❌   | 40/min     | Cryptocurrency news          |
-| 37  | `/api/news/stocks`         | GET    | ❌   | 40/min     | Stock market news            |
-| 38  | `/api/news/advanced`       | GET    | ❌   | 40/min     | Advanced search with filters |
+| #   | Endpoint               | Method | Auth | Rate Limit | Purpose                      |
+| --- | ---------------------- | ------ | ---- | ---------- | ---------------------------- |
+| 31  | `/api/news/latest`     | GET    | ❌   | 40/min     | Latest financial news        |
+| 32  | `/api/news/search`     | GET    | ❌   | 40/min     | Search news by keyword       |
+| 33  | `/api/news/symbols`    | GET    | ❌   | 40/min     | News for specific symbols    |
+| 34  | `/api/news/trending`   | GET    | ❌   | 40/min     | Top trending articles        |
+| 35  | `/api/news/date-range` | GET    | ❌   | 40/min     | News by date range           |
+| 36  | `/api/news/crypto`     | GET    | ❌   | 40/min     | Cryptocurrency news          |
+| 37  | `/api/news/stocks`     | GET    | ❌   | 40/min     | Stock market news            |
+| 38  | `/api/news/advanced`   | GET    | ❌   | 40/min     | Advanced search with filters |
 
 ### 🛡️ Admin APIs (8)
 
@@ -159,6 +159,7 @@
 ### 📰 MarketAux Service (Financial News)
 
 **Coverage:**
+
 - ✅ Global stock market & finance news from 5,000+ quality sources
 - ✅ 30+ languages supported
 - ✅ Over 200,000 entities tracked (stocks, crypto, ETFs, commodities, etc.)
@@ -166,6 +167,7 @@
 - ✅ Real-time news from major financial news providers
 
 **Features:**
+
 - 📰 Latest financial news (paginated)
 - 🔍 Search news by keyword
 - 📊 News filtered by stock symbols (e.g., AAPL, TSLA, BTC, etc.)
@@ -177,6 +179,7 @@
 - ✅ Mock data fallback for free tier
 
 **API Key:**
+
 - Get free key at: [marketaux.com/register](https://www.marketaux.com/register)
 - Free tier: 100 API calls/day
 - Paid plans: Up to 10,000+ calls/day
@@ -1721,11 +1724,11 @@ GET /api/news/symbols
 
 **Query Parameters:**
 
-| Parameter | Type   | Required | Description                    |
-| --------- | ------ | -------- | ------------------------------ |
+| Parameter | Type   | Required | Description                                        |
+| --------- | ------ | -------- | -------------------------------------------------- |
 | symbols   | string | ✅       | Comma-separated symbols (e.g., AAPL,MSFT,TSLA,BTC) |
-| limit     | number | ❌       | Results per page               |
-| page      | number | ❌       | Page number                    |
+| limit     | number | ❌       | Results per page                                   |
+| page      | number | ❌       | Page number                                        |
 
 **Response (200):**
 
@@ -1793,12 +1796,12 @@ GET /api/news/date-range
 
 **Query Parameters:**
 
-| Parameter | Type   | Required | Format              | Description        |
-| --------- | ------ | -------- | ------------------- | ------------------ |
-| startDate | string | ✅       | ISO 8601 datetime   | Start date         |
-| endDate   | string | ✅       | ISO 8601 datetime   | End date           |
-| limit     | number | ❌       | 1-100               | Results per page   |
-| page      | number | ❌       | Positive integer    | Page number        |
+| Parameter | Type   | Required | Format            | Description      |
+| --------- | ------ | -------- | ----------------- | ---------------- |
+| startDate | string | ✅       | ISO 8601 datetime | Start date       |
+| endDate   | string | ✅       | ISO 8601 datetime | End date         |
+| limit     | number | ❌       | 1-100             | Results per page |
+| page      | number | ❌       | Positive integer  | Page number      |
 
 **Response (200):**
 
@@ -1835,7 +1838,7 @@ GET /api/news/crypto
 **Query Parameters:**
 
 | Parameter | Type   | Default | Description      |
-| --------- | ------ | ------- | ----------------- |
+| --------- | ------ | ------- | ---------------- |
 | limit     | number | 20      | Results per page |
 | page      | number | 1       | Page number      |
 
@@ -1876,7 +1879,7 @@ GET /api/news/stocks
 **Query Parameters:**
 
 | Parameter | Type   | Default | Description      |
-| --------- | ------ | ------- | ----------------- |
+| --------- | ------ | ------- | ---------------- |
 | limit     | number | 20      | Results per page |
 | page      | number | 1       | Page number      |
 
@@ -1916,14 +1919,14 @@ GET /api/news/advanced
 
 **Query Parameters:**
 
-| Parameter | Type   | Required | Description                        |
-| --------- | ------ | -------- | ---------------------------------- |
-| query     | string | ❌       | Search keyword                     |
-| symbols   | string | ❌       | Comma-separated symbols            |
-| startDate | string | ❌       | ISO 8601 start date                |
-| endDate   | string | ❌       | ISO 8601 end date                  |
-| limit     | number | ❌       | Results per page (default: 10)     |
-| page      | number | ❌       | Page number (default: 1)           |
+| Parameter | Type   | Required | Description                    |
+| --------- | ------ | -------- | ------------------------------ |
+| query     | string | ❌       | Search keyword                 |
+| symbols   | string | ❌       | Comma-separated symbols        |
+| startDate | string | ❌       | ISO 8601 start date            |
+| endDate   | string | ❌       | ISO 8601 end date              |
+| limit     | number | ❌       | Results per page (default: 10) |
+| page      | number | ❌       | Page number (default: 1)       |
 
 **Response (200):**
 
@@ -1961,7 +1964,7 @@ curl "http://localhost:4000/api/news/advanced?query=earnings&symbols=AAPL,MSFT&s
 ✅ Entity extraction & matching  
 ✅ 40 requests/minute rate limit  
 ✅ Simple pagination  
-✅ Production ready  
+✅ Production ready
 
 ---
 
