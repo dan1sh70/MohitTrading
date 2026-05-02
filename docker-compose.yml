@@ -17,8 +17,6 @@ services:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       timeout: 20s
       retries: 10
-    networks:
-      - paper-trading-network
 
   redis:
     image: redis:7-alpine
@@ -31,8 +29,6 @@ services:
       test: ["CMD", "redis-cli", "-a", "redis_password_123", "ping"]
       timeout: 3s
       retries: 5
-    networks:
-      - paper-trading-network
 
   backend:
     build:
@@ -79,9 +75,6 @@ services:
       - ./src:/app/src
       - /app/node_modules
 
-    networks:
-      - paper-trading-network
-
     healthcheck:
       test:
         [
@@ -98,7 +91,3 @@ services:
 volumes:
   mysql_data:
   redis_data:
-
-networks:
-  paper-trading-network:
-    driver: bridge
