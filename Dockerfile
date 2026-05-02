@@ -20,7 +20,7 @@ ENV DB_PORT=3306
 ENV DB_USER=mysql
 ENV DB_PASSWORD=r1Wk6teTIRAsFp89tBNkkl30M3FosEEkn7cXyTPFtz74Jeqn5IfRMmhiq2gLoGQK
 ENV DB_NAME=default
-ENV REDIS_URL=redis://redis:6379
+ENV REDIS_URL=redis://:redis_password_123@redis:6379
 ENV JWT_SECRET=replace_with_a_long_secret
 ENV JWT_EXPIRES_IN=1d
 ENV CLIENT_ORIGIN=http://localhost:5173
@@ -41,8 +41,8 @@ USER nodejs
 
 EXPOSE 4000
 
-HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
-  CMD curl -f http://localhost:4000/health || exit 1
+HEALTHCHECK --interval=15s --timeout=5s --start-period=60s --retries=5 \
+  CMD curl -f http://localhost:4000/api/health || exit 1
 
 ENTRYPOINT ["dumb-init", "--"]
 

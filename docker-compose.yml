@@ -26,13 +26,13 @@ services:
     image: redis:7-alpine
     container_name: paper-trading-redis
     restart: unless-stopped
-    command: redis-server --appendonly yes
+    command: redis-server --appendonly yes --requirepass redis_password_123
     volumes:
       - redis_data:/data
     ports:
       - "6379:6379"
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "redis_password_123", "ping"]
       timeout: 3s
       retries: 5
     networks:
@@ -59,7 +59,7 @@ services:
       DB_PASSWORD: r1Wk6teTIRAsFp89tBNkkl30M3FosEEkn7cXyTPFtz74Jeqn5IfRMmhiq2gLoGQK
       DB_NAME: default
 
-      REDIS_URL: redis://redis:6379
+      REDIS_URL: redis://:redis_password_123@redis:6379
 
       JWT_SECRET: replace_with_a_long_secret
       JWT_EXPIRES_IN: 1d
@@ -90,16 +90,14 @@ services:
       test:
         [
           "CMD",
-          "wget",
-          "--quiet",
-          "--tries=1",
-          "--spider",
-          "http://localhost:4000/health",
+          "curl",
+          "-f",
+          "http://localhost:4000/api/health",
         ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
 
 volumes:
   mysql_data:
