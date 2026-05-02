@@ -4,7 +4,7 @@
  * API Docs: https://www.marketaux.com/documentation
  */
 
-const BASE_URL = "https://api.marketaux.com/v1/news";
+const BASE_URL = "https://api.marketaux.com/v1/news/all";
 const API_KEY = process.env.MARKETAUX_API_KEY || "demo";
 
 /**
