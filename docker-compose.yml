@@ -43,7 +43,7 @@ services:
         condition: service_healthy
     environment:
       NODE_ENV: production
-      PORT: 4000
+      PORT: 8080
 
       DB_HOST: mysql
       DB_PORT: 3306
@@ -69,7 +69,7 @@ services:
       MARKETAUX_API_KEY: demo
 
     ports:
-      - "4000:4000"
+      - "8080:8080"
 
     volumes:
       - ./src:/app/src
@@ -81,7 +81,7 @@ services:
           "CMD",
           "curl",
           "-f",
-          "http://localhost:4000/api/health",
+          "http://localhost:8080/api/health",
         ]
       interval: 15s
       timeout: 5s

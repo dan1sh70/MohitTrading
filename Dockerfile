@@ -14,7 +14,7 @@ FROM node:20-alpine
 WORKDIR /app
 
 ENV NODE_ENV=production
-ENV PORT=4000
+ENV PORT=8080
 ENV DB_HOST=mysql
 ENV DB_PORT=3306
 ENV DB_USER=mysql
@@ -39,10 +39,10 @@ COPY --from=builder /app ./
 RUN addgroup -S nodejs && adduser -S nodejs -G nodejs
 USER nodejs
 
-EXPOSE 4000
+EXPOSE 8080
 
 HEALTHCHECK --interval=15s --timeout=5s --start-period=60s --retries=5 \
-  CMD curl -f http://localhost:4000/api/health || exit 1
+  CMD curl -f http://localhost:8080/api/health || exit 1
 
 ENTRYPOINT ["dumb-init", "--"]
 
