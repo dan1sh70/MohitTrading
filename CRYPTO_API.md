@@ -395,7 +395,7 @@ adausdt@miniTicker
 ### Fetch All Prices (JavaScript/Fetch)
 
 ```javascript
-const response = await fetch("http://localhost:8080/api/crypto/prices");
+const response = await fetch("http://localhost:8808/api/crypto/prices");
 const { data, count } = await response.json();
 console.log(`Fetched ${count} cryptocurrency prices`);
 ```
@@ -405,7 +405,7 @@ console.log(`Fetched ${count} cryptocurrency prices`);
 ```javascript
 const token = "your_jwt_token_here";
 
-const response = await fetch("http://localhost:8080/api/crypto/buy", {
+const response = await fetch("http://localhost:8808/api/crypto/buy", {
   method: "POST",
   headers: {
     "Content-Type": "application/json",
@@ -427,7 +427,7 @@ console.log(result.message);
 ```javascript
 const token = "your_jwt_token_here";
 
-const response = await fetch("http://localhost:8080/api/crypto/portfolio", {
+const response = await fetch("http://localhost:8808/api/crypto/portfolio", {
   headers: {
     Authorization: `Bearer ${token}`,
   },
@@ -443,25 +443,25 @@ console.log(`Holdings: ${portfolio.positions.length} positions`);
 ### Get all prices
 
 ```bash
-curl http://localhost:8080/api/crypto/prices
+curl http://localhost:8808/api/crypto/prices
 ```
 
 ### Get specific price
 
 ```bash
-curl http://localhost:8080/api/crypto/prices/BTCUSDT
+curl http://localhost:8808/api/crypto/prices/BTCUSDT
 ```
 
 ### Get 24h stats
 
 ```bash
-curl http://localhost:8080/api/crypto/stats/ETHUSDT
+curl http://localhost:8808/api/crypto/stats/ETHUSDT
 ```
 
 ### Buy crypto (replace TOKEN with your JWT)
 
 ```bash
-curl -X POST http://localhost:8080/api/crypto/buy \\
+curl -X POST http://localhost:8808/api/crypto/buy \\
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer TOKEN" \
   -d '{
@@ -474,7 +474,7 @@ curl -X POST http://localhost:8080/api/crypto/buy \\
 ### Get portfolio
 
 ```bash
-curl http://localhost:8080/api/crypto/portfolio \\
+curl http://localhost:8808/api/crypto/portfolio \\
   -H "Authorization: Bearer TOKEN"
 ```
 

@@ -61,7 +61,7 @@ docker-compose exec mysql mysql -u root -p$MYSQL_ROOT_PASSWORD -D paper_trading 
 docker-compose ps
 
 # Test backend
-curl http://localhost:8080/health
+curl http://localhost:8808/health
 
 # Connect to MySQL
 docker-compose exec mysql mysql -u root -p
@@ -155,7 +155,7 @@ Modify ports in `.env`:
 ```
 MYSQL_PORT=3307      # instead of 3306
 REDIS_PORT=6380      # instead of 6379
-PORT=8081            # instead of 8080
+PORT=8081            # instead of 8808
 ```
 
 Then restart services: `docker-compose down && docker-compose up -d`
@@ -228,7 +228,7 @@ docker push your-registry/paper-trading-backend:latest
 ### Backend
 
 - **Image**: Node.js 20 Alpine (multi-stage build)
-- **Port**: 8080 (configurable via PORT env)
+- **Port**: 8808 (configurable via PORT env)
 - **Health Check**: Every 30s
 - **Restart Policy**: unless-stopped
 - **User**: Non-root for security

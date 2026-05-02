@@ -2,7 +2,7 @@
 
 ## System Status: ✅ FULLY FUNCTIONAL
 
-Backend server running at: `http://localhost:8080`
+Backend server running at: `http://localhost:8808`
 
 ---
 
@@ -91,7 +91,7 @@ Backend server running at: `http://localhost:8080`
 **Request:**
 
 ```bash
-curl -X POST http://localhost:8080/api/auth/login \
+curl -X POST http://localhost:8808/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"trader1@papertrading.local","password":"Trader123!"}'
 ```
@@ -126,7 +126,7 @@ curl -X POST http://localhost:8080/api/auth/login \
 **Request:**
 
 ```bash
-curl -X POST http://localhost:8080/api/crypto/buy \
+curl -X POST http://localhost:8808/api/crypto/buy \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <JWT_TOKEN>" \
   -d '{"symbol":"BTCUSDT","quantity":0.5,"price":49825}'
@@ -167,7 +167,7 @@ curl -X POST http://localhost:8080/api/crypto/buy \
 **Request:**
 
 ```bash
-curl -X POST http://localhost:8080/api/crypto/sell \
+curl -X POST http://localhost:8808/api/crypto/sell \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <JWT_TOKEN>" \
   -d '{"symbol":"BTCUSDT","quantity":0.5,"price":74834.75}'
@@ -208,7 +208,7 @@ curl -X POST http://localhost:8080/api/crypto/sell \
 **Request:**
 
 ```bash
-curl http://localhost:8080/api/crypto/portfolio \
+curl http://localhost:8808/api/crypto/portfolio \
   -H "Authorization: Bearer <JWT_TOKEN>"
 ```
 
@@ -249,7 +249,7 @@ curl http://localhost:8080/api/crypto/portfolio \
 **Request:**
 
 ```bash
-curl "http://localhost:8080/api/crypto/trades?page=1&limit=10" \
+curl "http://localhost:8808/api/crypto/trades?page=1&limit=10" \
   -H "Authorization: Bearer <JWT_TOKEN>"
 ```
 
@@ -396,25 +396,25 @@ curl "http://localhost:8080/api/crypto/trades?page=1&limit=10" \
 ### Get All Prices
 
 ```bash
-curl http://localhost:8080/api/crypto/prices
+curl http://localhost:8808/api/crypto/prices
 ```
 
 ### Get Specific Price
 
 ```bash
-curl http://localhost:8080/api/crypto/prices/BTCUSDT
+curl http://localhost:8808/api/crypto/prices/BTCUSDT
 ```
 
 ### Get 24h Stats
 
 ```bash
-curl http://localhost:8080/api/crypto/stats/ETHUSDT
+curl http://localhost:8808/api/crypto/stats/ETHUSDT
 ```
 
 ### Login
 
 ```bash
-curl -X POST http://localhost:8080/api/auth/login \
+curl -X POST http://localhost:8808/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"trader1@papertrading.local","password":"Trader123!"}'
 ```
@@ -423,7 +423,7 @@ curl -X POST http://localhost:8080/api/auth/login \
 
 ```bash
 TOKEN="<your_jwt_token>" && \
-curl -X POST http://localhost:8080/api/crypto/buy \
+curl -X POST http://localhost:8808/api/crypto/buy \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -d '{"symbol":"BTCUSDT","quantity":0.5,"price":49825}'
@@ -433,7 +433,7 @@ curl -X POST http://localhost:8080/api/crypto/buy \
 
 ```bash
 TOKEN="<your_jwt_token>" && \
-curl -X POST http://localhost:8080/api/crypto/sell \
+curl -X POST http://localhost:8808/api/crypto/sell \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -d '{"symbol":"BTCUSDT","quantity":0.5,"price":74834.75}'
@@ -443,7 +443,7 @@ curl -X POST http://localhost:8080/api/crypto/sell \
 
 ```bash
 TOKEN="<your_jwt_token>" && \
-curl http://localhost:8080/api/crypto/portfolio \
+curl http://localhost:8808/api/crypto/portfolio \
   -H "Authorization: Bearer $TOKEN"
 ```
 
@@ -451,7 +451,7 @@ curl http://localhost:8080/api/crypto/portfolio \
 
 ```bash
 TOKEN="<your_jwt_token>" && \
-curl "http://localhost:8080/api/crypto/trades?page=1&limit=20" \
+curl "http://localhost:8808/api/crypto/trades?page=1&limit=20" \
   -H "Authorization: Bearer $TOKEN"
 ```
 
@@ -554,6 +554,6 @@ BTCUSDT, ETHUSDT, BNBUSDT, SOLUSDT, XRPUSDT, TRXUSDT, ADAUSDT
 
 **Status:** ✅ All endpoints tested and working  
 **Last Updated:** April 14, 2026  
-**Backend URL:** http://localhost:8080  
+**Backend URL:** http://localhost:8808  
 **Documentation:** See `CRYPTO_API.md` for detailed endpoint specs
 **Developer Guide:** See `DEVELOPER_GUIDE.md` for complete integration guide
