@@ -1,10 +1,14 @@
 import { app } from "./app.js";
 import { env } from "./config/env.js";
 import { pool } from "./db/mysql.js";
+import { initDb } from "./db/init-db.js";
 import { isCacheEnabled, redis } from "./db/redis.js";
 import { startPollingService } from "./services/crypto-polling.service.js";
 
 async function startServer() {
+  // Initialize database (create tables and seed users if needed)
+  await initDb();
+
   await pool.query("SELECT 1");
 
   try {

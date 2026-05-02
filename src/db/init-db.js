@@ -3,12 +3,12 @@ import path from "node:path";
 import bcrypt from "bcryptjs";
 import { fileURLToPath } from "node:url";
 import { env } from "../config/env.js";
-import { pool, sql } from "./mysql.js";
+import { sql } from "./mysql.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-async function initDb() {
+export async function initDb() {
   const schemaPath = path.join(__dirname, "schema.sql");
   const schema = await fs.readFile(schemaPath, "utf8");
   await sql(schema);
@@ -44,11 +44,11 @@ async function initDb() {
   console.log("Database initialized and sample users seeded.");
 }
 
-initDb()
-  .catch((error) => {
-    console.error("Failed to initialize database:", error);
-    process.exitCode = 1;
-  })
-  .finally(async () => {
-    await pool.end();
-  });
+// Run only if executed directly (not imported)
+if (import.meta.url === `file://${process.argv[1]}`) {
+  initDb()
+    .catch((error) => {
+      console.error("Failed to initialize database:", error);
+      process.exitCode = 1;
+    });
+}
