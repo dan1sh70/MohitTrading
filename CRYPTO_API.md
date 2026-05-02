@@ -443,7 +443,7 @@ console.log(`Holdings: ${portfolio.positions.length} positions`);
 ### Get all prices
 
 ```bash
-curl http://localhost:4000/api/crypto/prices
+curl http://localhost:8080/api/crypto/prices
 ```
 
 ### Get specific price

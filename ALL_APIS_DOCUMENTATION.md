@@ -1,6 +1,6 @@
 # 🎯 Complete API Documentation (Crypto, Stocks, Forex, News, Admin)
 
-**Backend URL:** `http://localhost:4000`  
+**Backend URL:** `http://localhost:8080`  
 **Version:** 2.1  
 **Status:** ✅ Production Ready  
 **Total Endpoints:** 47 ✨
@@ -190,7 +190,7 @@
 
 # 🎯 Complete Crypto Trading API Documentation
 
-**Backend URL:** `http://localhost:4000`  
+**Backend URL:** `http://localhost:8080`  
 **Version:** 1.0.0  
 **Status:** ✅ Production Ready
 
@@ -262,7 +262,7 @@ Expiry: 24 hours
 **cURL Example:**
 
 ```bash
-curl -X POST http://localhost:4000/api/auth/login \
+curl -X POST http://localhost:8080/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"trader1@papertrading.local","password":"Trader123!"}'
 ```
@@ -329,7 +329,7 @@ GET /api/crypto/prices
 **cURL Example:**
 
 ```bash
-curl http://localhost:4000/api/crypto/prices
+curl http://localhost:8080/api/crypto/prices
 ```
 
 ---
@@ -365,7 +365,7 @@ GET /api/crypto/prices/:symbol
 **cURL Example:**
 
 ```bash
-curl http://localhost:4000/api/crypto/prices/BTCUSDT
+curl http://localhost:8080/api/crypto/prices/BTCUSDT
 ```
 
 ---
@@ -399,7 +399,7 @@ GET /api/crypto/stats/:symbol
 **cURL Example:**
 
 ```bash
-curl http://localhost:4000/api/crypto/stats/BTCUSDT
+curl http://localhost:8080/api/crypto/stats/BTCUSDT
 ```
 
 ---
@@ -465,7 +465,7 @@ GET /api/crypto/top-3/famous
 **cURL Example:**
 
 ```bash
-curl http://localhost:4000/api/crypto/top-3/famous
+curl http://localhost:8080/api/crypto/top-3/famous
 ```
 
 ---
@@ -515,7 +515,7 @@ GET /api/crypto/trending/top-10
 **cURL Example:**
 
 ```bash
-curl http://localhost:4000/api/crypto/trending/top-10
+curl http://localhost:8080/api/crypto/trending/top-10
 ```
 
 ---
@@ -540,7 +540,7 @@ GET /api/crypto/trending/all?minPercent=0
 **cURL Example:**
 
 ```bash
-curl http://localhost:4000/api/crypto/trending/all?minPercent=1.0
+curl http://localhost:8080/api/crypto/trending/all?minPercent=1.0
 ```
 
 ---
@@ -690,7 +690,7 @@ GET /api/crypto/top-10/ranked
 **cURL Example:**
 
 ```bash
-curl http://localhost:4000/api/crypto/top-10/ranked
+curl http://localhost:8080/api/crypto/top-10/ranked
 ```
 
 ---
@@ -752,7 +752,7 @@ GET /api/crypto/all/stats
 **cURL Example:**
 
 ```bash
-curl http://localhost:4000/api/crypto/all/stats
+curl http://localhost:8080/api/crypto/all/stats
 ```
 
 ---
@@ -819,13 +819,13 @@ GET /api/crypto/:symbol/chart?timeframe=1d&limit=100
 
 ```bash
 # Daily chart (100 candles)
-curl http://localhost:4000/api/crypto/BTCUSDT/chart?timeframe=1d&limit=100
+curl http://localhost:8080/api/crypto/BTCUSDT/chart?timeframe=1d&limit=100
 
 # Hourly chart (24 candles for 1 day)
-curl http://localhost:4000/api/crypto/ETHUSDT/chart?timeframe=1h&limit=24
+curl http://localhost:8080/api/crypto/ETHUSDT/chart?timeframe=1h&limit=24
 
 # Weekly chart (52 candles for 1 year)
-curl http://localhost:4000/api/crypto/BNBUSDT/chart?timeframe=1w&limit=52
+curl http://localhost:8080/api/crypto/BNBUSDT/chart?timeframe=1w&limit=52
 ```
 
 ---
@@ -880,13 +880,13 @@ GET /api/crypto/:symbol/historical?timeframe=1d&days=30
 
 ```bash
 # 30-day history
-curl http://localhost:4000/api/crypto/BTCUSDT/historical?timeframe=1d&days=30
+curl http://localhost:8080/api/crypto/BTCUSDT/historical?timeframe=1d&days=30
 
 # 365-day history
-curl http://localhost:4000/api/crypto/ETHUSDT/historical?timeframe=1d&days=365
+curl http://localhost:8080/api/crypto/ETHUSDT/historical?timeframe=1d&days=365
 
 # 24-hour hourly history
-curl http://localhost:4000/api/crypto/BNBUSDT/historical?timeframe=1h&days=1
+curl http://localhost:8080/api/crypto/BNBUSDT/historical?timeframe=1h&days=1
 ```
 
 ---
@@ -948,7 +948,7 @@ GET /api/crypto/:symbol/indicators?timeframe=1d
 **cURL Example:**
 
 ```bash
-curl http://localhost:4000/api/crypto/BTCUSDT/indicators?timeframe=1d
+curl http://localhost:8080/api/crypto/BTCUSDT/indicators?timeframe=1d
 ```
 
 ---
@@ -1028,7 +1028,7 @@ POST /api/crypto/buy
 ```bash
 TOKEN="your_jwt_token_here"
 
-curl -X POST http://localhost:4000/api/crypto/buy \
+curl -X POST http://localhost:8080/api/crypto/buy \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -d '{
@@ -1096,7 +1096,7 @@ POST /api/crypto/sell
 ```bash
 TOKEN="your_jwt_token_here"
 
-curl -X POST http://localhost:4000/api/crypto/sell \
+curl -X POST http://localhost:8080/api/crypto/sell \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -d '{
@@ -1164,7 +1164,7 @@ GET /api/crypto/portfolio
 ```bash
 TOKEN="your_jwt_token_here"
 
-curl http://localhost:4000/api/crypto/portfolio \
+curl http://localhost:8080/api/crypto/portfolio \
   -H "Authorization: Bearer $TOKEN"
 ```
 
@@ -1228,11 +1228,11 @@ GET /api/crypto/trades?page=1&limit=20
 TOKEN="your_jwt_token_here"
 
 # Page 1, 20 items
-curl http://localhost:4000/api/crypto/trades?page=1&limit=20 \
+curl http://localhost:8080/api/crypto/trades?page=1&limit=20 \
   -H "Authorization: Bearer $TOKEN"
 
 # Page 2, 50 items per page (max: 100)
-curl http://localhost:4000/api/crypto/trades?page=2&limit=50 \
+curl http://localhost:8080/api/crypto/trades?page=2&limit=50 \
   -H "Authorization: Bearer $TOKEN"
 ```
 
@@ -1263,7 +1263,7 @@ GET /api/health
 **cURL Example:**
 
 ```bash
-curl http://localhost:4000/api/health
+curl http://localhost:8080/api/health
 ```
 
 ---
@@ -1376,26 +1376,26 @@ Balance: $120,000
 
 ```bash
 # Get top 3 famous
-curl http://localhost:4000/api/crypto/top-3/famous
+curl http://localhost:8080/api/crypto/top-3/famous
 
 # Get top 10 trending
-curl http://localhost:4000/api/crypto/trending/top-10
+curl http://localhost:8080/api/crypto/trending/top-10
 
 # Get single price
-curl http://localhost:4000/api/crypto/prices/BTCUSDT
+curl http://localhost:8080/api/crypto/prices/BTCUSDT
 ```
 
 ### Workflow 2: Login & Check Portfolio
 
 ```bash
 # Login
-TOKEN=$(curl -s -X POST http://localhost:4000/api/auth/login \
+TOKEN=$(curl -s -X POST http://localhost:8080/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"trader1@papertrading.local","password":"Trader123!"}' \
   | jq -r '.token')
 
 # View portfolio
-curl http://localhost:4000/api/crypto/portfolio \
+curl http://localhost:8080/api/crypto/portfolio \
   -H "Authorization: Bearer $TOKEN"
 ```
 
@@ -1403,13 +1403,13 @@ curl http://localhost:4000/api/crypto/portfolio \
 
 ```bash
 # Buy BTC
-curl -X POST http://localhost:4000/api/crypto/buy \
+curl -X POST http://localhost:8080/api/crypto/buy \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -d '{"symbol":"BTCUSDT","quantity":0.5,"price":74834.75}'
 
 # Sell BTC
-curl -X POST http://localhost:4000/api/crypto/sell \
+curl -X POST http://localhost:8080/api/crypto/sell \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -d '{"symbol":"BTCUSDT","quantity":0.5,"price":75000.00}'
@@ -1419,10 +1419,10 @@ curl -X POST http://localhost:4000/api/crypto/sell \
 
 ```bash
 # Get candlestick
-curl http://localhost:4000/api/crypto/BTCUSDT/chart?timeframe=1d&limit=100
+curl http://localhost:8080/api/crypto/BTCUSDT/chart?timeframe=1d&limit=100
 
 # Get indicators
-curl http://localhost:4000/api/crypto/BTCUSDT/indicators?timeframe=1d
+curl http://localhost:8080/api/crypto/BTCUSDT/indicators?timeframe=1d
 ```
 
 ---
@@ -1660,7 +1660,7 @@ GET /api/news/latest
 **cURL Example:**
 
 ```bash
-curl "http://localhost:4000/api/news/latest?limit=20&page=1"
+curl "http://localhost:8080/api/news/latest?limit=20&page=1"
 ```
 
 ---
@@ -1708,7 +1708,7 @@ GET /api/news/search
 **cURL Example:**
 
 ```bash
-curl "http://localhost:4000/api/news/search?q=Tesla%20earnings&limit=10"
+curl "http://localhost:8080/api/news/search?q=Tesla%20earnings&limit=10"
 ```
 
 ---
@@ -1748,7 +1748,7 @@ GET /api/news/symbols
 **cURL Example:**
 
 ```bash
-curl "http://localhost:4000/api/news/symbols?symbols=AAPL,MSFT,TSLA&limit=15"
+curl "http://localhost:8080/api/news/symbols?symbols=AAPL,MSFT,TSLA&limit=15"
 ```
 
 ---
@@ -1780,7 +1780,7 @@ GET /api/news/trending
 **cURL Example:**
 
 ```bash
-curl "http://localhost:4000/api/news/trending"
+curl "http://localhost:8080/api/news/trending"
 ```
 
 ---
@@ -1821,7 +1821,7 @@ GET /api/news/date-range
 **cURL Example:**
 
 ```bash
-curl "http://localhost:4000/api/news/date-range?startDate=2026-04-01T00:00:00Z&endDate=2026-05-02T23:59:59Z&limit=20"
+curl "http://localhost:8080/api/news/date-range?startDate=2026-04-01T00:00:00Z&endDate=2026-05-02T23:59:59Z&limit=20"
 ```
 
 ---
@@ -1862,7 +1862,7 @@ GET /api/news/crypto
 **cURL Example:**
 
 ```bash
-curl "http://localhost:4000/api/news/crypto?limit=20"
+curl "http://localhost:8080/api/news/crypto?limit=20"
 ```
 
 ---
@@ -1903,7 +1903,7 @@ GET /api/news/stocks
 **cURL Example:**
 
 ```bash
-curl "http://localhost:4000/api/news/stocks?limit=20&page=1"
+curl "http://localhost:8080/api/news/stocks?limit=20&page=1"
 ```
 
 ---
@@ -1946,7 +1946,7 @@ GET /api/news/advanced
 **Combined Request Example:**
 
 ```bash
-curl "http://localhost:4000/api/news/advanced?query=earnings&symbols=AAPL,MSFT&startDate=2026-04-01T00:00:00Z&endDate=2026-05-02T23:59:59Z&limit=20"
+curl "http://localhost:8080/api/news/advanced?query=earnings&symbols=AAPL,MSFT&startDate=2026-04-01T00:00:00Z&endDate=2026-05-02T23:59:59Z&limit=20"
 ```
 
 ---
