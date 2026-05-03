@@ -4,6 +4,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 import { env } from "./config/env.js";
 import { apiRouter } from "./routes/index.js";
+import { requireAuth } from "./middleware/auth.js";
 
 export const app = express();
 
@@ -35,7 +36,8 @@ app.get("/health", (req, res) => {
   res.json({ status: "ok", timestamp: Date.now() });
 });
 
-app.use("/api", apiRouter);
+// Apply global auth middleware with public endpoint bypass
+app.use("/api", requireAuth, apiRouter);
 
 app.use((error, _req, res, _next) => {
   console.error(error);
