@@ -126,10 +126,10 @@ apiRouter.get("/crypto/top-10/ranked", cryptoPriceLimiter, getTop10Ranked);
 apiRouter.get("/crypto/all/stats", cryptoPriceLimiter, getAllStats);
 
 // Crypto trading endpoints (authenticated, rate limited)
-apiRouter.post("/crypto/buy", cryptoTradingLimiter, validateBody(buyTradeSchema), buyCrypto);
-apiRouter.post("/crypto/sell", cryptoTradingLimiter, validateBody(sellTradeSchema), sellCrypto);
-apiRouter.get("/crypto/portfolio", getPortfolio);
-apiRouter.get("/crypto/trades", getUserTrades);
+apiRouter.post("/crypto/buy", requireAuth, cryptoTradingLimiter, validateBody(buyTradeSchema), buyCrypto);
+apiRouter.post("/crypto/sell", requireAuth, cryptoTradingLimiter, validateBody(sellTradeSchema), sellCrypto);
+apiRouter.get("/crypto/portfolio", requireAuth, getPortfolio);
+apiRouter.get("/crypto/trades", requireAuth, getUserTrades);
 
 // ========== STOCKS & FOREX ENDPOINTS ==========
 
@@ -154,7 +154,7 @@ apiRouter.get("/stocks/in/batch", getIndianStocksBatch);
 apiRouter.get("/stocks/in/:symbol/intraday", getIndianStockIntradayData);
 apiRouter.get("/stocks/in/:symbol/daily", getIndianStockDailyData);
 
-// Commodities - Public endpoint (no authentication required)
+// Commodities - No rate limiter for development
 apiRouter.get("/commodities", getCommodities);
 
 // ========== NEWS ENDPOINTS (MarketAux) ==========
@@ -203,8 +203,8 @@ apiRouter.get("/proxy-image", async (req, res) => {
   }
 });
 
-// Admin endpoints (admin required - auth is handled globally)
-apiRouter.use(requireAdmin);
+// Admin endpoints (authenticated + admin required)
+apiRouter.use(requireAuth, requireAdmin);
 
 apiRouter.get("/admin/stats", getStats);
 apiRouter.get("/admin/audit-logs", listAuditLogs);
