@@ -51,7 +51,8 @@ import {
   getExchangeRate,
   getForexPairs,
   getTestedForex,
-  getUpcomingForex
+  getUpcomingForex,
+  getCommodities
 } from "../modules/stocks/stock.controller.js";
 import {
   getIndianStock,
@@ -152,6 +153,9 @@ apiRouter.get("/stocks/in/top", getTopIndian);
 apiRouter.get("/stocks/in/batch", getIndianStocksBatch);
 apiRouter.get("/stocks/in/:symbol/intraday", getIndianStockIntradayData);
 apiRouter.get("/stocks/in/:symbol/daily", getIndianStockDailyData);
+
+// Commodities - No rate limiter for development
+apiRouter.get("/commodities", getCommodities);
 
 // ========== NEWS ENDPOINTS (MarketAux) ==========
 

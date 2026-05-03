@@ -30,20 +30,40 @@ export async function getUSStockPrice(req, res) {
 }
 
 /**
- * Get all supported US stocks / Global Indices
+ * Get all supported US stocks / Global Indices with real prices
  */
-export function getStocks(req, res) {
+export async function getStocks(req, res) {
   try {
     const stocks = getSupportedStocks();
     
-    // Add mock price data for global indices
-    const stocksWithPrices = stocks.map(stock => ({
-      ...stock,
-      currentPrice: _getMockIndexPrice(stock.symbol),
-      priceChange: _getMockIndexChange(stock.symbol),
-      priceChangePercent: _getMockIndexChangePercent(stock.symbol),
-      lastUpdate: new Date().toISOString()
-    }));
+    // Fetch real prices for each stock/index
+    const stocksWithPrices = await Promise.all(
+      stocks.map(async (stock) => {
+        try {
+          const priceData = await getStockPrice(stock.symbol);
+          
+          return {
+            ...stock,
+            currentPrice: priceData.price || priceData.currentPrice,
+            priceChange: priceData.change || 0,
+            priceChangePercent: priceData.changePercent || 0,
+            lastUpdate: priceData.timestamp || new Date().toISOString(),
+            source: "Alpha Vantage"
+          };
+        } catch (error) {
+          console.warn(`Failed to fetch price for ${stock.symbol}:`, error.message);
+          // Fallback to mock data
+          return {
+            ...stock,
+            currentPrice: _getMockIndexPrice(stock.symbol),
+            priceChange: _getMockIndexChange(stock.symbol),
+            priceChangePercent: _getMockIndexChangePercent(stock.symbol),
+            lastUpdate: new Date().toISOString(),
+            source: "Mock Data"
+          };
+        }
+      })
+    );
     
     res.json({
       data: stocksWithPrices,
@@ -83,6 +103,101 @@ function _getMockIndexChange(symbol) {
 function _getMockIndexChangePercent(symbol) {
   const random = Date.now() % 100;
   return (random - 50) * 0.01;
+}
+
+// Commodity symbols for Alpha Vantage
+const COMMODITY_SYMBOLS = {
+  'GOLD': 'GC=F', // Gold Futures
+  'SILVER': 'SI=F', // Silver Futures
+  'OIL': 'CL=F', // Crude Oil Futures
+  'COPPER': 'HG=F', // Copper Futures
+  'NATURAL_GAS': 'NG=F', // Natural Gas Futures
+  'WHEAT': 'ZW=F', // Wheat Futures
+  'CORN': 'ZC=F', // Corn Futures
+  'COFFEE': 'KC=F', // Coffee Futures
+  'SUGAR': 'SB=F', // Sugar Futures
+  'COTTON': 'CT=F' // Cotton Futures
+};
+
+/**
+ * Get commodities data with real prices
+ */
+export async function getCommodities(req, res) {
+  try {
+    const commodities = Object.entries(COMMODITY_SYMBOLS).map(([name, symbol]) => ({
+      symbol,
+      name: name.charAt(0) + name.slice(1).toLowerCase(), // Capitalize first letter
+      category: 'Commodity'
+    }));
+    
+    // Fetch real prices for each commodity
+    const commoditiesWithPrices = await Promise.all(
+      commodities.map(async (commodity) => {
+        try {
+          const priceData = await getStockPrice(commodity.symbol);
+          
+          return {
+            ...commodity,
+            currentPrice: priceData.price || priceData.currentPrice,
+            priceChange: priceData.change || 0,
+            priceChangePercent: priceData.changePercent || 0,
+            lastUpdate: priceData.timestamp || new Date().toISOString(),
+            source: "Alpha Vantage"
+          };
+        } catch (error) {
+          console.warn(`Failed to fetch price for ${commodity.symbol}:`, error.message);
+          // Fallback to mock data
+          const mockPrice = _getMockCommodityPrice(commodity.name);
+          return {
+            ...commodity,
+            currentPrice: mockPrice,
+            priceChange: _getMockCommodityChange(commodity.name),
+            priceChangePercent: _getMockCommodityChangePercent(commodity.name),
+            lastUpdate: new Date().toISOString(),
+            source: "Mock Data"
+          };
+        }
+      })
+    );
+    
+    res.json({
+      data: commoditiesWithPrices,
+      count: commoditiesWithPrices.length,
+      timestamp: Date.now()
+    });
+  } catch (error) {
+    console.error("Error fetching commodities:", error.message);
+    res.status(500).json({ message: "Failed to fetch commodities" });
+  }
+}
+
+// Mock commodity price functions
+function _getMockCommodityPrice(name) {
+  const basePrices = {
+    'Gold': 1850.75,
+    'Silver': 24.85,
+    'Oil': 78.92,
+    'Copper': 3.85,
+    'Natural_gas': 3.25,
+    'Wheat': 6.45,
+    'Corn': 4.85,
+    'Coffee': 1.95,
+    'Sugar': 0.21,
+    'Cotton': 0.82
+  };
+  const random = Date.now() % 100;
+  const basePrice = basePrices[name] || 100.0;
+  return basePrice + (random * 0.1);
+}
+
+function _getMockCommodityChange(name) {
+  const random = Date.now() % 100;
+  return (random - 50) * 0.05;
+}
+
+function _getMockCommodityChangePercent(name) {
+  const random = Date.now() % 100;
+  return (random - 50) * 0.02;
 }
 
 /**
@@ -192,20 +307,41 @@ export function getForexPairs(req, res) {
 }
 
 /**
- * Get tested (available) forex pairs only - FREE TIER
+ * Get tested (available) forex pairs only - FREE TIER with real prices
  */
-export function getTestedForex(req, res) {
+export async function getTestedForex(req, res) {
   try {
     const pairs = getTestedForexPairs();
     
-    // Add mock price data for forex pairs
-    const pairsWithPrices = pairs.map(pair => ({
-      ...pair,
-      currentPrice: _getMockForexPrice(pair.pair),
-      priceChange: _getMockForexChange(pair.pair),
-      priceChangePercent: _getMockForexChangePercent(pair.pair),
-      lastUpdate: new Date().toISOString()
-    }));
+    // Fetch real prices for each forex pair
+    const pairsWithPrices = await Promise.all(
+      pairs.map(async (pair) => {
+        try {
+          const [fromCurrency, toCurrency] = pair.pair.split('/');
+          const rateData = await getForexRate(fromCurrency, toCurrency);
+          
+          return {
+            ...pair,
+            currentPrice: rateData.exchangeRate || rateData.rate,
+            priceChange: rateData.change || 0,
+            priceChangePercent: rateData.changePercent || 0,
+            lastUpdate: rateData.timestamp || new Date().toISOString(),
+            source: rateData.source || "Alpha Vantage"
+          };
+        } catch (error) {
+          console.warn(`Failed to fetch rate for ${pair.pair}:`, error.message);
+          // Fallback to mock data
+          return {
+            ...pair,
+            currentPrice: _getMockForexPrice(pair.pair),
+            priceChange: _getMockForexChange(pair.pair),
+            priceChangePercent: _getMockForexChangePercent(pair.pair),
+            lastUpdate: new Date().toISOString(),
+            source: "Mock Data"
+          };
+        }
+      })
+    );
     
     res.json({
       data: pairsWithPrices,
