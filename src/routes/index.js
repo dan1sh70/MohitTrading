@@ -32,6 +32,7 @@ import {
   getUserTrades,
   getHistoricalPrices,
   getChartData,
+  getTechnicals,
   getTop3,
   getTop10,
   getTrending,
