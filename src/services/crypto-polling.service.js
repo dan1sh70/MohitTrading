@@ -1,4 +1,5 @@
 import { cacheSet, redis } from "../db/redis.js";
+import { broadcastPriceUpdate } from "./websocket.service.js";
 
 const BINANCE_REST_API = "https://api.binance.com/api/v3";
 
@@ -84,7 +85,7 @@ async function fetchAllStatsFromBinance() {
 }
 
 /**
- * Cache all prices in Redis
+ * Cache all prices in Redis and broadcast via WebSocket
  */
 async function cacheAllPrices(prices) {
   try {
@@ -92,7 +93,7 @@ async function cacheAllPrices(prices) {
       prices = [prices];
     }
 
-    // Cache individual prices
+    // Cache individual prices and broadcast
     for (const priceData of prices) {
       const cacheKey = `crypto:price:${priceData.symbol}`;
       const priceObj = {
@@ -101,6 +102,9 @@ async function cacheAllPrices(prices) {
         timestamp: Date.now()
       };
       await cacheSet(cacheKey, JSON.stringify(priceObj), CACHE_TTL);
+      
+      // Broadcast real-time update via WebSocket
+      broadcastPriceUpdate(priceObj);
     }
 
     // Cache all prices together
@@ -115,7 +119,7 @@ async function cacheAllPrices(prices) {
     };
     await cacheSet("crypto:prices:all", JSON.stringify(allPricesObj), CACHE_TTL);
 
-    console.log(`[Polling] Cached ${prices.length} crypto prices`);
+    console.log(`[Polling] Cached and broadcasted ${prices.length} crypto prices`);
   } catch (error) {
     console.error("Error caching prices:", error.message);
   }

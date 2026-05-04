@@ -5,6 +5,7 @@ import { initDb } from "./db/init-db.js";
 import { isCacheEnabled, redis } from "./db/redis.js";
 import { startPollingService } from "./services/crypto-polling.service.js";
 import { startForexPollingService } from "./services/forex-polling.service.js";
+import { initializeWebSocket } from "./services/websocket.service.js";
 
 async function startServer() {
   // Initialize database (create tables and seed users if needed)
@@ -39,10 +40,13 @@ async function startServer() {
     console.log("Forex polling service disabled (set ENABLE_FOREX_POLLING=false to disable)");
   }
 
-  app.listen(env.port, '0.0.0.0', () => {
+  const server = app.listen(env.port, '0.0.0.0', () => {
     console.log(`Paper Trading backend running on http://0.0.0.0:${env.port}`);
     console.log(`Access from other devices: http://YOUR_IP:${env.port}`);
   });
+
+  // Initialize WebSocket server for real-time updates
+  initializeWebSocket(server);
 }
 
 startServer().catch((error) => {
