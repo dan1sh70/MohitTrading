@@ -108,16 +108,16 @@ function _getMockIndexChangePercent(symbol) {
 
 // Commodity symbols for Alpha Vantage
 const COMMODITY_SYMBOLS = {
-  'GOLD': 'GC=F', // Gold Futures
-  'SILVER': 'SI=F', // Silver Futures
-  'OIL': 'CL=F', // Crude Oil Futures
-  'COPPER': 'HG=F', // Copper Futures
-  'NATURAL_GAS': 'NG=F', // Natural Gas Futures
-  'WHEAT': 'ZW=F', // Wheat Futures
-  'CORN': 'ZC=F', // Corn Futures
-  'COFFEE': 'KC=F', // Coffee Futures
-  'SUGAR': 'SB=F', // Sugar Futures
-  'COTTON': 'CT=F' // Cotton Futures
+  'GOLD': 'GOLD', // Gold Futures
+  'SILVER': 'SILVER', // Silver Futures
+  'OIL': 'OIL', // Crude Oil Futures
+  'COPPER': 'COPPER', // Copper Futures
+  'NATURAL_GAS': 'NATURAL_GAS', // Natural Gas Futures
+  'WHEAT': 'WHEAT', // Wheat Futures
+  'CORN': 'CORN', // Corn Futures
+  'COFFEE': 'COFFEE', // Coffee Futures
+  'SUGAR': 'SUGAR', // Sugar Futures
+  'COTTON': 'COTTON' // Cotton Futures
 };
 
 /**
