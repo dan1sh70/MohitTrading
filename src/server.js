@@ -22,14 +22,9 @@ async function startServer() {
     }
   }
 
-  // Start background polling service for crypto data (optional)
-  const enablePolling = process.env.ENABLE_CRYPTO_POLLING === "true";
-  if (enablePolling) {
-    console.log("Starting crypto data polling service...");
-    startPollingService();
-  } else {
-    console.log("Crypto polling service disabled (set ENABLE_CRYPTO_POLLING=true to enable)");
-  }
+  // Start background polling service for crypto data (enabled by default)
+  console.log("Starting crypto data polling service...");
+  startPollingService();
 
   // Always start forex polling service for live rates
   const enableForexPolling = process.env.ENABLE_FOREX_POLLING !== "false";
