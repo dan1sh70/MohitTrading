@@ -35,9 +35,10 @@ import {
   getTop3,
   getTop10,
   getTrending,
-  getTechnicals,
   getTop10Ranked,
-  getAllStats
+  getAllStats,
+  streamPrices,
+  streamSinglePrice
 } from "../modules/crypto/crypto.controller.js";
 import {
   buyTradeSchema,
@@ -116,6 +117,10 @@ apiRouter.post("/auth/register", loginLimiter, validateBody(registerSchema), reg
 apiRouter.get("/crypto/prices", cryptoPriceLimiter, getAllPrices);
 apiRouter.get("/crypto/prices/:symbol", cryptoPriceLimiter, getPrice);
 apiRouter.get("/crypto/stats/:symbol", cryptoPriceLimiter, getCryptoStats);
+
+// Crypto streaming endpoints (real-time updates)
+apiRouter.get("/crypto/stream/prices", streamPrices);
+apiRouter.get("/crypto/stream/prices/:symbol", streamSinglePrice);
 
 // Crypto market data endpoints (public, rate limited)
 apiRouter.get("/crypto/:symbol/historical", cryptoPriceLimiter, getHistoricalPrices);
