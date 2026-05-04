@@ -36,10 +36,12 @@ import {
   getTop10,
   getTrending,
   getTop10Ranked,
-  getAllStats,
+  getAllStats
+} from "../modules/crypto/crypto.controller.js";
+import {
   streamPrices,
   streamSinglePrice
-} from "../modules/crypto/crypto.controller.js";
+} from "../modules/crypto/crypto-stream.controller.js";
 import {
   buyTradeSchema,
   sellTradeSchema
