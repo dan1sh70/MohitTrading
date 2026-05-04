@@ -28,6 +28,7 @@ import {
   buyCrypto,
   sellCrypto,
   getPortfolio,
+  getClosedPositions,
   getUserTrades,
   getHistoricalPrices,
   getChartData,
@@ -130,6 +131,7 @@ apiRouter.get("/crypto/all/stats", cryptoPriceLimiter, getAllStats);
 apiRouter.post("/crypto/buy", requireAuth, cryptoTradingLimiter, validateBody(buyTradeSchema), buyCrypto);
 apiRouter.post("/crypto/sell", requireAuth, cryptoTradingLimiter, validateBody(sellTradeSchema), sellCrypto);
 apiRouter.get("/crypto/portfolio", requireAuth, getPortfolio);
+apiRouter.get("/crypto/closed-positions", requireAuth, getClosedPositions);
 apiRouter.get("/crypto/trades", requireAuth, getUserTrades);
 
 // ========== STOCKS & FOREX ENDPOINTS ==========

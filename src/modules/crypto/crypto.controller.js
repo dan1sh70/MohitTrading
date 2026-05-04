@@ -252,7 +252,7 @@ export async function sellCrypto(req, res) {
 
 /**
  * GET /api/crypto/portfolio
- * Get user's crypto portfolio
+ * Get user's crypto portfolio (open positions only)
  */
 export async function getPortfolio(req, res) {
   const userId = req.user.id;
@@ -270,7 +270,7 @@ export async function getPortfolio(req, res) {
 
     const balance = parseFloat(userResult.rows[0].balance);
 
-    // Get open positions
+    // Get open positions (net positive quantity)
     const positionsResult = await sql(
       `
         SELECT 
@@ -279,11 +279,14 @@ export async function getPortfolio(req, res) {
             WHEN side = 'BUY' THEN quantity 
             WHEN side = 'SELL' THEN -quantity 
             END), 0) as quantity,
-          COALESCE(AVG(price), 0) as avg_price
+          COALESCE(AVG(CASE WHEN side = 'BUY' THEN price END), 0) as avg_buy_price
         FROM trades
         WHERE user_id = $1 AND status = 'OPEN'
         GROUP BY symbol
-        HAVING quantity > 0
+        HAVING COALESCE(SUM(CASE 
+          WHEN side = 'BUY' THEN quantity 
+          WHEN side = 'SELL' THEN -quantity 
+          END), 0) > 0
       `,
       [userId]
     );
@@ -297,22 +300,22 @@ export async function getPortfolio(req, res) {
           const currentPriceData = await getCryptoPrice(position.symbol);
           const currentPrice = currentPriceData.price;
           const value = position.quantity * currentPrice;
-          const pnl = (currentPrice - position.avg_price) * position.quantity;
+          const pnl = (currentPrice - position.avg_buy_price) * position.quantity;
 
           return {
             symbol: position.symbol,
             quantity: position.quantity,
-            avgPrice: parseFloat(position.avg_price),
+            avgPrice: parseFloat(position.avg_buy_price),
             currentPrice,
             value,
             pnl,
-            pnlPercent: ((pnl / (position.avg_price * position.quantity)) * 100).toFixed(2)
+            pnlPercent: ((pnl / (position.avg_buy_price * position.quantity)) * 100).toFixed(2)
           };
         } catch (error) {
           return {
             symbol: position.symbol,
             quantity: position.quantity,
-            avgPrice: parseFloat(position.avg_price),
+            avgPrice: parseFloat(position.avg_buy_price),
             error: "Unable to fetch current price"
           };
         }
@@ -326,6 +329,69 @@ export async function getPortfolio(req, res) {
     });
   } catch (error) {
     console.error("Get portfolio error:", error);
+    return res.status(500).json({ message: error.message });
+  }
+}
+
+/**
+ * GET /api/crypto/closed-positions
+ * Get user's closed/sold positions for performance tracking
+ */
+export async function getClosedPositions(req, res) {
+  const userId = req.user.id;
+
+  try {
+    // Get closed positions (net zero or negative quantity after all trades)
+    const closedResult = await sql(
+      `
+        SELECT 
+          symbol,
+          SUM(CASE WHEN side = 'BUY' THEN quantity ELSE 0 END) as total_bought,
+          SUM(CASE WHEN side = 'SELL' THEN quantity ELSE 0 END) as total_sold,
+          AVG(CASE WHEN side = 'BUY' THEN price END) as avg_buy_price,
+          AVG(CASE WHEN side = 'SELL' THEN price END) as avg_sell_price,
+          MAX(closed_at) as closed_at
+        FROM trades
+        WHERE user_id = $1 AND status = 'OPEN'
+        GROUP BY symbol
+        HAVING SUM(CASE WHEN side = 'BUY' THEN quantity WHEN side = 'SELL' THEN -quantity END) <= 0
+        AND SUM(CASE WHEN side = 'SELL' THEN 1 ELSE 0 END) > 0
+      `,
+      [userId]
+    );
+
+    const closedPositions = closedResult.rows || [];
+
+    // Calculate P&L for each closed position
+    const performanceData = closedPositions.map(position => {
+      const totalBought = parseFloat(position.total_bought || 0);
+      const totalSold = parseFloat(position.total_sold || 0);
+      const avgBuyPrice = parseFloat(position.avg_buy_price || 0);
+      const avgSellPrice = parseFloat(position.avg_sell_price || 0);
+      
+      const soldQuantity = Math.min(totalBought, totalSold);
+      const buyValue = avgBuyPrice * soldQuantity;
+      const sellValue = avgSellPrice * soldQuantity;
+      const pnl = sellValue - buyValue;
+      const pnlPercent = avgBuyPrice > 0 ? ((pnl / buyValue) * 100).toFixed(2) : 0;
+
+      return {
+        symbol: position.symbol,
+        quantity: soldQuantity,
+        avgBuyPrice,
+        avgSellPrice,
+        pnl,
+        pnlPercent,
+        closedAt: position.closed_at
+      };
+    });
+
+    return res.json({
+      closedPositions: performanceData,
+      timestamp: Date.now()
+    });
+  } catch (error) {
+    console.error("Get closed positions error:", error);
     return res.status(500).json({ message: error.message });
   }
 }
