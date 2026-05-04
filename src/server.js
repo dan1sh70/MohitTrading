@@ -29,8 +29,9 @@ async function startServer() {
     console.log("Crypto polling service disabled (set ENABLE_CRYPTO_POLLING=true to enable)");
   }
 
-  app.listen(env.port, () => {
-    console.log(`Paper Trading backend running on http://localhost:${env.port}`);
+  app.listen(env.port, '0.0.0.0', () => {
+    console.log(`Paper Trading backend running on http://0.0.0.0:${env.port}`);
+    console.log(`Access from other devices: http://YOUR_IP:${env.port}`);
   });
 }
 
