@@ -49,6 +49,7 @@ import {
   getStockSMAIndicator,
   getStockRSIIndicator,
   getExchangeRate,
+  getForexChartHandler,
   getForexPairs,
   getTestedForex,
   getUpcomingForex,
@@ -145,6 +146,7 @@ apiRouter.get("/forex/pairs", getForexPairs);
 apiRouter.get("/forex/pairs/tested", getTestedForex);
 apiRouter.get("/forex/pairs/upcoming", getUpcomingForex);
 apiRouter.get("/forex/rate/:from/:to", getExchangeRate);
+apiRouter.get("/forex/chart/:from/:to", getForexChartHandler);
 
 // Indian Stocks (DhanHQ) - No rate limiter for development
 apiRouter.get("/stocks/in", getIndianStocks);

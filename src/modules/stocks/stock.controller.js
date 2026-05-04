@@ -4,6 +4,7 @@ import {
   getStockSMA,
   getStockRSI,
   getForexRate,
+  getForexChart,
   getSupportedStocks,
   getSupportedForex,
   getTestedForexPairs,
@@ -284,6 +285,26 @@ export async function getExchangeRate(req, res) {
   } catch (error) {
     console.error("Error fetching forex rate:", error.message);
     res.status(500).json({ message: "Failed to fetch forex rate" });
+  }
+}
+
+/**
+ * Get forex chart data
+ */
+export async function getForexChartHandler(req, res) {
+  try {
+    const { from, to } = req.params;
+    const { interval = "daily", limit = "100" } = req.query;
+
+    if (!from || !to) {
+      return res.status(400).json({ message: "From and to currencies are required" });
+    }
+
+    const chart = await getForexChart(from.toUpperCase(), to.toUpperCase(), interval, parseInt(limit, 10));
+    res.json(chart);
+  } catch (error) {
+    console.error("Error fetching forex chart:", error.message);
+    res.status(500).json({ message: "Failed to fetch forex chart" });
   }
 }
 

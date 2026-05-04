@@ -421,6 +421,115 @@ export async function getForexRate(fromCurrency, toCurrency) {
 }
 
 /**
+ * Fetch forex chart data for a currency pair
+ */
+export async function getForexChart(fromCurrency, toCurrency, interval = "daily", limit = 100) {
+  const pair = `${fromCurrency}/${toCurrency}`;
+  const cacheKey = `forex:chart:${pair}:${interval}`;
+
+  try {
+    const cached = await cacheGet(cacheKey);
+    if (cached) {
+      const cachedData = JSON.parse(cached);
+      cachedData.data = cachedData.data.slice(0, limit);
+      return cachedData;
+    }
+  } catch (error) {
+    console.warn(`Cache error for forex chart ${pair}:`, error.message);
+  }
+
+  try {
+    let url;
+    let timeSeriesKey;
+    if (interval === "60min" || interval === "30min" || interval === "15min" || interval === "5min") {
+      url = `${ALPHA_VANTAGE_BASE_URL}?function=FX_INTRADAY&from_symbol=${fromCurrency}&to_symbol=${toCurrency}&interval=${interval}&outputsize=compact&apikey=${ALPHA_VANTAGE_API_KEY}`;
+      timeSeriesKey = `Time Series FX (${interval})`;
+    } else {
+      url = `${ALPHA_VANTAGE_BASE_URL}?function=FX_DAILY&from_symbol=${fromCurrency}&to_symbol=${toCurrency}&outputsize=compact&apikey=${ALPHA_VANTAGE_API_KEY}`;
+      timeSeriesKey = "Time Series FX (Daily)";
+    }
+
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(`Alpha Vantage API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    if (data["Note"] || data["Error Message"]) {
+      console.warn("Alpha Vantage API limit reached, returning mock forex chart");
+      return getMockForexChart(fromCurrency, toCurrency, interval, limit);
+    }
+
+    if (!data[timeSeriesKey]) {
+      console.warn(`No forex chart data for ${pair} (${interval}), returning mock data`);
+      return getMockForexChart(fromCurrency, toCurrency, interval, limit);
+    }
+
+    const timeSeries = data[timeSeriesKey];
+    const chartData = Object.entries(timeSeries)
+      .slice(0, limit)
+      .map(([datetime, values]) => ({
+        timestamp: Date.parse(datetime),
+        open: parseFloat(values["1. open"]),
+        high: parseFloat(values["2. high"]),
+        low: parseFloat(values["3. low"]),
+        close: parseFloat(values["4. close"])
+      }))
+      .reverse();
+
+    const result = {
+      fromCurrency,
+      toCurrency,
+      pair,
+      interval,
+      data: chartData,
+      timestamp: Date.now(),
+      source: "Alpha Vantage"
+    };
+
+    try {
+      await cacheSet(cacheKey, JSON.stringify(result), CACHE_TTL * 2);
+    } catch (cacheError) {
+      console.warn(`Failed to cache forex chart for ${pair}:`, cacheError.message);
+    }
+
+    return result;
+  } catch (error) {
+    console.error(`Error fetching forex chart for ${pair}:`, error.message);
+    return getMockForexChart(fromCurrency, toCurrency, interval, limit);
+  }
+}
+
+function getMockForexChart(fromCurrency, toCurrency, interval, limit = 100) {
+  const basePrice = 1.0 + Math.random() * 0.5;
+  const now = Date.now();
+  const candles = [];
+  const step = interval === "60min" ? 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
+  let price = basePrice;
+
+  for (let i = limit - 1; i >= 0; i--) {
+    const timestamp = now - i * step;
+    const open = price;
+    const close = price * (1 + (Math.random() - 0.5) * 0.01);
+    const high = Math.max(open, close) * (1 + Math.random() * 0.003);
+    const low = Math.min(open, close) * (1 - Math.random() * 0.003);
+    candles.push({ timestamp, open, high, low, close });
+    price = close;
+  }
+
+  return {
+    fromCurrency,
+    toCurrency,
+    pair: `${fromCurrency}/${toCurrency}`,
+    interval,
+    data: candles,
+    timestamp: Date.now(),
+    source: "Mock Forex"
+  };
+}
+
+/**
  * Get all supported stocks
  */
 export function getSupportedStocks() {
