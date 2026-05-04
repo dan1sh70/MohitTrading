@@ -1,8 +1,8 @@
 import { cacheSet, cacheGet, redis } from "../db/redis.js";
 import { getForexRate, getTestedForexPairs } from "./alpha-vantage.service.js";
 
-const POLLING_INTERVAL = 2000; // 2 seconds
-const CACHE_TTL = 10; // 10 seconds for live forex data
+const POLLING_INTERVAL = 60000; // 60 seconds (1 minute) to avoid API rate limits
+const CACHE_TTL = 120; // 2 minutes for live forex data
 
 let isPolling = false;
 let pollingIntervalId = null;
@@ -67,13 +67,13 @@ export function startForexPollingService() {
     return;
   }
 
-  console.log("[Forex Polling] Starting forex data polling service (2-second interval)");
+  console.log("[Forex Polling] Starting forex data polling service (60-second interval)");
   isPolling = true;
 
   // Run immediately on start
   pollForexData();
 
-  // Then set interval for every 2 seconds
+  // Then set interval for every 60 seconds
   pollingIntervalId = setInterval(() => {
     pollForexData();
   }, POLLING_INTERVAL);
