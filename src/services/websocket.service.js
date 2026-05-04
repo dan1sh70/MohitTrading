@@ -8,10 +8,16 @@ const subscribers = new Map(); // symbol -> Set of WebSocket connections
  * Initialize WebSocket server for real-time price updates
  */
 export function initializeWebSocket(server) {
-  wss = new WebSocketServer({ 
-    server,
-    path: '/ws/crypto'
-  });
+  try {
+    wss = new WebSocketServer({ 
+      server,
+      path: '/ws/crypto'
+    });
+    console.log('[WebSocket] Server initialized on /ws/crypto');
+  } catch (error) {
+    console.error('[WebSocket] Error initializing WebSocket server:', error);
+    return;
+  }
 
   wss.on('connection', (ws, req) => {
     console.log('[WebSocket] Client connected');
