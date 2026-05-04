@@ -15,7 +15,7 @@ import {
  */
 export async function getLatestNewsHandler(req, res) {
   try {
-    const limit = Math.min(Number(req.query.limit) || 20, 100);
+    const limit =100;
     const result = await getLatestNews(limit);
 
     if (!result.success) {
