@@ -4,6 +4,7 @@ import { pool } from "./db/mysql.js";
 import { initDb } from "./db/init-db.js";
 import { isCacheEnabled, redis } from "./db/redis.js";
 import { startPollingService } from "./services/crypto-polling.service.js";
+import { startForexPollingService } from "./services/forex-polling.service.js";
 
 async function startServer() {
   // Initialize database (create tables and seed users if needed)
@@ -27,6 +28,15 @@ async function startServer() {
     startPollingService();
   } else {
     console.log("Crypto polling service disabled (set ENABLE_CRYPTO_POLLING=true to enable)");
+  }
+
+  // Always start forex polling service for live rates
+  const enableForexPolling = process.env.ENABLE_FOREX_POLLING !== "false";
+  if (enableForexPolling) {
+    console.log("Starting forex data polling service...");
+    startForexPollingService();
+  } else {
+    console.log("Forex polling service disabled (set ENABLE_FOREX_POLLING=false to disable)");
   }
 
   app.listen(env.port, '0.0.0.0', () => {

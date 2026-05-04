@@ -332,6 +332,25 @@ export function getForexPairs(req, res) {
  */
 export async function getTestedForex(req, res) {
   try {
+    // Import the forex polling service to get cached data
+    const { getCachedTestedForex } = await import("../../services/forex-polling.service.js");
+    
+    // Try to get cached data first
+    const cachedData = await getCachedTestedForex();
+    if (cachedData && cachedData.data && cachedData.data.length > 0) {
+      console.log(`[Stock Controller] Returning cached forex data (${cachedData.data.length} pairs, age: ${Date.now() - cachedData.timestamp}ms)`);
+      return res.json({
+        data: cachedData.data,
+        count: cachedData.count,
+        tier: "free (tested)",
+        timestamp: Date.now(),
+        dataAge: Date.now() - cachedData.timestamp,
+        cached: true
+      });
+    }
+
+    // Fallback: Fetch from API if cache is empty
+    console.log("[Stock Controller] Cache miss, fetching forex pairs...");
     const pairs = getTestedForexPairs();
     
     // Fetch real prices for each forex pair
@@ -368,7 +387,8 @@ export async function getTestedForex(req, res) {
       data: pairsWithPrices,
       count: pairsWithPrices.length,
       tier: "free (tested)",
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      cached: false
     });
   } catch (error) {
     console.error("Error fetching tested forex pairs:", error.message);
