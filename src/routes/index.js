@@ -69,6 +69,19 @@ import {
   getIndianStockDailyData
 } from "../modules/stocks/indian.controller.js";
 import {
+  buyIndianStock,
+  sellIndianStock,
+  getIndianStockPositions,
+  getPositionDetails,
+  exitPosition,
+  getPerformanceMetrics
+} from "../modules/stocks/indian-trade.controller.js";
+import {
+  buyIndianStockSchema,
+  sellIndianStockSchema,
+  exitPositionSchema
+} from "../modules/stocks/indian-trade.schema.js";
+import {
   getLatestNewsHandler,
   searchNewsHandler,
   getNewsBySymbolsHandler,
@@ -108,6 +121,12 @@ const newsLimiter = rateLimit({
 });
 
 export const apiRouter = Router();
+
+// DEBUG: Log all incoming requests
+apiRouter.use((req, res, next) => {
+  console.log(`[DEBUG] ${req.method} ${req.path} - User: ${req.user?.id || 'none'}, Role: ${req.user?.role || 'none'}`);
+  next();
+});
 
 apiRouter.get("/health", (_req, res) => {
   res.json({ status: "ok", service: "paper-trading-backend" });
@@ -158,13 +177,42 @@ apiRouter.get("/forex/pairs/upcoming", getUpcomingForex);
 apiRouter.get("/forex/rate/:from/:to", getExchangeRate);
 apiRouter.get("/forex/chart/:from/:to", getForexChartHandler);
 
-// Indian Stocks (DhanHQ) - No rate limiter for development
+// ========== INDIAN STOCKS DATA ENDPOINTS (PUBLIC) ==========
+// NOTE: Specific routes must come BEFORE parameterized routes
 apiRouter.get("/stocks/in", getIndianStocks);
-apiRouter.get("/stocks/in/:symbol", getIndianStock);
 apiRouter.get("/stocks/in/top", getTopIndian);
 apiRouter.get("/stocks/in/batch", getIndianStocksBatch);
+
+// ========== INDIAN STOCK TRADING ENDPOINTS (AUTHENTICATED) ==========
+// 
+// WORKFLOW:
+// 1. User selects stock from Markets tab
+// 2. Clicks Buy/Sell → IndianStockTradeScreen
+// 3. Submits order → POST /stocks/in/trade/buy or /sell
+// 4. OrderPlaced confirmation screen
+// 5. Navigate to Trading Lab → Positions tab
+// 6. View positions via GET /stocks/in/positions
+// 7. Exit position via POST /stocks/in/positions/:id/exit
+// 8. View performance via GET /stocks/in/performance
+// 
+// FEATURES:
+// - Real-time balance management
+// - P&L calculation (Long and Short positions)
+// - Performance metrics with 6 scoring systems
+// - Automatic grade calculation (A/B/C/D)
+// - Audit logging for all trades
+
+apiRouter.post("/stocks/in/trade/buy", requireAuth, validateBody(buyIndianStockSchema), buyIndianStock);
+apiRouter.post("/stocks/in/trade/sell", requireAuth, validateBody(sellIndianStockSchema), sellIndianStock);
+apiRouter.get("/stocks/in/positions", requireAuth, getIndianStockPositions);
+apiRouter.get("/stocks/in/positions/:positionId", requireAuth, getPositionDetails);
+apiRouter.post("/stocks/in/positions/:positionId/exit", requireAuth, validateBody(exitPositionSchema), exitPosition);
+apiRouter.get("/stocks/in/performance", requireAuth, getPerformanceMetrics);
+
+// Parameterized Indian stock data routes (must come AFTER specific routes)
 apiRouter.get("/stocks/in/:symbol/intraday", getIndianStockIntradayData);
 apiRouter.get("/stocks/in/:symbol/daily", getIndianStockDailyData);
+apiRouter.get("/stocks/in/:symbol", getIndianStock);
 
 // Commodities - No rate limiter for development
 apiRouter.get("/commodities", getCommodities);
@@ -215,14 +263,12 @@ apiRouter.get("/proxy-image", async (req, res) => {
   }
 });
 
-// Admin endpoints (authenticated + admin required)
-apiRouter.use(requireAuth, requireAdmin);
-
-apiRouter.get("/admin/stats", getStats);
-apiRouter.get("/admin/audit-logs", listAuditLogs);
-apiRouter.get("/admin/users", listUsers);
-apiRouter.post("/admin/users", validateBody(createUserSchema), createUser);
-apiRouter.get("/admin/positions", getPositions);
-apiRouter.get("/admin/trades", listTrades);
-apiRouter.post("/admin/trades", validateBody(createTradeSchema), createTrade);
-apiRouter.patch("/admin/trades/:id/close", validateBody(closeTradeSchema), closeTrade);
+// Admin endpoints (each requires auth + admin)
+apiRouter.get("/admin/stats", requireAuth, requireAdmin, getStats);
+apiRouter.get("/admin/audit-logs", requireAuth, requireAdmin, listAuditLogs);
+apiRouter.get("/admin/users", requireAuth, requireAdmin, listUsers);
+apiRouter.post("/admin/users", requireAuth, requireAdmin, validateBody(createUserSchema), createUser);
+apiRouter.get("/admin/positions", requireAuth, requireAdmin, getPositions);
+apiRouter.get("/admin/trades", requireAuth, requireAdmin, listTrades);
+apiRouter.post("/admin/trades", requireAuth, requireAdmin, validateBody(createTradeSchema), createTrade);
+apiRouter.patch("/admin/trades/:id/close", requireAuth, requireAdmin, validateBody(closeTradeSchema), closeTrade);
