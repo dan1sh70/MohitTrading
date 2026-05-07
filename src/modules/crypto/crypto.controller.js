@@ -114,8 +114,8 @@ export async function buyCrypto(req, res) {
     // Create buy transaction
     const tradeResult = await sql(
       `
-        INSERT INTO trades (user_id, symbol, side, quantity, price)
-        VALUES ($1, $2, 'BUY', $3, $4)
+        INSERT INTO trades (user_id, symbol, side, quantity, price, trading_type, status)
+        VALUES ($1, $2, 'BUY', $3, $4, 'crypto', 'OPEN')
       `,
       [userId, symbol, quantity, price]
     );
@@ -167,8 +167,13 @@ export async function buyCrypto(req, res) {
  * Sell cryptocurrency
  */
 export async function sellCrypto(req, res) {
+  console.log('[Crypto Sell] Request body:', req.body);
+  console.log('[Crypto Sell] Validated body:', req.validatedBody);
+  
   const { symbol, quantity, price } = req.validatedBody;
   const userId = req.user.id;
+
+  console.log(`[Crypto Sell] User ${userId} selling: symbol=${symbol}, quantity=${quantity}, price=${price}`);
 
   if (!symbol || symbol.trim().length === 0) {
     return res.status(400).json({
@@ -190,22 +195,32 @@ export async function sellCrypto(req, res) {
       [userId, symbol]
     );
 
-    const netPosition = positionResult.rows[0].net_position || 0;
+    const netPosition = parseFloat(positionResult.rows[0].net_position) || 0;
+    console.log(`[Crypto Sell] User ${userId} net position for ${symbol}: ${netPosition}, trying to sell: ${quantity}`);
 
     if (netPosition < quantity) {
+      console.log(`[Crypto Sell] REJECTED: Insufficient position. Available: ${netPosition}, Requested: ${quantity}`);
       return res.status(400).json({
-        message: `Insufficient position. Available: ${netPosition}, Requested: ${quantity}`
+        message: `Insufficient position. Available: ${netPosition.toFixed(4)}, Requested: ${quantity}`
       });
     }
 
     // Create sell transaction
     const tradeResult = await sql(
       `
-        INSERT INTO trades (user_id, symbol, side, quantity, price)
-        VALUES ($1, $2, 'SELL', $3, $4)
+        INSERT INTO trades (user_id, symbol, side, quantity, price, trading_type, status)
+        VALUES ($1, $2, 'SELL', $3, $4, 'crypto', 'OPEN')
       `,
       [userId, symbol, quantity, price]
     );
+
+    // If net position becomes 0 after this sell, mark all trades for this symbol as CLOSED
+    if (Math.abs(netPosition - quantity) < 0.000001) {
+      await sql(
+        `UPDATE trades SET status = 'CLOSED', closed_at = NOW() WHERE user_id = $1 AND symbol = $2 AND status = 'OPEN' AND trading_type = 'crypto'`,
+        [userId, symbol]
+      );
+    }
 
     // Update user balance (add the sell proceeds)
     const sellProceeds = quantity * price;
@@ -240,6 +255,8 @@ export async function sellCrypto(req, res) {
       [tradeResult.insertId]
     );
 
+    console.log(`[Crypto Sell] SUCCESS: User ${userId} sold ${quantity} ${symbol} at ${price}`);
+    
     return res.status(201).json({
       message: "Sell order created successfully",
       trade: trade.rows[0]
@@ -341,8 +358,8 @@ export async function getClosedPositions(req, res) {
   const userId = req.user.id;
 
   try {
-    // Get closed positions (net zero or negative quantity after all trades)
-    const closedResult = await sql(
+    // Get closed crypto positions from trades table
+    const cryptoClosedResult = await sql(
       `
         SELECT 
           symbol,
@@ -350,20 +367,36 @@ export async function getClosedPositions(req, res) {
           SUM(CASE WHEN side = 'SELL' THEN quantity ELSE 0 END) as total_sold,
           AVG(CASE WHEN side = 'BUY' THEN price END) as avg_buy_price,
           AVG(CASE WHEN side = 'SELL' THEN price END) as avg_sell_price,
-          MAX(closed_at) as closed_at
+          MAX(created_at) as closed_at
         FROM trades
-        WHERE user_id = $1 AND status = 'OPEN'
+        WHERE user_id = $1 AND status = 'CLOSED' AND trading_type = 'crypto'
         GROUP BY symbol
-        HAVING SUM(CASE WHEN side = 'BUY' THEN quantity WHEN side = 'SELL' THEN -quantity END) <= 0
-        AND SUM(CASE WHEN side = 'SELL' THEN 1 ELSE 0 END) > 0
       `,
       [userId]
     );
 
-    const closedPositions = closedResult.rows || [];
+    // Get exited Indian stock positions from indian_stock_positions table
+    const indianClosedResult = await sql(
+      `
+        SELECT 
+          symbol,
+          quantity,
+          entry_price as avg_buy_price,
+          exit_price as avg_sell_price,
+          pnl,
+          pnl_percent,
+          exit_time as closed_at
+        FROM indian_stock_positions
+        WHERE user_id = $1 AND status = 'EXITED'
+      `,
+      [userId]
+    );
 
-    // Calculate P&L for each closed position
-    const performanceData = closedPositions.map(position => {
+    const cryptoClosed = cryptoClosedResult.rows || [];
+    const indianClosed = indianClosedResult.rows || [];
+
+    // Format crypto performance data
+    const cryptoPerformance = cryptoClosed.map(position => {
       const totalBought = parseFloat(position.total_bought || 0);
       const totalSold = parseFloat(position.total_sold || 0);
       const avgBuyPrice = parseFloat(position.avg_buy_price || 0);
@@ -382,11 +415,31 @@ export async function getClosedPositions(req, res) {
         avgSellPrice,
         pnl,
         pnlPercent,
-        closedAt: position.closed_at
+        closedAt: position.closed_at,
+        type: 'crypto'
       };
     });
 
+    // Format Indian stock performance data
+    const indianPerformance = indianClosed.map(position => ({
+      symbol: position.symbol,
+      quantity: parseFloat(position.quantity),
+      avgBuyPrice: parseFloat(position.avg_buy_price),
+      avgSellPrice: parseFloat(position.avg_sell_price),
+      pnl: parseFloat(position.pnl),
+      pnlPercent: parseFloat(position.pnl_percent).toFixed(2),
+      closedAt: position.closed_at,
+      type: 'indian_stock'
+    }));
+
+    // Combine and sort by closed date descending
+    const performanceData = [...cryptoPerformance, ...indianPerformance].sort((a, b) => 
+      new Date(b.closedAt) - new Date(a.closedAt)
+    );
+
     return res.json({
+      success: true,
+      count: performanceData.length,
       closedPositions: performanceData,
       timestamp: Date.now()
     });
@@ -413,11 +466,11 @@ export async function getUserTrades(req, res) {
       [userId]
     );
 
-    const total = countResult.rows[0].total || 0;
+    const total = parseInt(countResult.rows[0].total) || 0;
 
     const tradesResult = await sql(
       `
-        SELECT id, symbol, side, quantity, price, status, pnl, created_at, closed_at
+        SELECT id, symbol, side, quantity, price, status, pnl, created_at, closed_at, trading_type as tradingType
         FROM trades
         WHERE user_id = $1
         ORDER BY created_at DESC

@@ -323,9 +323,46 @@ export async function getIndianStockPositions(req, res) {
       [userId, status]
     );
 
+    // Fetch live market prices for all positions
+    const positionsWithLivePrices = await Promise.all(
+      result.rows.map(async (position) => {
+        try {
+          const priceData = await getIndianStockPrice(position.symbol);
+          const currentPrice = parseFloat(priceData.price || priceData.currentPrice || position.current_price);
+          const entryPrice = parseFloat(position.entry_price);
+          const quantity = parseInt(position.quantity);
+          
+          // Calculate real-time P&L
+          let pnl, pnlPercent;
+          if (position.trade_type === 'BUY') {
+            pnl = (currentPrice - entryPrice) * quantity;
+            pnlPercent = entryPrice > 0 ? ((currentPrice - entryPrice) / entryPrice) * 100 : 0;
+          } else { // SELL/SHORT
+            pnl = (entryPrice - currentPrice) * quantity;
+            pnlPercent = entryPrice > 0 ? ((entryPrice - currentPrice) / entryPrice) * 100 : 0;
+          }
+          
+          return {
+            ...position,
+            current_price: currentPrice,
+            pnl: parseFloat(pnl.toFixed(2)),
+            pnl_percent: parseFloat(pnlPercent.toFixed(2)),
+            last_update: Date.now()
+          };
+        } catch (error) {
+          console.error(`[Indian Stock Positions] Failed to fetch price for ${position.symbol}:`, error.message);
+          // Return position with stored price if live fetch fails
+          return {
+            ...position,
+            last_update: Date.now()
+          };
+        }
+      })
+    );
+
     return res.json({
-      count: result.rowCount,
-      positions: result.rows,
+      count: positionsWithLivePrices.length,
+      positions: positionsWithLivePrices,
       timestamp: Date.now()
     });
   } catch (error) {

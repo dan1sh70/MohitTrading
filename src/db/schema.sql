@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS users (
     full_name VARCHAR(120) NOT NULL,
     email VARCHAR(180) NOT NULL UNIQUE,
     role ENUM('trader', 'admin') NOT NULL DEFAULT 'trader',
-    balance DECIMAL(14, 2) NOT NULL DEFAULT 100000,
+    balance DECIMAL(14, 2) NOT NULL DEFAULT 1000000,
     password_hash TEXT NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

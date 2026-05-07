@@ -19,7 +19,8 @@ import {
 import {
   closeTrade,
   createTrade,
-  listTrades
+  listTrades,
+  resetAccount
 } from "../modules/trades/trades.controller.js";
 import {
   getAllPrices,
@@ -160,6 +161,9 @@ apiRouter.post("/crypto/sell", requireAuth, cryptoTradingLimiter, validateBody(s
 apiRouter.get("/crypto/portfolio", requireAuth, getPortfolio);
 apiRouter.get("/crypto/closed-positions", requireAuth, getClosedPositions);
 apiRouter.get("/crypto/trades", requireAuth, getUserTrades);
+
+// Reset account endpoint - clears all trades, positions, performance data and resets balance
+apiRouter.post("/auth/reset-account", requireAuth, resetAccount);
 
 // ========== STOCKS & FOREX ENDPOINTS ==========
 

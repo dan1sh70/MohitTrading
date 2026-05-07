@@ -173,3 +173,84 @@ export async function closeTrade(req, res) {
 
   return res.json(result.rows[0]);
 }
+
+/**
+ * POST /api/auth/reset-account
+ * Reset user account - clears all trades, positions, performance data and resets balance
+ */
+export async function resetAccount(req, res) {
+  const userId = req.user.id;
+  const DEFAULT_BALANCE = 1000000; // Default balance for new accounts (10 Lakhs)
+
+  try {
+    // Get current user info for audit log
+    const userResult = await sql(
+      `SELECT full_name, email, balance FROM users WHERE id = $1`,
+      [userId]
+    );
+
+    if (userResult.rowCount === 0) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    const previousBalance = parseFloat(userResult.rows[0].balance);
+
+    // Count data to be deleted for the response
+    const tradesCount = await sql(
+      `SELECT COUNT(*) as count FROM trades WHERE user_id = $1`,
+      [userId]
+    );
+    const positionsCount = await sql(
+      `SELECT COUNT(*) as count FROM indian_stock_positions WHERE user_id = $1`,
+      [userId]
+    );
+
+    // Delete all trades for the user
+    await sql(`DELETE FROM trades WHERE user_id = $1`, [userId]);
+
+    // Delete all indian stock positions for the user
+    await sql(`DELETE FROM indian_stock_positions WHERE user_id = $1`, [userId]);
+
+    // Delete indian stock performance data for the user
+    await sql(`DELETE FROM indian_stock_performance WHERE user_id = $1`, [userId]);
+
+    // Reset user balance to default
+    await sql(
+      `UPDATE users SET balance = $1 WHERE id = $2`,
+      [DEFAULT_BALANCE, userId]
+    );
+
+    // Invalidate cache
+    await cacheDel("admin:stats", "admin:positions", "crypto:prices:all");
+
+    // Write audit log
+    await writeAuditLog({
+      actorUserId: userId,
+      action: "RESET_ACCOUNT",
+      targetType: "user",
+      targetId: String(userId),
+      details: {
+        previousBalance,
+        newBalance: DEFAULT_BALANCE,
+        tradesDeleted: parseInt(tradesCount.rows[0].count),
+        positionsDeleted: parseInt(positionsCount.rows[0].count)
+      }
+    });
+
+    return res.json({
+      success: true,
+      message: "Account reset successfully",
+      data: {
+        newBalance: DEFAULT_BALANCE,
+        tradesDeleted: parseInt(tradesCount.rows[0].count),
+        positionsDeleted: parseInt(positionsCount.rows[0].count)
+      }
+    });
+  } catch (error) {
+    console.error("Reset account error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to reset account: " + error.message
+    });
+  }
+}
