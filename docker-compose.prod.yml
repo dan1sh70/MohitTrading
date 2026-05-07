@@ -3,7 +3,7 @@ version: "3.8"
 services:
   mysql:
     image: mysql:8.0
-    container_name: paper-trading-mysql
+    container_name: paper-trading-mysql-prod
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: r1Wk6teTIRAsFp89tBNkkl30M3FosEEkn7cXyTPFtz74Jeqn5IfRMmhiq2gLoGQK
@@ -20,7 +20,7 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: paper-trading-redis
+    container_name: paper-trading-redis-prod
     restart: unless-stopped
     command: redis-server --appendonly yes --requirepass redis_password_123
     volumes:
@@ -34,7 +34,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: paper-trading-backend
+    container_name: paper-trading-backend-prod
     restart: unless-stopped
     depends_on:
       mysql:
@@ -62,11 +62,11 @@ services:
       ADMIN_PASSWORD: Admin123!
       TRADER_PASSWORD: Trader123!
 
-      ENABLE_CRYPTO_POLLING: true
+      ENABLE_CRYPTO_POLLING: false
 
       ALPHA_VANTAGE_API_KEY: demo
       DHANHQ_API_KEY: demo
-      MARKETAUX_API_KEY: 7OSYVZ7vixIYPBAjNH5r8hYuskViy6SHwgbLpi3S
+      MARKETAUX_API_KEY: demo
 
     ports:
       - "8808:8808"
