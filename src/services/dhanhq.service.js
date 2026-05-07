@@ -63,8 +63,8 @@ export async function getIndianStockPrice(symbol) {
     const data = await response.json();
 
     if (data.status !== "success" || !data.data) {
-      console.warn(`No price data for ${symbol}, returning mock data`);
-      return getMockIndianStockPrice(symbol);
+      console.warn(`No price data for ${symbol} from DhanHQ API`);
+      throw new Error(`No price data available for ${symbol}`);
     }
 
     const quote = data.data;
@@ -93,8 +93,7 @@ export async function getIndianStockPrice(symbol) {
     return price;
   } catch (error) {
     console.error(`Error fetching Indian stock price for ${symbol}:`, error.message);
-    // Return mock data if real API fails
-    return getMockIndianStockPrice(symbol);
+    throw error; // Propagate error instead of returning mock data
   }
 }
 
@@ -321,7 +320,7 @@ export async function getTopIndianStocks(sortBy = "volume") {
     return result;
   } catch (error) {
     console.error(`Error fetching top Indian stocks:`, error.message);
-    return getMockTopIndianStocks();
+    throw error; // Propagate error instead of returning mock data
   }
 }
 
