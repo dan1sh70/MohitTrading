@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import { sql } from "../../db/mysql.js";
 import { writeAuditLog } from "../../utils/audit-log.js";
 import { signAdminToken } from "../../utils/jwt.js";
@@ -90,5 +91,211 @@ export async function register(req, res) {
       email: newUser.email,
       role: newUser.role
     }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FORGOT PASSWORD - Generate reset token
+// ═══════════════════════════════════════════════════════════════════════════
+
+export async function forgotPassword(req, res) {
+  const { email } = req.validatedBody;
+
+  // Check if user exists
+  const userResult = await sql(
+    `SELECT id, email, full_name FROM users WHERE email = $1`,
+    [email]
+  );
+
+  const user = userResult.rows[0];
+
+  // Always return success to prevent email enumeration attacks
+  if (!user) {
+    return res.json({
+      success: true,
+      message: "If an account exists with this email, a password reset link has been sent."
+    });
+  }
+
+  // Generate secure random token
+  const resetToken = crypto.randomBytes(32).toString("hex");
+  const tokenHash = crypto.createHash("sha256").update(resetToken).digest("hex");
+
+  // Set expiration (1 hour from now)
+  const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+
+  // Invalidate any existing unused tokens for this user
+  await sql(
+    `UPDATE password_reset_tokens 
+     SET used_at = CURRENT_TIMESTAMP 
+     WHERE user_id = $1 AND used_at IS NULL`,
+    [user.id]
+  );
+
+  // Store the hashed token
+  await sql(
+    `INSERT INTO password_reset_tokens (user_id, token, expires_at) 
+     VALUES ($1, $2, $3)`,
+    [user.id, tokenHash, expiresAt]
+  );
+
+  // Log the action (without sensitive data)
+  await writeAuditLog({
+    actorUserId: user.id,
+    action: "PASSWORD_RESET_REQUEST",
+    targetType: "user",
+    targetId: String(user.id),
+    details: { email: user.email }
+  });
+
+  // TODO: Send email with reset link
+  // For now, return the token in response (development only)
+  // In production, send email and don't expose the token
+  const isDevelopment = process.env.NODE_ENV === "development";
+
+  const response = {
+    success: true,
+    message: "Password reset link has been sent to your email address."
+  };
+
+  // Only expose token in development mode
+  if (isDevelopment) {
+    response.resetToken = resetToken;
+    response.note = "This token is only exposed in development mode. In production, it would be sent via email.";
+  }
+
+  return res.json(response);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// RESET PASSWORD - Validate token and update password
+// ═══════════════════════════════════════════════════════════════════════════
+
+export async function resetPassword(req, res) {
+  const { token, newPassword } = req.validatedBody;
+
+  // Hash the provided token for comparison
+  const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+
+  // Find valid token
+  const tokenResult = await sql(
+    `SELECT rt.id, rt.user_id, rt.expires_at, rt.used_at, u.email, u.full_name
+     FROM password_reset_tokens rt
+     JOIN users u ON rt.user_id = u.id
+     WHERE rt.token = $1`,
+    [tokenHash]
+  );
+
+  const resetRecord = tokenResult.rows[0];
+
+  // Validate token
+  if (!resetRecord) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid or expired reset token."
+    });
+  }
+
+  if (resetRecord.used_at) {
+    return res.status(400).json({
+      success: false,
+      message: "This reset token has already been used. Please request a new one."
+    });
+  }
+
+  if (new Date(resetRecord.expires_at) < new Date()) {
+    return res.status(400).json({
+      success: false,
+      message: "Reset token has expired. Please request a new one."
+    });
+  }
+
+  // Hash new password
+  const passwordHash = await bcrypt.hash(newPassword, 12);
+
+  // Update user's password
+  await sql(
+    `UPDATE users SET password_hash = $1 WHERE id = $2`,
+    [passwordHash, resetRecord.user_id]
+  );
+
+  // Mark token as used
+  await sql(
+    `UPDATE password_reset_tokens SET used_at = CURRENT_TIMESTAMP WHERE id = $1`,
+    [resetRecord.id]
+  );
+
+  // Log the action
+  await writeAuditLog({
+    actorUserId: resetRecord.user_id,
+    action: "PASSWORD_RESET_COMPLETE",
+    targetType: "user",
+    targetId: String(resetRecord.user_id),
+    details: { email: resetRecord.email }
+  });
+
+  return res.json({
+    success: true,
+    message: "Password has been reset successfully. You can now log in with your new password."
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// VERIFY RESET TOKEN - Check if token is valid
+// ═══════════════════════════════════════════════════════════════════════════
+
+export async function verifyResetToken(req, res) {
+  const { token } = req.params;
+
+  if (!token) {
+    return res.status(400).json({
+      success: false,
+      message: "Token is required."
+    });
+  }
+
+  // Hash the provided token for comparison
+  const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+
+  // Find valid token
+  const tokenResult = await sql(
+    `SELECT rt.expires_at, rt.used_at, u.email
+     FROM password_reset_tokens rt
+     JOIN users u ON rt.user_id = u.id
+     WHERE rt.token = $1`,
+    [tokenHash]
+  );
+
+  const resetRecord = tokenResult.rows[0];
+
+  if (!resetRecord) {
+    return res.status(400).json({
+      success: false,
+      valid: false,
+      message: "Invalid reset token."
+    });
+  }
+
+  if (resetRecord.used_at) {
+    return res.status(400).json({
+      success: false,
+      valid: false,
+      message: "This reset token has already been used."
+    });
+  }
+
+  if (new Date(resetRecord.expires_at) < new Date()) {
+    return res.status(400).json({
+      success: false,
+      valid: false,
+      message: "Reset token has expired."
+    });
+  }
+
+  return res.json({
+    success: true,
+    valid: true,
+    email: resetRecord.email,
+    message: "Token is valid."
   });
 }

@@ -701,3 +701,11 @@ function calculateOverallGrade(consistencyScore, riskMeter, portfolioHealth, win
 
   return { overallScore, grade };
 }
+
+// UPDATE INDIAN STOCK TRADE (stub - full implementation pending)
+export async function updateIndianStock(req, res) {
+  return res.status(501).json({
+    success: false,
+    message: "Update trade endpoint not yet implemented. Use exit position instead."
+  });
+}

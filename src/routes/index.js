@@ -2,8 +2,19 @@ import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import { validateBody } from "../middleware/validate.js";
 import { requireAdmin, requireAuth } from "../middleware/auth.js";
-import { loginSchema, registerSchema } from "../modules/auth/auth.schema.js";
-import { login, register } from "../modules/auth/auth.controller.js";
+import { 
+  loginSchema, 
+  registerSchema, 
+  forgotPasswordSchema, 
+  resetPasswordSchema 
+} from "../modules/auth/auth.schema.js";
+import { 
+  login, 
+  register, 
+  forgotPassword, 
+  resetPassword, 
+  verifyResetToken 
+} from "../modules/auth/auth.controller.js";
 import {
   createUser,
   getPositions,
@@ -12,6 +23,22 @@ import {
   listUsers
 } from "../modules/admin/admin.controller.js";
 import { createUserSchema } from "../modules/admin/admin.schema.js";
+import {
+  getMarketHours,
+  getMarketHoursByType,
+  updateMarketHours,
+  checkMarketStatus,
+  getMarketHoursHistory
+} from "../modules/admin/market-hours.controller.js";
+import {
+  getMarketHolidays,
+  getMarketHolidayById,
+  createMarketHoliday,
+  updateMarketHoliday,
+  deleteMarketHoliday,
+  checkTodayHoliday,
+  bulkCreateHolidays
+} from "../modules/admin/market-holidays.controller.js";
 import {
   createTradeSchema,
   closeTradeSchema
@@ -75,7 +102,8 @@ import {
   getIndianStockPositions,
   getPositionDetails,
   exitPosition,
-  getPerformanceMetrics
+  getPerformanceMetrics,
+  updateIndianStock
 } from "../modules/stocks/indian-trade.controller.js";
 import {
   buyIndianStockSchema,
@@ -135,6 +163,9 @@ apiRouter.get("/health", (_req, res) => {
 
 apiRouter.post("/auth/login", loginLimiter, validateBody(loginSchema), login);
 apiRouter.post("/auth/register", loginLimiter, validateBody(registerSchema), register);
+apiRouter.post("/auth/forgot-password", loginLimiter, validateBody(forgotPasswordSchema), forgotPassword);
+apiRouter.post("/auth/reset-password", loginLimiter, validateBody(resetPasswordSchema), resetPassword);
+apiRouter.get("/auth/verify-reset-token/:token", verifyResetToken);
 
 // Crypto price endpoints (public, rate limited)
 apiRouter.get("/crypto/prices", cryptoPriceLimiter, getAllPrices);
@@ -208,6 +239,7 @@ apiRouter.get("/stocks/in/batch", getIndianStocksBatch);
 
 apiRouter.post("/stocks/in/trade/buy", requireAuth, validateBody(buyIndianStockSchema), buyIndianStock);
 apiRouter.post("/stocks/in/trade/sell", requireAuth, validateBody(sellIndianStockSchema), sellIndianStock);
+apiRouter.put("/stocks/in/trade/update", requireAuth, updateIndianStock);
 apiRouter.get("/stocks/in/positions", requireAuth, getIndianStockPositions);
 apiRouter.get("/stocks/in/positions/:positionId", requireAuth, getPositionDetails);
 apiRouter.post("/stocks/in/positions/:positionId/exit", requireAuth, validateBody(exitPositionSchema), exitPosition);
@@ -276,3 +308,22 @@ apiRouter.get("/admin/positions", requireAuth, requireAdmin, getPositions);
 apiRouter.get("/admin/trades", requireAuth, requireAdmin, listTrades);
 apiRouter.post("/admin/trades", requireAuth, requireAdmin, validateBody(createTradeSchema), createTrade);
 apiRouter.patch("/admin/trades/:id/close", requireAuth, requireAdmin, validateBody(closeTradeSchema), closeTrade);
+
+// Market Hours Management (Admin)
+apiRouter.get("/admin/market-hours", requireAuth, requireAdmin, getMarketHours);
+apiRouter.get("/admin/market-hours/:marketType", requireAuth, requireAdmin, getMarketHoursByType);
+apiRouter.put("/admin/market-hours/:id", requireAuth, requireAdmin, updateMarketHours);
+apiRouter.get("/admin/market-hours/:id/history", requireAuth, requireAdmin, getMarketHoursHistory);
+
+// Market Holidays Management (Admin)
+apiRouter.get("/admin/market-holidays", requireAuth, requireAdmin, getMarketHolidays);
+apiRouter.get("/admin/market-holidays/:id", requireAuth, requireAdmin, getMarketHolidayById);
+apiRouter.post("/admin/market-holidays", requireAuth, requireAdmin, createMarketHoliday);
+apiRouter.put("/admin/market-holidays/:id", requireAuth, requireAdmin, updateMarketHoliday);
+apiRouter.delete("/admin/market-holidays/:id", requireAuth, requireAdmin, deleteMarketHoliday);
+apiRouter.post("/admin/market-holidays/bulk-create", requireAuth, requireAdmin, bulkCreateHolidays);
+
+// Market Status & Holidays (Public)
+apiRouter.get("/market-hours/status/:marketType", checkMarketStatus);
+apiRouter.get("/market-holidays/check/:marketType", checkTodayHoliday);
+apiRouter.get("/market-holidays/:marketType", getMarketHolidays);
