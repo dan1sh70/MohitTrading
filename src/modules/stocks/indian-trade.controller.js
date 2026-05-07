@@ -200,25 +200,16 @@ export async function sellIndianStock(req, res) {
     }
 
     const currentBalance = parseFloat(userResult.rows[0].balance);
-    const totalCost = marginUsed + charges;
+    const sellProceeds = quantity * entryPrice;
+    const netProceeds = sellProceeds - charges; // Only deduct charges, not margin
     
-    console.log(`[IndianTrade] Balance check - Current: ${currentBalance}, Required: ${totalCost}`);
+    console.log(`[IndianTrade] Sell calculation - Proceeds: ${sellProceeds}, Charges: ${charges}, Net: ${netProceeds}`);
 
-    // Check if user has sufficient balance
-    if (currentBalance < totalCost) {
-      console.log(`[IndianTrade] 400 - Insufficient balance`);
-      return res.status(400).json({ 
-        message: "Insufficient balance",
-        required: totalCost,
-        available: currentBalance 
-      });
-    }
-
-    // Deduct from user balance
-    console.log(`[IndianTrade] Deducting ${totalCost} from user ${userId} balance`);
+    // Add sell proceeds to user balance (selling gives money, doesn't cost money)
+    console.log(`[IndianTrade] Adding ${netProceeds} to user ${userId} balance`);
     await sql(
-      `UPDATE users SET balance = balance - $1 WHERE id = $2`,
-      [totalCost, userId]
+      `UPDATE users SET balance = balance + $1 WHERE id = $2`,
+      [netProceeds, userId]
     );
     console.log(`[IndianTrade] Balance updated successfully`);
 
@@ -281,8 +272,9 @@ export async function sellIndianStock(req, res) {
       timeFrame,
       marginUsed,
       charges,
-      totalCost,
-      remainingBalance: currentBalance - totalCost
+      sellProceeds,
+      netProceeds,
+      remainingBalance: currentBalance + netProceeds
     });
   } catch (error) {
     console.error(`[IndianTrade] ERROR - Full stack:`, error);
