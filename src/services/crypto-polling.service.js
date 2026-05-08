@@ -3,7 +3,8 @@ import { broadcastPriceUpdate } from "./websocket.service.js";
 
 const BINANCE_REST_API = "https://api.binance.com/api/v3";
 
-// Supported cryptocurrencies - 10 top cryptos by market cap
+// Supported cryptocurrencies - Top 10 by market cap (as per screenshot)
+// 1. BTC, 2. ETH, 3. USDT, 4. BNB, 5. XRP, 6. USDC, 7. SOL, 8. TRX, 9. DOGE, 10. HYPE
 const SUPPORTED_SYMBOLS = [
   "BTCUSDT",
   "ETHUSDT",
@@ -11,10 +12,22 @@ const SUPPORTED_SYMBOLS = [
   "SOLUSDT",
   "XRPUSDT",
   "TRXUSDT",
-  "ADAUSDT",
   "DOGEUSDT",
-  "LTCUSDT",
-  "MATICUSDT"
+  "HYPEUSDT"
+];
+
+// Top 10 ranked by market cap (fixed order matching the screenshot)
+const TOP_10_RANKED = [
+  { rank: 1, symbol: "BTCUSDT", name: "Bitcoin", shortSymbol: "BTC" },
+  { rank: 2, symbol: "ETHUSDT", name: "Ethereum", shortSymbol: "ETH" },
+  { rank: 3, symbol: "USDT", name: "Tether", shortSymbol: "USDT", isStablecoin: true },
+  { rank: 4, symbol: "BNBUSDT", name: "BNB", shortSymbol: "BNB" },
+  { rank: 5, symbol: "XRPUSDT", name: "XRP", shortSymbol: "XRP" },
+  { rank: 6, symbol: "USDC", name: "USDC", shortSymbol: "USDC", isStablecoin: true },
+  { rank: 7, symbol: "SOLUSDT", name: "Solana", shortSymbol: "SOL" },
+  { rank: 8, symbol: "TRXUSDT", name: "TRON", shortSymbol: "TRX" },
+  { rank: 9, symbol: "DOGEUSDT", name: "Dogecoin", shortSymbol: "DOGE" },
+  { rank: 10, symbol: "HYPEUSDT", name: "Hyperliquid", shortSymbol: "HYPE" }
 ];
 
 const POLLING_INTERVAL = 2000; // 2 seconds
@@ -126,7 +139,7 @@ async function cacheAllPrices(prices) {
 }
 
 /**
- * Cache all stats in Redis and get top 10 ranked by price change
+ * Cache all stats in Redis and get top 10 ranked by market cap (fixed order)
  */
 async function cacheAllStats(statsArray) {
   try {
@@ -140,8 +153,62 @@ async function cacheAllStats(statsArray) {
       await cacheSet(cacheKey, JSON.stringify(stats), STATS_CACHE_TTL);
     }
 
-    // Sort by price change percent (descending - winners first)
-    const top10 = statsArray
+    // Create stats lookup map
+    const statsMap = new Map();
+    for (const stats of statsArray) {
+      statsMap.set(stats.symbol, stats);
+    }
+
+    // Build top 10 ranked by market cap (fixed order from screenshot)
+    // 1. BTC, 2. ETH, 3. USDT, 4. BNB, 5. XRP, 6. USDC, 7. SOL, 8. TRX, 9. DOGE, 10. HYPE
+    const top10 = TOP_10_RANKED.map(item => {
+      const stats = statsMap.get(item.symbol);
+      if (stats) {
+        return {
+          rank: item.rank,
+          symbol: item.shortSymbol,
+          fullSymbol: item.symbol,
+          name: item.name,
+          price: parseFloat(stats.price),
+          priceChange: parseFloat(stats.priceChange),
+          priceChangePercent: parseFloat(stats.priceChangePercent),
+          highPrice: parseFloat(stats.highPrice),
+          lowPrice: parseFloat(stats.lowPrice),
+          volume: parseFloat(stats.volume),
+          quoteAssetVolume: parseFloat(stats.quoteAssetVolume),
+          timestamp: stats.timestamp
+        };
+      }
+      // For stablecoins or missing data, return basic info
+      if (item.isStablecoin) {
+        return {
+          rank: item.rank,
+          symbol: item.shortSymbol,
+          fullSymbol: item.symbol,
+          name: item.name,
+          price: 1.0,
+          priceChange: 0,
+          priceChangePercent: 0,
+          highPrice: 1.0,
+          lowPrice: 1.0,
+          volume: 0,
+          quoteAssetVolume: 0,
+          timestamp: Date.now()
+        };
+      }
+      return null;
+    }).filter(Boolean);
+
+    // Cache top 10 ranked by market cap
+    const top10Obj = {
+      data: top10,
+      count: top10.length,
+      timestamp: Date.now()
+    };
+    await cacheSet("crypto:top10:ranked", JSON.stringify(top10Obj), STATS_CACHE_TTL);
+
+    // Also cache top 10 by price change percent (for trending)
+    const top10Trending = statsArray
       .sort((a, b) => parseFloat(b.priceChangePercent) - parseFloat(a.priceChangePercent))
       .slice(0, 10)
       .map(s => ({
@@ -156,13 +223,11 @@ async function cacheAllStats(statsArray) {
         timestamp: s.timestamp
       }));
 
-    // Cache top 10
-    const top10Obj = {
-      data: top10,
-      count: top10.length,
+    await cacheSet("crypto:top10:trending", JSON.stringify({
+      data: top10Trending,
+      count: top10Trending.length,
       timestamp: Date.now()
-    };
-    await cacheSet("crypto:top10:ranked", JSON.stringify(top10Obj), STATS_CACHE_TTL);
+    }), STATS_CACHE_TTL);
 
     // Cache all stats together
     const allStatsObj = {
@@ -172,7 +237,7 @@ async function cacheAllStats(statsArray) {
     };
     await cacheSet("crypto:stats:all", JSON.stringify(allStatsObj), STATS_CACHE_TTL);
 
-    console.log(`[Polling] Cached top 10 ranked cryptos`);
+    console.log(`[Polling] Cached top 10 ranked by market cap`);
   } catch (error) {
     console.error("Error caching stats:", error.message);
   }

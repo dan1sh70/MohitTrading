@@ -94,7 +94,11 @@ import {
   getIndianStocks,
   getIndianStocksBatch,
   getIndianStockIntradayData,
-  getIndianStockDailyData
+  getIndianStockDailyData,
+  getLotSizeForSymbol,
+  getAllLotSizes,
+  validateLotSize,
+  getLotSizeStats as getLotStats
 } from "../modules/stocks/indian.controller.js";
 import {
   buyIndianStock,
@@ -217,6 +221,13 @@ apiRouter.get("/forex/chart/:from/:to", getForexChartHandler);
 apiRouter.get("/stocks/in", getIndianStocks);
 apiRouter.get("/stocks/in/top", getTopIndian);
 apiRouter.get("/stocks/in/batch", getIndianStocksBatch);
+
+// ========== INDIAN STOCKS LOT SIZE ENDPOINTS (PUBLIC) ==========
+// Free API for lot size management - No authentication required
+apiRouter.get("/stocks/in/lot-size/:symbol", getLotSizeForSymbol);
+apiRouter.get("/stocks/in/lot-sizes/all", getAllLotSizes);
+apiRouter.get("/stocks/in/lot-sizes/stats", getLotStats);
+apiRouter.get("/stocks/in/lot-sizes/validate", validateLotSize);
 
 // ========== INDIAN STOCK TRADING ENDPOINTS (AUTHENTICATED) ==========
 // 
