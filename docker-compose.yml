@@ -45,8 +45,8 @@ services:
       NODE_ENV: production
       PORT: 8808
 
-      DB_HOST: mysql
-      DB_PORT: 3306
+      DB_HOST: 72.62.192.34
+      DB_PORT: 8965
       DB_USER: mysql
       DB_PASSWORD: r1Wk6teTIRAsFp89tBNkkl30M3FosEEkn7cXyTPFtz74Jeqn5IfRMmhiq2gLoGQK
       DB_NAME: default
@@ -71,13 +71,7 @@ services:
     ports:
       - "8808:8808"
     healthcheck:
-      test:
-        [
-          "CMD",
-          "curl",
-          "-f",
-          "http://localhost:8808/api/health",
-        ]
+      test: ["CMD", "curl", "-f", "http://localhost:8808/api/health"]
       interval: 15s
       timeout: 5s
       retries: 5
