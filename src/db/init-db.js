@@ -13,6 +13,17 @@ export async function initDb() {
   const schema = await fs.readFile(schemaPath, "utf8");
   await sql(schema);
 
+  // Fix: Ensure trading_type column exists in trades table
+  try {
+    await sql(`ALTER TABLE trades ADD COLUMN trading_type ENUM('indian_stock', 'crypto', 'other') NOT NULL DEFAULT 'crypto'`);
+    console.log("[DB Init] Added trading_type column to trades table");
+  } catch (error) {
+    // Column already exists or other error - ignore
+    if (error.code !== 'ER_DUP_FIELDNAME' && !error.message?.includes('Duplicate')) {
+      console.log("[DB Init] trading_type column check:", error.message);
+    }
+  }
+
   const passwordHash = await bcrypt.hash(env.adminPassword, 12);
   const traderPasswordHash = await bcrypt.hash(env.traderPassword, 12);
 

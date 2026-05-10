@@ -171,25 +171,46 @@ export async function getTopIndian(req, res) {
 }
 
 /**
+ * Check if Indian stock market is currently open
+ */
+function isIndianMarketOpen() {
+  const now = new Date();
+  const istTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+  const hours = istTime.getHours();
+  const minutes = istTime.getMinutes();
+  const day = istTime.getDay(); // 0 = Sunday, 6 = Saturday
+  
+  // Weekend check
+  if (day === 0 || day === 6) return false;
+  
+  // Market hours: 9:15 AM - 3:30 PM IST
+  const marketOpen = hours * 60 + minutes >= 9 * 60 + 15;  // 9:15
+  const marketClose = hours * 60 + minutes <= 15 * 60 + 30; // 15:30
+  
+  return marketOpen && marketClose;
+}
+
+/**
  * Static fallback data for individual Indian stock price (no random values)
  */
 function getStaticIndianStockPrice(symbol) {
+  const marketOpen = isIndianMarketOpen();
   const staticPrices = {
-    "INFY": { symbol: "INFY", name: "Infosys Limited", exchange: "NSE", price: 1580.50, change: 15.25, changePercent: 0.97, volume: 8500000, timestamp: Date.now(), source: "Static" },
-    "TCS": { symbol: "TCS", name: "Tata Consultancy Services", exchange: "NSE", price: 3650.25, change: -22.50, changePercent: -0.61, volume: 12000000, timestamp: Date.now(), source: "Static" },
-    "RELIANCE": { symbol: "RELIANCE", name: "Reliance Industries", exchange: "NSE", price: 2850.75, change: 35.80, changePercent: 1.27, volume: 15000000, timestamp: Date.now(), source: "Static" },
-    "HDFC": { symbol: "HDFC", name: "HDFC Bank", exchange: "NSE", price: 1680.30, change: 8.45, changePercent: 0.51, volume: 9800000, timestamp: Date.now(), source: "Static" },
-    "ICICIBANK": { symbol: "ICICIBANK", name: "ICICI Bank", exchange: "NSE", price: 950.60, change: -5.20, changePercent: -0.54, volume: 11200000, timestamp: Date.now(), source: "Static" },
-    "SBIN": { symbol: "SBIN", name: "State Bank of India", exchange: "NSE", price: 620.45, change: 12.30, changePercent: 2.02, volume: 18500000, timestamp: Date.now(), source: "Static" },
-    "WIPRO": { symbol: "WIPRO", name: "Wipro Limited", exchange: "NSE", price: 420.80, change: -3.15, changePercent: -0.74, volume: 6500000, timestamp: Date.now(), source: "Static" },
-    "MARUTI": { symbol: "MARUTI", name: "Maruti Suzuki", exchange: "NSE", price: 9850.25, change: 125.50, changePercent: 1.29, volume: 3200000, timestamp: Date.now(), source: "Static" },
-    "BAJAJFINSV": { symbol: "BAJAJFINSV", name: "Bajaj Finserv", exchange: "NSE", price: 1450.90, change: 18.75, changePercent: 1.31, volume: 2800000, timestamp: Date.now(), source: "Static" },
-    "LT": { symbol: "LT", name: "Larsen & Toubro", exchange: "NSE", price: 3200.15, change: -28.90, changePercent: -0.89, volume: 4500000, timestamp: Date.now(), source: "Static" },
-    "HINDUNILVR": { symbol: "HINDUNILVR", name: "Hindustan Unilever", exchange: "NSE", price: 2650.40, change: 22.80, changePercent: 0.87, volume: 2100000, timestamp: Date.now(), source: "Static" },
-    "SUNPHARMA": { symbol: "SUNPHARMA", name: "Sun Pharmaceutical", exchange: "NSE", price: 980.75, change: -8.30, changePercent: -0.84, volume: 5600000, timestamp: Date.now(), source: "Static" },
-    "ADANIGREEN": { symbol: "ADANIGREEN", name: "Adani Green Energy", exchange: "NSE", price: 1850.60, change: 45.20, changePercent: 2.51, volume: 3900000, timestamp: Date.now(), source: "Static" },
-    "BHARTIARTL": { symbol: "BHARTIARTL", name: "Bharti Airtel", exchange: "NSE", price: 890.30, change: 6.70, changePercent: 0.76, volume: 8700000, timestamp: Date.now(), source: "Static" },
-    "HDFCBANK": { symbol: "HDFCBANK", name: "HDFC Bank", exchange: "NSE", price: 1920.75, change: 15.60, changePercent: 0.82, volume: 10500000, timestamp: Date.now(), source: "Static" }
+    "INFY": { symbol: "INFY", name: "Infosys Limited", exchange: "NSE", price: 1580.50, change: 15.25, changePercent: 0.97, volume: 8500000, timestamp: Date.now(), source: marketOpen ? "Static (API Error)" : "Static (Market Closed)", marketOpen: marketOpen, isStale: true, lastUpdated: "Previous close" },
+    "TCS": { symbol: "TCS", name: "Tata Consultancy Services", exchange: "NSE", price: 3650.25, change: -22.50, changePercent: -0.61, volume: 12000000, timestamp: Date.now(), source: marketOpen ? "Static (API Error)" : "Static (Market Closed)", marketOpen: marketOpen, isStale: true, lastUpdated: "Previous close" },
+    "RELIANCE": { symbol: "RELIANCE", name: "Reliance Industries", exchange: "NSE", price: 2850.75, change: 35.80, changePercent: 1.27, volume: 15000000, timestamp: Date.now(), source: marketOpen ? "Static (API Error)" : "Static (Market Closed)", marketOpen: marketOpen, isStale: true, lastUpdated: "Previous close" },
+    "HDFC": { symbol: "HDFC", name: "HDFC Bank", exchange: "NSE", price: 1680.30, change: 8.45, changePercent: 0.51, volume: 9800000, timestamp: Date.now(), source: marketOpen ? "Static (API Error)" : "Static (Market Closed)", marketOpen: marketOpen, isStale: true, lastUpdated: "Previous close" },
+    "ICICIBANK": { symbol: "ICICIBANK", name: "ICICI Bank", exchange: "NSE", price: 950.60, change: -5.20, changePercent: -0.54, volume: 11200000, timestamp: Date.now(), source: marketOpen ? "Static (API Error)" : "Static (Market Closed)", marketOpen: marketOpen, isStale: true, lastUpdated: "Previous close" },
+    "SBIN": { symbol: "SBIN", name: "State Bank of India", exchange: "NSE", price: 620.45, change: 12.30, changePercent: 2.02, volume: 18500000, timestamp: Date.now(), source: marketOpen ? "Static (API Error)" : "Static (Market Closed)", marketOpen: marketOpen, isStale: true, lastUpdated: "Previous close" },
+    "WIPRO": { symbol: "WIPRO", name: "Wipro Limited", exchange: "NSE", price: 420.80, change: -3.15, changePercent: -0.74, volume: 6500000, timestamp: Date.now(), source: marketOpen ? "Static (API Error)" : "Static (Market Closed)", marketOpen: marketOpen, isStale: true, lastUpdated: "Previous close" },
+    "MARUTI": { symbol: "MARUTI", name: "Maruti Suzuki", exchange: "NSE", price: 9850.25, change: 125.50, changePercent: 1.29, volume: 3200000, timestamp: Date.now(), source: marketOpen ? "Static (API Error)" : "Static (Market Closed)", marketOpen: marketOpen, isStale: true, lastUpdated: "Previous close" },
+    "BAJAJFINSV": { symbol: "BAJAJFINSV", name: "Bajaj Finserv", exchange: "NSE", price: 1450.90, change: 18.75, changePercent: 1.31, volume: 2800000, timestamp: Date.now(), source: marketOpen ? "Static (API Error)" : "Static (Market Closed)", marketOpen: marketOpen, isStale: true, lastUpdated: "Previous close" },
+    "LT": { symbol: "LT", name: "Larsen & Toubro", exchange: "NSE", price: 3200.15, change: -28.90, changePercent: -0.89, volume: 4500000, timestamp: Date.now(), source: marketOpen ? "Static (API Error)" : "Static (Market Closed)", marketOpen: marketOpen, isStale: true, lastUpdated: "Previous close" },
+    "HINDUNILVR": { symbol: "HINDUNILVR", name: "Hindustan Unilever", exchange: "NSE", price: 2650.40, change: 22.80, changePercent: 0.87, volume: 2100000, timestamp: Date.now(), source: marketOpen ? "Static (API Error)" : "Static (Market Closed)", marketOpen: marketOpen, isStale: true, lastUpdated: "Previous close" },
+    "SUNPHARMA": { symbol: "SUNPHARMA", name: "Sun Pharmaceutical", exchange: "NSE", price: 980.75, change: -8.30, changePercent: -0.84, volume: 5600000, timestamp: Date.now(), source: marketOpen ? "Static (API Error)" : "Static (Market Closed)", marketOpen: marketOpen, isStale: true, lastUpdated: "Previous close" },
+    "ADANIGREEN": { symbol: "ADANIGREEN", name: "Adani Green Energy", exchange: "NSE", price: 1850.60, change: 45.20, changePercent: 2.51, volume: 3900000, timestamp: Date.now(), source: marketOpen ? "Static (API Error)" : "Static (Market Closed)", marketOpen: marketOpen, isStale: true, lastUpdated: "Previous close" },
+    "BHARTIARTL": { symbol: "BHARTIARTL", name: "Bharti Airtel", exchange: "NSE", price: 890.30, change: 6.70, changePercent: 0.76, volume: 8700000, timestamp: Date.now(), source: marketOpen ? "Static (API Error)" : "Static (Market Closed)", marketOpen: marketOpen, isStale: true, lastUpdated: "Previous close" },
+    "HDFCBANK": { symbol: "HDFCBANK", name: "HDFC Bank", exchange: "NSE", price: 1920.75, change: 15.60, changePercent: 0.82, volume: 10500000, timestamp: Date.now(), source: marketOpen ? "Static (API Error)" : "Static (Market Closed)", marketOpen: marketOpen, isStale: true, lastUpdated: "Previous close" }
   };
 
   return staticPrices[symbol] || {
@@ -201,7 +222,10 @@ function getStaticIndianStockPrice(symbol) {
     changePercent: 0.00,
     volume: 1000000,
     timestamp: Date.now(),
-    source: "Static (Default)"
+    source: marketOpen ? "Static (API Error)" : "Static (Market Closed)",
+    marketOpen: marketOpen,
+    isStale: true,
+    lastUpdated: "Previous close"
   };
 }
 
@@ -236,11 +260,19 @@ function getStaticTopIndianStocks(sortBy = "volume") {
     stocks.sort((a, b) => (b.price || 0) - (a.price || 0));
   }
 
+  const marketOpen = isIndianMarketOpen();
+
   return {
     data: stocks.slice(0, 15),
     count: stocks.slice(0, 15).length,
     timestamp: Date.now(),
-    source: "Static (DhanHQ unavailable)"
+    source: marketOpen ? "Static (API Error)" : "Static (Market Closed)",
+    marketOpen: marketOpen,
+    isStale: true,
+    message: marketOpen
+      ? "Real-time data unavailable. Showing last known prices."
+      : "Market is closed. Showing previous close prices.",
+    lastUpdated: "Previous close"
   };
 }
 

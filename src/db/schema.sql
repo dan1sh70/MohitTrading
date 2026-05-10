@@ -76,6 +76,7 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 -- ===== GENERIC TRADES TABLE =====
+-- First, ensure the table exists with all columns
 CREATE TABLE IF NOT EXISTS trades (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
