@@ -10,8 +10,8 @@ import {
   calculateQuantity,
   calculateLots,
   validateLotMultiple,
-  getAllLotSizes,
-  getLotSizeStats
+  getAllLotSizes as getAllLotSizesFromService,
+  getLotSizeStats as getLotSizeStatsFromService
 } from "../../services/nse-lot-size.service.js";
 
 /**
@@ -307,7 +307,7 @@ export function getAllLotSizes(req, res) {
       const { getLotSizesByCategory } = require("../../services/nse-lot-size.service.js");
       lotSizes = getLotSizesByCategory(category);
     } else {
-      lotSizes = getAllLotSizes();
+      lotSizes = getAllLotSizesFromService();
     }
 
     res.json({
@@ -393,7 +393,7 @@ export function validateLotSize(req, res) {
  */
 export function getLotSizeStats(req, res) {
   try {
-    const stats = getLotSizeStats();
+    const stats = getLotSizeStatsFromService();
 
     res.json({
       success: true,
