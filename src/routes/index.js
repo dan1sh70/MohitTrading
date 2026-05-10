@@ -65,7 +65,11 @@ import {
   getTop10,
   getTrending,
   getTop10Ranked,
-  getAllStats
+  getAllStats,
+  getCryptoLotSize,
+  getAllCryptoLotSizes,
+  validateCryptoLotSize,
+  getCryptoLotSizeStats
 } from "../modules/crypto/crypto.controller.js";
 import {
   streamPrices,
@@ -175,6 +179,12 @@ apiRouter.get("/auth/verify-reset-token/:token", verifyResetToken);
 apiRouter.get("/crypto/prices", cryptoPriceLimiter, getAllPrices);
 apiRouter.get("/crypto/prices/:symbol", cryptoPriceLimiter, getPrice);
 apiRouter.get("/crypto/stats/:symbol", cryptoPriceLimiter, getCryptoStats);
+
+// Crypto lot size endpoints (public, rate limited) - Binance LOT_SIZE filters
+apiRouter.get("/crypto/lot-size/:symbol", cryptoPriceLimiter, getCryptoLotSize);
+apiRouter.get("/crypto/lot-sizes/all", cryptoPriceLimiter, getAllCryptoLotSizes);
+apiRouter.get("/crypto/lot-sizes/validate", cryptoPriceLimiter, validateCryptoLotSize);
+apiRouter.get("/crypto/lot-sizes/stats", cryptoPriceLimiter, getCryptoLotSizeStats);
 
 // Crypto streaming endpoints (real-time updates)
 apiRouter.get("/crypto/stream/prices", streamPrices);

@@ -3,16 +3,12 @@ import {
   getIndianStockIntraday,
   getIndianStockDaily,
   getTopIndianStocks,
-  getSupportedIndianStocks
+  getSupportedIndianStocks,
+  getLotSizeFromDhanHQ,
+  getAllLotSizesFromDhanHQ,
+  validateLotMultipleFromDhanHQ,
+  calculateQuantityFromDhanHQ
 } from "../../services/dhanhq.service.js";
-import {
-  getLotSize,
-  calculateQuantity,
-  calculateLots,
-  validateLotMultiple,
-  getAllLotSizes as getAllLotSizesFromService,
-  getLotSizeStats as getLotSizeStatsFromService
-} from "../../services/nse-lot-size.service.js";
 
 /**
  * Get Indian stock price
@@ -256,7 +252,7 @@ function getStaticTopIndianStocks(sortBy = "volume") {
  * Get lot size for a specific symbol
  * GET /stocks/in/lot-size/:symbol
  */
-export function getLotSizeForSymbol(req, res) {
+export async function getLotSizeForSymbol(req, res) {
   try {
     const { symbol } = req.params;
     const { lots } = req.query;
@@ -268,12 +264,12 @@ export function getLotSizeForSymbol(req, res) {
       });
     }
 
-    const lotInfo = getLotSize(symbol);
+    const lotInfo = await getLotSizeFromDhanHQ(symbol.toUpperCase());
 
     // If lots parameter provided, calculate quantity
     if (lots && !isNaN(parseInt(lots))) {
       const numLots = parseInt(lots);
-      lotInfo.calculatedQuantity = calculateQuantity(symbol, numLots);
+      lotInfo.calculatedQuantity = lotInfo.lotSize * numLots;
       lotInfo.requestedLots = numLots;
       lotInfo.totalValue = lotInfo.calculatedQuantity * (req.query.price || 0);
     }
@@ -282,7 +278,7 @@ export function getLotSizeForSymbol(req, res) {
       success: true,
       data: lotInfo,
       timestamp: Date.now(),
-      source: "NSE Lot Size Database"
+      source: lotInfo.source
     });
   } catch (error) {
     console.error("[LotSize] Error getting lot size:", error.message);
@@ -298,24 +294,20 @@ export function getLotSizeForSymbol(req, res) {
  * Get all lot sizes
  * GET /stocks/in/lot-sizes/all
  */
-export function getAllLotSizes(req, res) {
+export async function getAllLotSizes(req, res) {
   try {
-    const { category } = req.query;
+    const { segment } = req.query;
     
-    let lotSizes;
-    if (category) {
-      const { getLotSizesByCategory } = require("../../services/nse-lot-size.service.js");
-      lotSizes = getLotSizesByCategory(category);
-    } else {
-      lotSizes = getAllLotSizesFromService();
-    }
+    // Default to NSE_FNO segment, or use NSE_EQ for equity
+    const exchangeSegment = segment || "NSE_FNO";
+    const lotSizes = await getAllLotSizesFromDhanHQ(exchangeSegment);
 
     res.json({
       success: true,
       data: lotSizes,
       count: lotSizes.length,
       timestamp: Date.now(),
-      source: "NSE Lot Size Database"
+      source: "DhanHQ API"
     });
   } catch (error) {
     console.error("[LotSize] Error getting all lot sizes:", error.message);
@@ -331,7 +323,7 @@ export function getAllLotSizes(req, res) {
  * Validate lot size for trading
  * GET /stocks/in/lot-sizes/validate?symbol=RELIANCE&quantity=500
  */
-export function validateLotSize(req, res) {
+export async function validateLotSize(req, res) {
   try {
     const { symbol, quantity, lots } = req.query;
 
@@ -349,17 +341,17 @@ export function validateLotSize(req, res) {
       });
     }
 
-    const lotInfo = getLotSize(symbol);
+    const lotInfo = await getLotSizeFromDhanHQ(symbol.toUpperCase());
 
     let validation;
     if (quantity) {
-      validation = validateLotMultiple(symbol, parseInt(quantity));
+      validation = await validateLotMultipleFromDhanHQ(symbol.toUpperCase(), parseInt(quantity));
     } else {
       const numLots = parseInt(lots);
-      const calcQuantity = calculateQuantity(symbol, numLots);
+      const calcQuantity = lotInfo.lotSize * numLots;
       validation = {
         isValid: true,
-        symbol,
+        symbol: symbol.toUpperCase(),
         quantity: calcQuantity,
         lotSize: lotInfo.lotSize,
         lots: numLots,
@@ -375,7 +367,7 @@ export function validateLotSize(req, res) {
         lotInfo
       },
       timestamp: Date.now(),
-      source: "NSE Lot Size Database"
+      source: lotInfo.source
     });
   } catch (error) {
     console.error("[LotSize] Error validating lot size:", error.message);
@@ -391,15 +383,32 @@ export function validateLotSize(req, res) {
  * Get lot size statistics
  * GET /stocks/in/lot-sizes/stats
  */
-export function getLotSizeStats(req, res) {
+export async function getLotSizeStats(req, res) {
   try {
-    const stats = getLotSizeStatsFromService();
+    // Fetch all FNO instruments for statistics
+    const fnoInstruments = await getAllLotSizesFromDhanHQ("NSE_FNO");
+    
+    // Calculate statistics
+    const lotSizes = fnoInstruments.map(i => i.lotSize);
+    const stats = {
+      totalCount: fnoInstruments.length,
+      uniqueLotSizes: [...new Set(lotSizes)].sort((a, b) => a - b),
+      averageLotSize: lotSizes.length > 0 
+        ? Math.round(lotSizes.reduce((a, b) => a + b, 0) / lotSizes.length) 
+        : 0,
+      minLotSize: lotSizes.length > 0 ? Math.min(...lotSizes) : 0,
+      maxLotSize: lotSizes.length > 0 ? Math.max(...lotSizes) : 0,
+      categories: {
+        fno: fnoInstruments.length
+      },
+      source: "DhanHQ API"
+    };
 
     res.json({
       success: true,
       data: stats,
       timestamp: Date.now(),
-      source: "NSE Lot Size Database"
+      source: "DhanHQ API"
     });
   } catch (error) {
     console.error("[LotSize] Error getting lot size stats:", error.message);

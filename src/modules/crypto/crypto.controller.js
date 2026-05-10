@@ -666,3 +666,181 @@ export async function getAllStats(req, res) {
     return res.status(500).json({ message: error.message });
   }
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CRYPTO LOT_SIZE API CONTROLLERS - Binance Integration
+// ═══════════════════════════════════════════════════════════════════════════
+
+import {
+  getCryptoLotSizeFromBinance,
+  getAllCryptoLotSizesFromBinance,
+  validateCryptoQuantityFromBinance,
+  roundCryptoQuantityToStepSize
+} from "../../services/crypto-polling.service.js";
+
+/**
+ * GET /api/crypto/lot-size/:symbol
+ * Get lot size (trading filters) for a specific crypto symbol
+ */
+export async function getCryptoLotSize(req, res) {
+  try {
+    const { symbol } = req.params;
+    const { quantity, price } = req.query;
+
+    if (!symbol) {
+      return res.status(400).json({
+        success: false,
+        message: "Symbol is required"
+      });
+    }
+
+    const lotInfo = await getCryptoLotSizeFromBinance(symbol);
+
+    // If quantity and price provided, validate them
+    if (quantity && price) {
+      const validation = await validateCryptoQuantityFromBinance(
+        symbol,
+        parseFloat(quantity),
+        parseFloat(price)
+      );
+      lotInfo.validation = validation;
+    }
+
+    res.json({
+      success: true,
+      data: lotInfo,
+      timestamp: Date.now(),
+      source: lotInfo.source
+    });
+  } catch (error) {
+    console.error("[CryptoLotSize] Error getting lot size:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Failed to get crypto lot size",
+      error: error.message
+    });
+  }
+}
+
+/**
+ * GET /api/crypto/lot-sizes/all
+ * Get all crypto lot sizes from Binance
+ */
+export async function getAllCryptoLotSizes(req, res) {
+  try {
+    const lotSizes = await getAllCryptoLotSizesFromBinance();
+
+    res.json({
+      success: true,
+      data: lotSizes,
+      count: lotSizes.length,
+      timestamp: Date.now(),
+      source: "Binance"
+    });
+  } catch (error) {
+    console.error("[CryptoLotSize] Error getting all lot sizes:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Failed to get crypto lot sizes",
+      error: error.message
+    });
+  }
+}
+
+/**
+ * GET /api/crypto/lot-sizes/validate
+ * Validate crypto quantity against Binance LOT_SIZE filters
+ */
+export async function validateCryptoLotSize(req, res) {
+  try {
+    const { symbol, quantity, price } = req.query;
+
+    if (!symbol) {
+      return res.status(400).json({
+        success: false,
+        message: "Symbol is required"
+      });
+    }
+
+    if (!quantity) {
+      return res.status(400).json({
+        success: false,
+        message: "Quantity parameter is required"
+      });
+    }
+
+    const validation = await validateCryptoQuantityFromBinance(
+      symbol,
+      parseFloat(quantity),
+      price ? parseFloat(price) : undefined
+    );
+
+    // If invalid due to step size, suggest correct quantity
+    if (!validation.isValid && validation.error === "STEP_SIZE") {
+      validation.suggestedQuantity = await roundCryptoQuantityToStepSize(
+        symbol,
+        parseFloat(quantity)
+      );
+    }
+
+    res.json({
+      success: true,
+      data: validation,
+      timestamp: Date.now(),
+      source: validation.lotInfo?.source || "Binance"
+    });
+  } catch (error) {
+    console.error("[CryptoLotSize] Error validating lot size:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Failed to validate crypto quantity",
+      error: error.message
+    });
+  }
+}
+
+/**
+ * GET /api/crypto/lot-sizes/stats
+ * Get crypto lot size statistics
+ */
+export async function getCryptoLotSizeStats(req, res) {
+  try {
+    const lotSizes = await getAllCryptoLotSizesFromBinance();
+    
+    // Calculate statistics for supported symbols
+    const supportedSymbols = ["BTC", "ETH", "BNB", "SOL", "XRP", "TRX", "DOGE", "HYPE"];
+    const supportedLotSizes = lotSizes.filter(l => supportedSymbols.includes(l.symbol));
+    
+    const stats = {
+      totalCount: lotSizes.length,
+      supportedCount: supportedLotSizes.length,
+      averageMinQty: supportedLotSizes.length > 0
+        ? supportedLotSizes.reduce((sum, l) => sum + l.minQty, 0) / supportedLotSizes.length
+        : 0,
+      averageMinNotional: supportedLotSizes.length > 0
+        ? supportedLotSizes.reduce((sum, l) => sum + l.minNotional, 0) / supportedLotSizes.length
+        : 0,
+      symbols: supportedLotSizes.map(l => ({
+        symbol: l.symbol,
+        minQty: l.minQty,
+        stepSize: l.stepSize,
+        minNotional: l.minNotional
+      })),
+      source: "Binance"
+    };
+
+    res.json({
+      success: true,
+      data: stats,
+      timestamp: Date.now(),
+      source: "Binance"
+    });
+  } catch (error) {
+    console.error("[CryptoLotSize] Error getting stats:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Failed to get crypto lot size statistics",
+      error: error.message
+    });
+  }
+}

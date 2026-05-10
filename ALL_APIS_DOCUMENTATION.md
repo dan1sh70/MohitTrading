@@ -3,7 +3,7 @@
 **Backend URL:** `http://localhost:8808`  
 **Version:** 2.3  
 **Status:** ✅ Production Ready  
-**Total Endpoints:** 71 ✨
+**Total Endpoints:** 79 ✨
 
 ---
 
@@ -27,7 +27,7 @@
 | 70  | `/api/auth/reset-password`    | POST   | ❌   | 5/min      | Reset password         |
 | 71  | `/api/auth/verify-reset-token/:token` | GET | ❌   | 10/min     | Verify reset token     |
 
-### 💹 Crypto APIs (16)
+### 💹 Crypto APIs (20)
 
 | #   | Endpoint                         | Method | Auth | Rate Limit | Purpose                |
 | --- | -------------------------------- | ------ | ---- | ---------- | ---------------------- |
@@ -46,6 +46,10 @@
 | 14  | `/api/crypto/sell`               | POST   | ✅   | 5/min      | Sell order             |
 | 15  | `/api/crypto/portfolio`          | GET    | ✅   | -          | Portfolio & holdings   |
 | 16  | `/api/crypto/trades`             | GET    | ✅   | -          | Trade history          |
+| 76  | `/api/crypto/lot-size/:symbol`    | GET    | ❌   | 30/min     | Get LOT_SIZE filters   |
+| 77  | `/api/crypto/lot-sizes/all`      | GET    | ❌   | 30/min     | All LOT_SIZE filters   |
+| 78  | `/api/crypto/lot-sizes/validate` | GET    | ❌   | 30/min     | Validate quantity      |
+| 79  | `/api/crypto/lot-sizes/stats`    | GET    | ❌   | 30/min     | LOT_SIZE statistics    |
 
 ### 🇺🇸 US Stocks APIs (5 - Alpha Vantage)
 
@@ -120,6 +124,15 @@
 | 53  | `/api/stocks/in/positions/:id/exit`    | POST   | ✅   | 5/min      | Exit position              |
 | 54  | `/api/stocks/in/performance`           | GET    | ✅   | -          | Performance metrics        |
 
+### 📦 Indian Stock Lot Size APIs (4) - DhanHQ
+
+| #   | Endpoint                               | Method | Auth | Rate Limit | Purpose                    |
+| --- | -------------------------------------- | ------ | ---- | ---------- | -------------------------- |
+| 72  | `/api/stocks/in/lot-size/:symbol`       | GET    | ❌   | 30/min     | Get lot size for symbol    |
+| 73  | `/api/stocks/in/lot-sizes/all`         | GET    | ❌   | 30/min     | Get all lot sizes          |
+| 74  | `/api/stocks/in/lot-sizes/validate`    | GET    | ❌   | 30/min     | Validate lot multiple      |
+| 75  | `/api/stocks/in/lot-sizes/stats`       | GET    | ❌   | 30/min     | Lot size statistics        |
+
 ### ⏰ Market Hours APIs (6)
 
 | #   | Endpoint                               | Method | Auth | Rate Limit | Purpose                    |
@@ -184,6 +197,21 @@
 - ✅ Top stocks ranking (by volume, price change, price)
 - ✅ Mock data fallback for free tier
 
+**📦 Lot Size API (New):**
+
+- ✅ **Real NSE F&O lot sizes** via DhanHQ Instrument API
+- ✅ **Dynamic lot size lookup** for 200+ F&O instruments
+- ✅ **Lot validation** - ensures quantity is multiple of lot size
+- ✅ **Lot-to-quantity conversion** - calculate shares from lots
+- ✅ **Redis caching** - 24-hour cache for lot sizes (they rarely change)
+- ✅ **Fallback to equity** (lot size = 1) if symbol not found in F&O
+
+**API Endpoints:**
+- `GET /api/stocks/in/lot-size/:symbol` - Get lot size for any symbol
+- `GET /api/stocks/in/lot-sizes/all` - Get all F&O lot sizes
+- `GET /api/stocks/in/lot-sizes/validate` - Validate quantity/lots
+- `GET /api/stocks/in/lot-sizes/stats` - Statistics on lot sizes
+
 ---
 
 ### 💹 Binance Service (Cryptocurrencies - Real-time)
@@ -198,6 +226,35 @@
 - ✅ Historical OHLCV data
 - ⚡ **Redis Caching:** Auto-update every 2 seconds
 - ✅ Top 3 famous, Top 10 trending, Top 10 ranked (cached)
+
+**📦 LOT_SIZE Filters (New):**
+
+- ✅ **Real Binance LOT_SIZE filters** via exchangeInfo API
+- ✅ **minQty/maxQty validation** - Ensures quantity is within limits
+- ✅ **stepSize validation** - Quantity must be multiple of step size
+- ✅ **minNotional validation** - Minimum order value (typically $10 USDT)
+- ✅ **Auto-rounding** - Rounds quantity to valid step size
+- ✅ **Redis caching** - 24-hour cache for exchange info (rarely changes)
+
+**API Endpoints:**
+- `GET /api/crypto/lot-size/:symbol` - Get LOT_SIZE filters for symbol
+- `GET /api/crypto/lot-sizes/all` - Get all LOT_SIZE filters
+- `GET /api/crypto/lot-sizes/validate` - Validate quantity against filters
+- `GET /api/crypto/lot-sizes/stats` - Statistics on LOT_SIZE filters
+
+**Example LOT_SIZE Response:**
+```json
+{
+  "symbol": "BTC",
+  "binanceSymbol": "BTCUSDT",
+  "minQty": 0.00001,
+  "maxQty": 9000.0,
+  "stepSize": 0.00001,
+  "minNotional": 10,
+  "precision": 5,
+  "source": "Binance"
+}
+```
 
 ---
 

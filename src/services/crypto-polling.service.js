@@ -309,3 +309,293 @@ export function stopPollingService() {
 export function isPollingActive() {
   return isPolling;
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BINANCE LOT_SIZE API - Crypto Trading Filters
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Cache for exchange info (LOT_SIZE filters)
+const EXCHANGE_INFO_CACHE_TTL = 86400; // 24 hours - filters rarely change
+let exchangeInfoCache = null;
+let exchangeInfoCacheTime = 0;
+
+/**
+ * Fetch exchange info from Binance (contains LOT_SIZE filters)
+ * Endpoint: GET /api/v3/exchangeInfo
+ */
+export async function fetchBinanceExchangeInfo() {
+  const cacheKey = "binance:exchange:info";
+  
+  try {
+    // Check memory cache first
+    const now = Date.now();
+    if (exchangeInfoCache && (now - exchangeInfoCacheTime) < EXCHANGE_INFO_CACHE_TTL * 1000) {
+      return exchangeInfoCache;
+    }
+    
+    // Check Redis cache
+    const cached = await redis.get(cacheKey);
+    if (cached) {
+      exchangeInfoCache = JSON.parse(cached);
+      exchangeInfoCacheTime = now;
+      return exchangeInfoCache;
+    }
+  } catch (error) {
+    console.warn("[Binance] Cache error for exchange info:", error.message);
+  }
+
+  try {
+    const response = await fetch(`${BINANCE_REST_API}/exchangeInfo`);
+    
+    if (!response.ok) {
+      throw new Error(`Binance API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    // Cache the results
+    try {
+      await cacheSet(cacheKey, JSON.stringify(data), EXCHANGE_INFO_CACHE_TTL);
+      exchangeInfoCache = data;
+      exchangeInfoCacheTime = Date.now();
+    } catch (cacheError) {
+      console.warn("[Binance] Failed to cache exchange info:", cacheError.message);
+    }
+
+    return data;
+  } catch (error) {
+    console.error("[Binance] Error fetching exchange info:", error.message);
+    return null;
+  }
+}
+
+/**
+ * Extract LOT_SIZE filter for a specific symbol
+ */
+function extractLotSizeFilter(symbolInfo) {
+  if (!symbolInfo || !symbolInfo.filters) return null;
+  
+  const lotSizeFilter = symbolInfo.filters.find(f => f.filterType === "LOT_SIZE");
+  if (!lotSizeFilter) return null;
+  
+  return {
+    minQty: parseFloat(lotSizeFilter.minQty),
+    maxQty: parseFloat(lotSizeFilter.maxQty),
+    stepSize: parseFloat(lotSizeFilter.stepSize)
+  };
+}
+
+/**
+ * Extract MIN_NOTIONAL filter for a specific symbol
+ */
+function extractMinNotionalFilter(symbolInfo) {
+  if (!symbolInfo || !symbolInfo.filters) return null;
+  
+  const minNotionalFilter = symbolInfo.filters.find(f => f.filterType === "MIN_NOTIONAL");
+  if (!minNotionalFilter) return null;
+  
+  return {
+    minNotional: parseFloat(minNotionalFilter.minNotional)
+  };
+}
+
+/**
+ * Get lot size info for a specific crypto symbol from Binance
+ */
+export async function getCryptoLotSizeFromBinance(symbol) {
+  try {
+    // Normalize symbol (add USDT suffix if needed)
+    const normalizedSymbol = symbol.toUpperCase().includes("USDT") 
+      ? symbol.toUpperCase() 
+      : `${symbol.toUpperCase()}USDT`;
+    
+    // Fetch exchange info if not cached
+    const exchangeInfo = await fetchBinanceExchangeInfo();
+    if (!exchangeInfo || !exchangeInfo.symbols) {
+      throw new Error("Failed to fetch exchange info");
+    }
+    
+    // Find symbol info
+    const symbolInfo = exchangeInfo.symbols.find(s => s.symbol === normalizedSymbol);
+    if (!symbolInfo) {
+      // Return default for unknown symbols
+      return {
+        symbol: symbol.toUpperCase(),
+        binanceSymbol: normalizedSymbol,
+        minQty: 0.00001,
+        maxQty: 1000000,
+        stepSize: 0.00001,
+        minNotional: 10,
+        precision: 5,
+        source: "Default",
+        isDefault: true
+      };
+    }
+    
+    // Extract filters
+    const lotSize = extractLotSizeFilter(symbolInfo);
+    const minNotional = extractMinNotionalFilter(symbolInfo);
+    
+    // Calculate precision from step size
+    const stepSizeStr = lotSize?.stepSize?.toString() || "0.00001";
+    const decimalPart = stepSizeStr.split(".")[1];
+    const precision = decimalPart ? decimalPart.length : 5;
+    
+    return {
+      symbol: symbol.toUpperCase(),
+      binanceSymbol: normalizedSymbol,
+      minQty: lotSize?.minQty || 0.00001,
+      maxQty: lotSize?.maxQty || 1000000,
+      stepSize: lotSize?.stepSize || 0.00001,
+      minNotional: minNotional?.minNotional || 10,
+      precision: precision,
+      status: symbolInfo.status,
+      source: "Binance",
+      isDefault: false
+    };
+  } catch (error) {
+    console.error(`[Binance] Error getting lot size for ${symbol}:`, error.message);
+    return {
+      symbol: symbol.toUpperCase(),
+      binanceSymbol: `${symbol.toUpperCase()}USDT`,
+      minQty: 0.00001,
+      maxQty: 1000000,
+      stepSize: 0.00001,
+      minNotional: 10,
+      precision: 5,
+      source: "Default",
+      isDefault: true
+    };
+  }
+}
+
+/**
+ * Get all crypto lot sizes from Binance
+ */
+export async function getAllCryptoLotSizesFromBinance() {
+  try {
+    const exchangeInfo = await fetchBinanceExchangeInfo();
+    if (!exchangeInfo || !exchangeInfo.symbols) {
+      return [];
+    }
+    
+    // Filter for USDT pairs only
+    const usdtSymbols = exchangeInfo.symbols.filter(s => 
+      s.symbol.endsWith("USDT") && s.status === "TRADING"
+    );
+    
+    return usdtSymbols.map(symbolInfo => {
+      const lotSize = extractLotSizeFilter(symbolInfo);
+      const minNotional = extractMinNotionalFilter(symbolInfo);
+      
+      return {
+        symbol: symbolInfo.symbol.replace("USDT", ""),
+        binanceSymbol: symbolInfo.symbol,
+        minQty: lotSize?.minQty || 0.00001,
+        maxQty: lotSize?.maxQty || 1000000,
+        stepSize: lotSize?.stepSize || 0.00001,
+        minNotional: minNotional?.minNotional || 10,
+        baseAsset: symbolInfo.baseAsset,
+        quoteAsset: symbolInfo.quoteAsset
+      };
+    });
+  } catch (error) {
+    console.error("[Binance] Error getting all crypto lot sizes:", error.message);
+    return [];
+  }
+}
+
+/**
+ * Validate crypto quantity using Binance LOT_SIZE filter
+ */
+export async function validateCryptoQuantityFromBinance(symbol, quantity, price) {
+  const lotInfo = await getCryptoLotSizeFromBinance(symbol);
+  
+  const qty = parseFloat(quantity);
+  const prc = parseFloat(price) || 0;
+  const notional = qty * prc;
+  
+  // Check minimum quantity
+  if (qty < lotInfo.minQty) {
+    return {
+      isValid: false,
+      symbol,
+      quantity: qty,
+      error: "MIN_QTY",
+      message: `Minimum quantity is ${lotInfo.minQty} ${lotInfo.symbol}`,
+      lotInfo
+    };
+  }
+  
+  // Check maximum quantity
+  if (qty > lotInfo.maxQty) {
+    return {
+      isValid: false,
+      symbol,
+      quantity: qty,
+      error: "MAX_QTY",
+      message: `Maximum quantity is ${lotInfo.maxQty} ${lotInfo.symbol}`,
+      lotInfo
+    };
+  }
+  
+  // Check step size (quantity must be multiple of step size)
+  const remainder = qty % lotInfo.stepSize;
+  if (remainder > 0.00000001) { // Allow tiny floating point errors
+    // Calculate nearest valid quantity
+    const validQty = Math.floor(qty / lotInfo.stepSize) * lotInfo.stepSize;
+    return {
+      isValid: false,
+      symbol,
+      quantity: qty,
+      error: "STEP_SIZE",
+      message: `Quantity must be multiple of ${lotInfo.stepSize}`,
+      suggestedQuantity: validQty,
+      lotInfo
+    };
+  }
+  
+  // Check minimum notional value
+  if (prc > 0 && notional < lotInfo.minNotional) {
+    return {
+      isValid: false,
+      symbol,
+      quantity: qty,
+      notional,
+      error: "MIN_NOTIONAL",
+      message: `Minimum order value is ${lotInfo.minNotional} USDT`,
+      lotInfo
+    };
+  }
+  
+  return {
+    isValid: true,
+    symbol,
+    quantity: qty,
+    notional,
+    message: `Valid quantity: ${qty.toFixed(lotInfo.precision)} ${lotInfo.symbol}`,
+    lotInfo
+  };
+}
+
+/**
+ * Round quantity to valid step size
+ */
+export async function roundCryptoQuantityToStepSize(symbol, quantity) {
+  const lotInfo = await getCryptoLotSizeFromBinance(symbol);
+  const stepSize = lotInfo.stepSize;
+  
+  // Round down to nearest step size multiple
+  const steps = Math.floor(quantity / stepSize);
+  const rounded = steps * stepSize;
+  
+  // Format to correct precision
+  return parseFloat(rounded.toFixed(lotInfo.precision));
+}
+
+/**
+ * Format quantity for display
+ */
+export function formatCryptoQuantity(quantity, precision = 5) {
+  return parseFloat(quantity.toFixed(precision));
+}
