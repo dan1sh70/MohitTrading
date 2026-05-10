@@ -352,18 +352,23 @@ export async function fetchDhanHQInstruments(exchangeSegment = "NSE_FNO") {
   const cacheKey = `dhanhq:instruments:${exchangeSegment}`;
   
   try {
-    // Check memory cache first
+    // Check memory cache first - only if it has data
     const now = Date.now();
-    if (instrumentCache && (now - instrumentCacheTime) < LOT_SIZE_CACHE_TTL * 1000) {
+    if (instrumentCache && instrumentCache.length > 0 && (now - instrumentCacheTime) < LOT_SIZE_CACHE_TTL * 1000) {
+      console.log(`[DhanHQ] Returning ${instrumentCache.length} instruments from memory cache`);
       return instrumentCache;
     }
     
-    // Check Redis cache
+    // Check Redis cache - only if it has data
     const cached = await cacheGet(cacheKey);
     if (cached) {
-      instrumentCache = JSON.parse(cached);
-      instrumentCacheTime = now;
-      return instrumentCache;
+      const parsed = JSON.parse(cached);
+      if (parsed && parsed.length > 0) {
+        instrumentCache = parsed;
+        instrumentCacheTime = now;
+        console.log(`[DhanHQ] Returning ${parsed.length} instruments from Redis cache`);
+        return instrumentCache;
+      }
     }
   } catch (error) {
     console.warn("[DhanHQ] Cache error for instruments:", error.message);
@@ -373,6 +378,9 @@ export async function fetchDhanHQInstruments(exchangeSegment = "NSE_FNO") {
     // DhanHQ Instrument API - returns CSV data
     const url = `${DHANHQ_BASE_URL}/instrument/${exchangeSegment}`;
     
+    console.log(`[DhanHQ] Fetching instruments from: ${url}`);
+    console.log(`[DhanHQ] API Key: ${DHANHQ_API_KEY.substring(0, 10)}...`);
+    
     const response = await fetch(url, {
       headers: {
         "Authorization": `Bearer ${DHANHQ_API_KEY}`,
@@ -380,29 +388,110 @@ export async function fetchDhanHQInstruments(exchangeSegment = "NSE_FNO") {
       }
     });
 
+    console.log(`[DhanHQ] Response status: ${response.status}`);
+
     if (!response.ok) {
-      throw new Error(`DhanHQ API error: ${response.status}`);
+      const errorText = await response.text();
+      console.error(`[DhanHQ] API error response: ${errorText}`);
+      throw new Error(`DhanHQ API error: ${response.status} - ${errorText}`);
     }
 
     const csvData = await response.text();
+    console.log(`[DhanHQ] Received CSV data length: ${csvData.length} chars`);
+    console.log(`[DhanHQ] CSV preview: ${csvData.substring(0, 200)}...`);
     
     // Parse CSV and extract lot sizes
     const instruments = parseDhanHQInstrumentCSV(csvData);
+    console.log(`[DhanHQ] Parsed ${instruments.length} instruments`);
     
-    // Cache the results
-    try {
-      await cacheSet(cacheKey, JSON.stringify(instruments), LOT_SIZE_CACHE_TTL);
-      instrumentCache = instruments;
-      instrumentCacheTime = Date.now();
-    } catch (cacheError) {
-      console.warn("[DhanHQ] Failed to cache instruments:", cacheError.message);
+    // Cache the results only if we have data
+    if (instruments && instruments.length > 0) {
+      try {
+        await cacheSet(cacheKey, JSON.stringify(instruments), LOT_SIZE_CACHE_TTL);
+        instrumentCache = instruments;
+        instrumentCacheTime = Date.now();
+        console.log(`[DhanHQ] Cached ${instruments.length} instruments`);
+      } catch (cacheError) {
+        console.warn("[DhanHQ] Failed to cache instruments:", cacheError.message);
+      }
+    } else {
+      console.warn("[DhanHQ] No instruments to cache, using fallback");
+      return getFallbackLotSizes();
     }
 
     return instruments;
   } catch (error) {
     console.error(`[DhanHQ] Error fetching instruments:`, error.message);
-    return [];
+    // Return fallback lot sizes for common NSE F&O symbols
+    console.log("[DhanHQ] Returning fallback lot sizes");
+    return getFallbackLotSizes();
   }
+}
+
+/**
+ * Fallback lot sizes for common NSE F&O symbols
+ * Used when DhanHQ API is unavailable
+ */
+function getFallbackLotSizes() {
+  return [
+    { symbol: "NIFTY", lotSize: 50, name: "Nifty 50", exchange: "NSE", segment: "FNO" },
+    { symbol: "BANKNIFTY", lotSize: 15, name: "Bank Nifty", exchange: "NSE", segment: "FNO" },
+    { symbol: "FINNIFTY", lotSize: 40, name: "Fin Nifty", exchange: "NSE", segment: "FNO" },
+    { symbol: "SENSEX", lotSize: 10, name: "Sensex", exchange: "BSE", segment: "FNO" },
+    { symbol: "BANKEX", lotSize: 15, name: "Bankex", exchange: "BSE", segment: "FNO" },
+    { symbol: "RELIANCE", lotSize: 250, name: "Reliance Industries", exchange: "NSE", segment: "FNO" },
+    { symbol: "TCS", lotSize: 175, name: "Tata Consultancy Services", exchange: "NSE", segment: "FNO" },
+    { symbol: "INFY", lotSize: 400, name: "Infosys", exchange: "NSE", segment: "FNO" },
+    { symbol: "HDFCBANK", lotSize: 550, name: "HDFC Bank", exchange: "NSE", segment: "FNO" },
+    { symbol: "ICICIBANK", lotSize: 700, name: "ICICI Bank", exchange: "NSE", segment: "FNO" },
+    { symbol: "SBIN", lotSize: 1500, name: "State Bank of India", exchange: "NSE", segment: "FNO" },
+    { symbol: "AXISBANK", lotSize: 625, name: "Axis Bank", exchange: "NSE", segment: "FNO" },
+    { symbol: "KOTAKBANK", lotSize: 400, name: "Kotak Mahindra Bank", exchange: "NSE", segment: "FNO" },
+    { symbol: "LT", lotSize: 300, name: "Larsen & Toubro", exchange: "NSE", segment: "FNO" },
+    { symbol: "ITC", lotSize: 1600, name: "ITC Limited", exchange: "NSE", segment: "FNO" },
+    { symbol: "HINDUNILVR", lotSize: 100, name: "Hindustan Unilever", exchange: "NSE", segment: "FNO" },
+    { symbol: "BAJFINANCE", lotSize: 125, name: "Bajaj Finance", exchange: "NSE", segment: "FNO" },
+    { symbol: "MARUTI", lotSize: 50, name: "Maruti Suzuki", exchange: "NSE", segment: "FNO" },
+    { symbol: "BHARTIARTL", lotSize: 950, name: "Bharti Airtel", exchange: "NSE", segment: "FNO" },
+    { symbol: "SUNPHARMA", lotSize: 700, name: "Sun Pharmaceutical", exchange: "NSE", segment: "FNO" },
+    { symbol: "ADANIENT", lotSize: 500, name: "Adani Enterprises", exchange: "NSE", segment: "FNO" },
+    { symbol: "ADANIPORTS", lotSize: 1000, name: "Adani Ports", exchange: "NSE", segment: "FNO" },
+    { symbol: "TATAMOTORS", lotSize: 1425, name: "Tata Motors", exchange: "NSE", segment: "FNO" },
+    { symbol: "ULTRACEMCO", lotSize: 100, name: "UltraTech Cement", exchange: "NSE", segment: "FNO" },
+    { symbol: "POWERGRID", lotSize: 4500, name: "Power Grid Corp", exchange: "NSE", segment: "FNO" },
+    { symbol: "NTPC", lotSize: 5700, name: "NTPC Limited", exchange: "NSE", segment: "FNO" },
+    { symbol: "ONGC", lotSize: 3850, name: "Oil & Natural Gas Corp", exchange: "NSE", segment: "FNO" },
+    { symbol: "COALINDIA", lotSize: 4200, name: "Coal India", exchange: "NSE", segment: "FNO" },
+    { symbol: "WIPRO", lotSize: 1000, name: "Wipro", exchange: "NSE", segment: "FNO" },
+    { symbol: "TECHM", lotSize: 1000, name: "Tech Mahindra", exchange: "NSE", segment: "FNO" },
+    { symbol: "HCLTECH", lotSize: 350, name: "HCL Technologies", exchange: "NSE", segment: "FNO" },
+    { symbol: "ASIANPAINT", lotSize: 200, name: "Asian Paints", exchange: "NSE", segment: "FNO" },
+    { symbol: "NESTLEIND", lotSize: 20, name: "Nestle India", exchange: "NSE", segment: "FNO" },
+    { symbol: "TITAN", lotSize: 350, name: "Titan Company", exchange: "NSE", segment: "FNO" },
+    { symbol: "JSWSTEEL", lotSize: 2500, name: "JSW Steel", exchange: "NSE", segment: "FNO" },
+    { symbol: "GRASIM", lotSize: 475, name: "Grasim Industries", exchange: "NSE", segment: "FNO" },
+    { symbol: "VEDL", lotSize: 6200, name: "Vedanta", exchange: "NSE", segment: "FNO" },
+    { symbol: "CIPLA", lotSize: 1300, name: "Cipla", exchange: "NSE", segment: "FNO" },
+    { symbol: "DRREDDY", lotSize: 100, name: "Dr Reddy's Labs", exchange: "NSE", segment: "FNO" },
+    { symbol: "EICHERMOT", lotSize: 70, name: "Eicher Motors", exchange: "NSE", segment: "FNO" },
+    { symbol: "DIVISLAB", lotSize: 150, name: "Divi's Labs", exchange: "NSE", segment: "FNO" },
+    { symbol: "SBILIFE", lotSize: 550, name: "SBI Life Insurance", exchange: "NSE", segment: "FNO" },
+    { symbol: "HDFCLIFE", lotSize: 1100, name: "HDFC Life", exchange: "NSE", segment: "FNO" },
+    { symbol: "BPCL", lotSize: 1800, name: "Bharat Petroleum", exchange: "NSE", segment: "FNO" },
+    { symbol: "IOC", lotSize: 4875, name: "Indian Oil Corp", exchange: "NSE", segment: "FNO" },
+    { symbol: "M&M", lotSize: 700, name: "Mahindra & Mahindra", exchange: "NSE", segment: "FNO" },
+    { symbol: "APOLLOHOSP", lotSize: 50, name: "Apollo Hospitals", exchange: "NSE", segment: "FNO" },
+    { symbol: "HEROMOTOCO", lotSize: 300, name: "Hero MotoCorp", exchange: "NSE", segment: "FNO" },
+    { symbol: "BRITANNIA", lotSize: 200, name: "Britannia Industries", exchange: "NSE", segment: "FNO" },
+    { symbol: "TATACONSUM", lotSize: 900, name: "Tata Consumer", exchange: "NSE", segment: "FNO" },
+    { symbol: "HINDALCO", lotSize: 2500, name: "Hindalco Industries", exchange: "NSE", segment: "FNO" },
+    { symbol: "TATSTEEL", lotSize: 4250, name: "Tata Steel", exchange: "NSE", segment: "FNO" },
+    { symbol: "MCDOWELL-N", lotSize: 250, name: "United Spirits", exchange: "NSE", segment: "FNO" },
+    { symbol: "DABUR", lotSize: 1250, name: "Dabur India", exchange: "NSE", segment: "FNO" },
+    { symbol: "INDUSINDBK", lotSize: 475, name: "IndusInd Bank", exchange: "NSE", segment: "FNO" },
+    { symbol: "BAJAJ-AUTO", lotSize: 125, name: "Bajaj Auto", exchange: "NSE", segment: "FNO" },
+    { symbol: "BAJAJFINSV", lotSize: 500, name: "Bajaj Finserv", exchange: "NSE", segment: "FNO" }
+  ];
 }
 
 /**
@@ -413,18 +502,38 @@ function parseDhanHQInstrumentCSV(csvData) {
   const instruments = [];
   const lines = csvData.trim().split("\n");
   
-  if (lines.length < 2) return instruments;
+  console.log(`[DhanHQ] CSV lines count: ${lines.length}`);
+  
+  if (lines.length < 2) {
+    console.warn("[DhanHQ] CSV has less than 2 lines (header + data)");
+    return instruments;
+  }
   
   // Parse header
   const headers = lines[0].split(",").map(h => h.trim().replace(/"/g, ""));
-  const symbolIdx = headers.indexOf("SEM_TRADING_SYMBOL");
-  const lotSizeIdx = headers.indexOf("SEM_LOT_UNITS");
-  const nameIdx = headers.indexOf("SEM_INSTRUMENT_NAME");
-  const exchangeIdx = headers.indexOf("SEM_EXM_EXCH_ID");
-  const segmentIdx = headers.indexOf("SEM_SEGMENT");
+  console.log(`[DhanHQ] CSV headers: ${headers.join(", ")}`);
+  
+  // DhanHQ API uses different column names - check for both old and new formats
+  const symbolIdx = headers.indexOf("SYMBOL_NAME") !== -1 
+    ? headers.indexOf("SYMBOL_NAME") 
+    : headers.indexOf("SEM_TRADING_SYMBOL");
+  const lotSizeIdx = headers.indexOf("LOT_SIZE") !== -1 
+    ? headers.indexOf("LOT_SIZE") 
+    : headers.indexOf("SEM_LOT_UNITS");
+  const nameIdx = headers.indexOf("DISPLAY_NAME") !== -1 
+    ? headers.indexOf("DISPLAY_NAME") 
+    : headers.indexOf("SEM_INSTRUMENT_NAME");
+  const exchangeIdx = headers.indexOf("EXCH_ID") !== -1 
+    ? headers.indexOf("EXCH_ID") 
+    : headers.indexOf("SEM_EXM_EXCH_ID");
+  const segmentIdx = headers.indexOf("SEGMENT") !== -1 
+    ? headers.indexOf("SEGMENT") 
+    : headers.indexOf("SEM_SEGMENT");
+  
+  console.log(`[DhanHQ] Column indices - symbol: ${symbolIdx}, lotSize: ${lotSizeIdx}, name: ${nameIdx}`);
   
   if (symbolIdx === -1 || lotSizeIdx === -1) {
-    console.warn("[DhanHQ] CSV missing required columns");
+    console.warn(`[DhanHQ] CSV missing required columns. Available: ${headers.join(", ")}`);
     return instruments;
   }
   

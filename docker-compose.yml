@@ -65,6 +65,7 @@ services:
       ENABLE_CRYPTO_POLLING: true
 
       ALPHA_VANTAGE_API_KEY: demo
+      # DHANHQ_API_KEY: YOUR_DHANHQ_API_KEY_HERE  # Get from https://dhanhq.co/dashboard - Replace "demo" with actual key
       DHANHQ_API_KEY: demo
       MARKETAUX_API_KEY: 7OSYVZ7vixIYPBAjNH5r8hYuskViy6SHwgbLpi3S
 
