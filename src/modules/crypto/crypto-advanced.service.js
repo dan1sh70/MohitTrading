@@ -217,12 +217,18 @@ export async function getTop3Famous() {
  * Get top 10 trending cryptocurrencies
  */
 export async function getTop10Trending() {
-  const cacheKey = "crypto:top10:trending";
+  // Changed cache key to v2 to invalidate old cache without name field
+  const cacheKey = "crypto:top10:trending:v2";
 
   try {
     const cached = await cacheGet(cacheKey);
     if (cached) {
-      return JSON.parse(cached);
+      const parsed = JSON.parse(cached);
+      // Check if data has name field, if not, skip cache
+      if (parsed.data && parsed.data.length > 0 && parsed.data[0].name) {
+        return parsed;
+      }
+      console.log('[getTop10Trending] Cache missing name field, fetching fresh data');
     }
   } catch (error) {
     console.warn(`Cache error for top 10:`, error.message);
@@ -240,10 +246,13 @@ export async function getTop10Trending() {
 
           const data = await response.json();
           const percentChange = parseFloat(data.priceChangePercent);
+          const name = getSymbolName(data.symbol);
+          
+          console.log(`[getTop10Trending] ${data.symbol} -> ${name}`);
 
           return {
             symbol: data.symbol,
-            name: getSymbolName(data.symbol),
+            name: name,
             currentPrice: parseFloat(data.lastPrice),
             priceChange: parseFloat(data.priceChange),
             priceChangePercent: percentChange,
@@ -269,9 +278,10 @@ export async function getTop10Trending() {
       timestamp: Date.now()
     };
 
-    // Cache with 30 second TTL
+    // Cache with 30 second TTL using new v2 key
     try {
       await cacheSet(cacheKey, JSON.stringify(result), 30);
+      console.log(`[getTop10Trending] Cached ${result.count} cryptos with names`);
     } catch (cacheError) {
       console.warn(`Failed to cache top 10:`, cacheError.message);
     }
@@ -330,19 +340,35 @@ export async function getTrendingCryptos(minPercentChange = 0) {
  * Helper function to get crypto name from symbol
  */
 function getSymbolName(symbol) {
+  if (!symbol) return "Unknown";
+  
+  // Normalize symbol - remove USDT or other suffixes and uppercase
+  const normalizedSymbol = symbol.toUpperCase().trim();
+  
   const names = {
     BTCUSDT: "Bitcoin",
+    BTC: "Bitcoin",
     ETHUSDT: "Ethereum",
+    ETH: "Ethereum",
     BNBUSDT: "Binance Coin",
+    BNB: "Binance Coin",
     SOLUSDT: "Solana",
+    SOL: "Solana",
     XRPUSDT: "XRP",
+    XRP: "XRP",
     TRXUSDT: "TRON",
+    TRX: "TRON",
     ADAUSDT: "Cardano",
+    ADA: "Cardano",
     DOGEUSDT: "Dogecoin",
+    DOGE: "Dogecoin",
     LTCUSDT: "Litecoin",
-    MATICUSDT: "Polygon"
+    LTC: "Litecoin",
+    MATICUSDT: "Polygon",
+    MATIC: "Polygon"
   };
-  return names[symbol] || symbol;
+  
+  return names[normalizedSymbol] || normalizedSymbol.replace("USDT", "").replace("USD", "");
 }
 
 /**
