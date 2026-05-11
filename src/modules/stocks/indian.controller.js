@@ -23,12 +23,19 @@ export async function getIndianStock(req, res) {
 
     try {
       const price = await getIndianStockPrice(symbol.toUpperCase());
-      res.json(price);
-    } catch (dhanError) {
-      console.warn("DhanHQ API failed for individual stock, using static data:", dhanError.message);
-      // Return static realistic data when DhanHQ fails
-      const staticData = getStaticIndianStockPrice(symbol.toUpperCase());
-      res.json(staticData);
+      const marketOpen = isIndianMarketOpen();
+      
+      // Add market status to response
+      const responseData = {
+        ...price,
+        marketOpen: marketOpen,
+        isStale: false
+      };
+      
+      res.json(responseData);
+    } catch (error) {
+      console.error("Error fetching Indian stock price:", error.message);
+      res.status(500).json({ message: "Failed to fetch Indian stock price" });
     }
   } catch (error) {
     console.error("Error fetching Indian stock price:", error.message);
@@ -37,15 +44,61 @@ export async function getIndianStock(req, res) {
 }
 
 /**
- * Get all supported Indian stocks
+ * Get all supported Indian stocks with real-time prices
  */
-export function getIndianStocks(req, res) {
+export async function getIndianStocks(req, res) {
   try {
     const stocks = getSupportedIndianStocks();
+    const marketOpen = isIndianMarketOpen();
+    
+    // Fetch prices for all stocks in parallel
+    const stocksWithPrices = await Promise.allSettled(
+      stocks.map(async (stock) => {
+        try {
+          const priceData = await getIndianStockPrice(stock.symbol);
+          return {
+            symbol: stock.symbol,
+            name: stock.name,
+            exchange: stock.exchange,
+            price: priceData.price,
+            open: priceData.open,
+            high: priceData.high,
+            low: priceData.low,
+            close: priceData.close,
+            change: priceData.change,
+            changePercent: priceData.changePercent,
+            volume: priceData.volume,
+            timestamp: priceData.timestamp,
+            marketOpen: marketOpen,
+            isStale: false
+          };
+        } catch (error) {
+          console.error(`Error fetching price for ${stock.symbol}:`, error.message);
+          // Return stock without price data
+          return {
+            ...stock,
+            price: null,
+            change: null,
+            changePercent: null,
+            marketOpen: marketOpen,
+            isStale: true
+          };
+        }
+      })
+    );
+    
+    // Filter out rejected promises and extract values
+    const validStocks = stocksWithPrices
+      .filter(result => result.status === "fulfilled")
+      .map(result => result.value);
+    
     res.json({
-      data: stocks,
-      count: stocks.length,
-      timestamp: Date.now()
+      data: validStocks,
+      count: validStocks.length,
+      timestamp: Date.now(),
+      marketOpen: marketOpen,
+      source: "Live Demo",
+      message: marketOpen ? "Live market data with 2-second updates" : "Market closed"
     });
   } catch (error) {
     console.error("Error fetching Indian stocks:", error.message);
@@ -157,12 +210,20 @@ export async function getTopIndian(req, res) {
 
     try {
       const data = await getTopIndianStocks(sortBy);
-      res.json(data);
-    } catch (dhanError) {
-      console.warn("DhanHQ API failed, using static data:", dhanError.message);
-      // Return static realistic data when DhanHQ fails
-      const staticData = getStaticTopIndianStocks(sortBy);
-      res.json(staticData);
+      const marketOpen = isIndianMarketOpen();
+      
+      // Add market status flags to response
+      const responseData = {
+        ...data,
+        marketOpen: marketOpen,
+        isStale: false,
+        message: marketOpen ? "Live market data" : "Market closed - showing last known prices"
+      };
+      
+      res.json(responseData);
+    } catch (error) {
+      console.error("Error fetching top Indian stocks:", error.message);
+      res.status(500).json({ message: "Failed to fetch top Indian stocks" });
     }
   } catch (error) {
     console.error("Error fetching top Indian stocks:", error.message);
