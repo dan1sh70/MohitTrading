@@ -79,6 +79,7 @@ import {
   buyTradeSchema,
   sellTradeSchema
 } from "../modules/crypto/crypto.schema.js";
+import cryptoOrdersRouter from "../modules/crypto/crypto-orders.routes.js";
 import {
   getUSStockPrice,
   getStocks,
@@ -206,6 +207,9 @@ apiRouter.post("/crypto/sell", requireAuth, cryptoTradingLimiter, validateBody(s
 apiRouter.get("/crypto/portfolio", requireAuth, getPortfolio);
 apiRouter.get("/crypto/closed-positions", requireAuth, getClosedPositions);
 apiRouter.get("/crypto/trades", requireAuth, getUserTrades);
+
+// Crypto Orders API (new trading system with matching engine)
+apiRouter.use("/crypto", cryptoOrdersRouter);
 
 // Reset account endpoint - clears all trades, positions, performance data and resets balance
 apiRouter.post("/auth/reset-account", requireAuth, resetAccount);

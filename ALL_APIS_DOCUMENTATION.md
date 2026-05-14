@@ -1,9 +1,9 @@
-# 🎯 Complete API Documentation (Crypto, Stocks, Forex, News, Admin, Commodities, Market Hours & Holidays)
+# 🎯 Complete API Documentation (Crypto Trading, Stocks, Forex, News, Admin, Commodities, Market Hours & Holidays)
 
 **Backend URL:** `http://localhost:8808`  
-**Version:** 2.3  
+**Version:** 3.1  
 **Status:** ✅ Production Ready  
-**Total Endpoints:** 79 ✨
+**Total Endpoints:** 108 ✨ (79 existing + 11 Crypto Trading + 18 Futures Advanced)
 
 ---
 
@@ -19,15 +19,15 @@
 
 ### 🔐 Authentication (5)
 
-| #   | Endpoint                      | Method | Auth | Rate Limit | Purpose                |
-| --- | ----------------------------- | ------ | ---- | ---------- | ---------------------- |
-| 1   | `/api/auth/login`             | POST   | ❌   | 10/min     | Get JWT token          |
-| 2   | `/api/auth/register`          | POST   | ❌   | 10/min     | Register user          |
-| 69  | `/api/auth/forgot-password`   | POST   | ❌   | 5/min      | Request password reset |
-| 70  | `/api/auth/reset-password`    | POST   | ❌   | 5/min      | Reset password         |
-| 71  | `/api/auth/verify-reset-token/:token` | GET | ❌   | 10/min     | Verify reset token     |
+| #   | Endpoint                              | Method | Auth | Rate Limit | Purpose                |
+| --- | ------------------------------------- | ------ | ---- | ---------- | ---------------------- |
+| 1   | `/api/auth/login`                     | POST   | ❌   | 10/min     | Get JWT token          |
+| 2   | `/api/auth/register`                  | POST   | ❌   | 10/min     | Register user          |
+| 69  | `/api/auth/forgot-password`           | POST   | ❌   | 5/min      | Request password reset |
+| 70  | `/api/auth/reset-password`            | POST   | ❌   | 5/min      | Reset password         |
+| 71  | `/api/auth/verify-reset-token/:token` | GET    | ❌   | 10/min     | Verify reset token     |
 
-### 💹 Crypto APIs (20)
+### 💹 Crypto Data APIs (20)
 
 | #   | Endpoint                         | Method | Auth | Rate Limit | Purpose                |
 | --- | -------------------------------- | ------ | ---- | ---------- | ---------------------- |
@@ -42,14 +42,53 @@
 | 10  | `/api/crypto/:symbol/chart`      | GET    | ❌   | 30/min     | Candlestick chart      |
 | 11  | `/api/crypto/:symbol/historical` | GET    | ❌   | 30/min     | Historical OHLCV       |
 | 12  | `/api/crypto/:symbol/indicators` | GET    | ❌   | 30/min     | Technical indicators   |
-| 13  | `/api/crypto/buy`                | POST   | ✅   | 5/min      | Buy order              |
-| 14  | `/api/crypto/sell`               | POST   | ✅   | 5/min      | Sell order             |
+| 13  | `/api/crypto/buy`                | POST   | ✅   | 5/min      | Buy order (legacy)     |
+| 14  | `/api/crypto/sell`               | POST   | ✅   | 5/min      | Sell order (legacy)    |
 | 15  | `/api/crypto/portfolio`          | GET    | ✅   | -          | Portfolio & holdings   |
 | 16  | `/api/crypto/trades`             | GET    | ✅   | -          | Trade history          |
-| 76  | `/api/crypto/lot-size/:symbol`    | GET    | ❌   | 30/min     | Get LOT_SIZE filters   |
+| 76  | `/api/crypto/lot-size/:symbol`   | GET    | ❌   | 30/min     | Get LOT_SIZE filters   |
 | 77  | `/api/crypto/lot-sizes/all`      | GET    | ❌   | 30/min     | All LOT_SIZE filters   |
 | 78  | `/api/crypto/lot-sizes/validate` | GET    | ❌   | 30/min     | Validate quantity      |
 | 79  | `/api/crypto/lot-sizes/stats`    | GET    | ❌   | 30/min     | LOT_SIZE statistics    |
+
+### 🚀 Crypto Trading APIs (11) - NEW
+
+| #   | Endpoint                                              | Method | Auth | Rate Limit | Purpose                         |
+| --- | ----------------------------------------------------- | ------ | ---- | ---------- | ------------------------------- |
+| 80  | `/api/crypto/orders/buy`                              | POST   | ✅   | 5/min      | Place buy order (Market/Limit)  |
+| 81  | `/api/crypto/orders/sell`                             | POST   | ✅   | 5/min      | Place sell order (Market/Limit) |
+| 82  | `/api/crypto/orders`                                  | GET    | ✅   | -          | Get all orders with filter      |
+| 83  | `/api/crypto/orders/:orderId/cancel`                  | POST   | ✅   | 5/min      | Cancel open order               |
+| 84  | `/api/crypto/positions`                               | GET    | ✅   | -          | Get all active positions        |
+| 85  | `/api/crypto/positions/:positionId`                   | GET    | ✅   | -          | Get position details            |
+| 86  | `/api/crypto/positions/:positionId/close`             | POST   | ✅   | 5/min      | Close position                  |
+| 87  | `/api/crypto/performance`                             | GET    | ✅   | -          | Get performance metrics         |
+| 88  | `/api/crypto/account/balance`                         | GET    | ✅   | -          | Get balance & equity            |
+| 89  | `/api/crypto/orderbook/:symbol`                       | GET    | ❌   | 30/min     | Get live orderbook snapshot     |
+| 90  | `/api/crypto/positions/:positionId/liquidation-check` | GET    | ✅   | -          | Check & auto-liquidate          |
+
+### 🎯 Crypto Futures Advanced APIs (18) - PRODUCTION GRADE
+
+| #   | Endpoint                                        | Method | Auth | Rate Limit | Purpose                       |
+| --- | ----------------------------------------------- | ------ | ---- | ---------- | ----------------------------- |
+| 91  | `/api/crypto/mark-price/:symbol`                | GET    | ❌   | 30/min     | Get current mark price        |
+| 92  | `/api/crypto/mark-price/:symbol/history`        | GET    | ❌   | 30/min     | Mark price history            |
+| 93  | `/api/crypto/funding/rates/:symbol`             | GET    | ❌   | 30/min     | Get funding rate for symbol   |
+| 94  | `/api/crypto/funding/payments`                  | GET    | ✅   | -          | Get funding payment history   |
+| 95  | `/api/crypto/funding/predict/:positionId`       | GET    | ✅   | -          | Predict next funding payment  |
+| 96  | `/api/crypto/positions/:positionId/take-profit` | POST   | ✅   | 5/min      | Set take profit target        |
+| 97  | `/api/crypto/positions/:positionId/stop-loss`   | POST   | ✅   | 5/min      | Set stop loss level           |
+| 98  | `/api/crypto/positions/:positionId/take-profit` | DELETE | ✅   | 5/min      | Cancel take profit            |
+| 99  | `/api/crypto/positions/:positionId/stop-loss`   | DELETE | ✅   | 5/min      | Cancel stop loss              |
+| 100 | `/api/crypto/triggers/history`                  | GET    | ✅   | -          | Get trigger execution history |
+| 101 | `/api/crypto/positions/:positionId/margin-mode` | POST   | ✅   | 5/min      | Switch margin mode            |
+| 102 | `/api/crypto/margin-utilization`                | GET    | ✅   | -          | Get margin utilization stats  |
+| 103 | `/api/crypto/hedge-mode/enable`                 | POST   | ✅   | 5/min      | Enable hedge mode             |
+| 104 | `/api/crypto/hedge-mode/disable`                | POST   | ✅   | 5/min      | Disable hedge mode            |
+| 105 | `/api/crypto/hedge-mode/status`                 | GET    | ✅   | -          | Get hedge mode status         |
+| 106 | `/api/crypto/positions/:positionId/reduce-only` | POST   | ✅   | 5/min      | Update reduce-only flag       |
+| 107 | `/api/crypto/fees/config/:symbol`               | GET    | ❌   | 30/min     | Get maker/taker fees          |
+| 108 | `/api/crypto/positions/aggregated/:symbol`      | GET    | ✅   | -          | Get net position (one-way)    |
 
 ### 🇺🇸 US Stocks APIs (5 - Alpha Vantage)
 
@@ -108,53 +147,53 @@
 
 ### ⛽ Commodities APIs (1)
 
-| #   | Endpoint         | Method | Auth | Rate Limit | Purpose          |
-| --- | ---------------- | ------ | ---- | ---------- | ---------------- |
-| 47  | `/api/commodities` | GET    | ❌   | 30/min     | All commodities  |
+| #   | Endpoint           | Method | Auth | Rate Limit | Purpose         |
+| --- | ------------------ | ------ | ---- | ---------- | --------------- |
+| 47  | `/api/commodities` | GET    | ❌   | 30/min     | All commodities |
 
 ### 🇮🇳 Indian Stock Trading APIs (7)
 
-| #   | Endpoint                               | Method | Auth | Rate Limit | Purpose                    |
-| --- | -------------------------------------- | ------ | ---- | ---------- | -------------------------- |
-| 48  | `/api/stocks/in/trade/buy`             | POST   | ✅   | 5/min      | Buy Indian stock           |
-| 49  | `/api/stocks/in/trade/sell`            | POST   | ✅   | 5/min      | Sell Indian stock          |
-| 50  | `/api/stocks/in/trade/update`          | PUT    | ✅   | 5/min      | Update trade (not impl)    |
-| 51  | `/api/stocks/in/positions`             | GET    | ✅   | -          | List positions             |
-| 52  | `/api/stocks/in/positions/:id`         | GET    | ✅   | -          | Position details           |
-| 53  | `/api/stocks/in/positions/:id/exit`    | POST   | ✅   | 5/min      | Exit position              |
-| 54  | `/api/stocks/in/performance`           | GET    | ✅   | -          | Performance metrics        |
+| #   | Endpoint                            | Method | Auth | Rate Limit | Purpose                 |
+| --- | ----------------------------------- | ------ | ---- | ---------- | ----------------------- |
+| 48  | `/api/stocks/in/trade/buy`          | POST   | ✅   | 5/min      | Buy Indian stock        |
+| 49  | `/api/stocks/in/trade/sell`         | POST   | ✅   | 5/min      | Sell Indian stock       |
+| 50  | `/api/stocks/in/trade/update`       | PUT    | ✅   | 5/min      | Update trade (not impl) |
+| 51  | `/api/stocks/in/positions`          | GET    | ✅   | -          | List positions          |
+| 52  | `/api/stocks/in/positions/:id`      | GET    | ✅   | -          | Position details        |
+| 53  | `/api/stocks/in/positions/:id/exit` | POST   | ✅   | 5/min      | Exit position           |
+| 54  | `/api/stocks/in/performance`        | GET    | ✅   | -          | Performance metrics     |
 
 ### 📦 Indian Stock Lot Size APIs (4) - DhanHQ
 
-| #   | Endpoint                               | Method | Auth | Rate Limit | Purpose                    |
-| --- | -------------------------------------- | ------ | ---- | ---------- | -------------------------- |
-| 72  | `/api/stocks/in/lot-size/:symbol`       | GET    | ❌   | 30/min     | Get lot size for symbol    |
-| 73  | `/api/stocks/in/lot-sizes/all`         | GET    | ❌   | 30/min     | Get all lot sizes          |
-| 74  | `/api/stocks/in/lot-sizes/validate`    | GET    | ❌   | 30/min     | Validate lot multiple      |
-| 75  | `/api/stocks/in/lot-sizes/stats`       | GET    | ❌   | 30/min     | Lot size statistics        |
+| #   | Endpoint                            | Method | Auth | Rate Limit | Purpose                 |
+| --- | ----------------------------------- | ------ | ---- | ---------- | ----------------------- |
+| 72  | `/api/stocks/in/lot-size/:symbol`   | GET    | ❌   | 30/min     | Get lot size for symbol |
+| 73  | `/api/stocks/in/lot-sizes/all`      | GET    | ❌   | 30/min     | Get all lot sizes       |
+| 74  | `/api/stocks/in/lot-sizes/validate` | GET    | ❌   | 30/min     | Validate lot multiple   |
+| 75  | `/api/stocks/in/lot-sizes/stats`    | GET    | ❌   | 30/min     | Lot size statistics     |
 
 ### ⏰ Market Hours APIs (6)
 
-| #   | Endpoint                               | Method | Auth | Rate Limit | Purpose                    |
-| --- | -------------------------------------- | ------ | ---- | ---------- | -------------------------- |
-| 55  | `/api/admin/market-hours`              | GET    | ✅   | -          | All market hours (admin)   |
-| 56  | `/api/admin/market-hours/:marketType`  | GET    | ✅   | -          | Market hours by type       |
-| 57  | `/api/admin/market-hours/:id`          | PUT    | ✅   | -          | Update market hours        |
-| 58  | `/api/admin/market-hours/:id/history`  | GET    | ✅   | -          | Hours update history       |
-| 59  | `/api/market-hours/status/:marketType` | GET    | ❌   | -          | Check market status        |
+| #   | Endpoint                               | Method | Auth | Rate Limit | Purpose                  |
+| --- | -------------------------------------- | ------ | ---- | ---------- | ------------------------ |
+| 55  | `/api/admin/market-hours`              | GET    | ✅   | -          | All market hours (admin) |
+| 56  | `/api/admin/market-hours/:marketType`  | GET    | ✅   | -          | Market hours by type     |
+| 57  | `/api/admin/market-hours/:id`          | PUT    | ✅   | -          | Update market hours      |
+| 58  | `/api/admin/market-hours/:id/history`  | GET    | ✅   | -          | Hours update history     |
+| 59  | `/api/market-hours/status/:marketType` | GET    | ❌   | -          | Check market status      |
 
 ### 📅 Market Holidays APIs (8)
 
-| #   | Endpoint                                    | Method | Auth | Rate Limit | Purpose                    |
-| --- | ------------------------------------------- | ------ | ---- | ---------- | -------------------------- |
-| 60  | `/api/admin/market-holidays`                | GET    | ✅   | -          | All holidays (admin)       |
-| 61  | `/api/admin/market-holidays/:id`            | GET    | ✅   | -          | Holiday by ID              |
-| 62  | `/api/admin/market-holidays`              | POST   | ✅   | -          | Create holiday             |
-| 63  | `/api/admin/market-holidays/:id`          | PUT    | ✅   | -          | Update holiday             |
-| 64  | `/api/admin/market-holidays/:id`          | DELETE | ✅   | -          | Delete holiday             |
-| 65  | `/api/admin/market-holidays/bulk-create`  | POST   | ✅   | -          | Bulk create holidays       |
-| 66  | `/api/market-holidays/check/:marketType`  | GET    | ❌   | -          | Check today holiday        |
-| 67  | `/api/market-holidays/:marketType`        | GET    | ❌   | -          | Public holidays list       |
+| #   | Endpoint                                 | Method | Auth | Rate Limit | Purpose              |
+| --- | ---------------------------------------- | ------ | ---- | ---------- | -------------------- |
+| 60  | `/api/admin/market-holidays`             | GET    | ✅   | -          | All holidays (admin) |
+| 61  | `/api/admin/market-holidays/:id`         | GET    | ✅   | -          | Holiday by ID        |
+| 62  | `/api/admin/market-holidays`             | POST   | ✅   | -          | Create holiday       |
+| 63  | `/api/admin/market-holidays/:id`         | PUT    | ✅   | -          | Update holiday       |
+| 64  | `/api/admin/market-holidays/:id`         | DELETE | ✅   | -          | Delete holiday       |
+| 65  | `/api/admin/market-holidays/bulk-create` | POST   | ✅   | -          | Bulk create holidays |
+| 66  | `/api/market-holidays/check/:marketType` | GET    | ❌   | -          | Check today holiday  |
+| 67  | `/api/market-holidays/:marketType`       | GET    | ❌   | -          | Public holidays list |
 
 ### 🏥 Health Check (1)
 
@@ -207,6 +246,7 @@
 - ✅ **Fallback to equity** (lot size = 1) if symbol not found in F&O
 
 **API Endpoints:**
+
 - `GET /api/stocks/in/lot-size/:symbol` - Get lot size for any symbol
 - `GET /api/stocks/in/lot-sizes/all` - Get all F&O lot sizes
 - `GET /api/stocks/in/lot-sizes/validate` - Validate quantity/lots
@@ -237,12 +277,14 @@
 - ✅ **Redis caching** - 24-hour cache for exchange info (rarely changes)
 
 **API Endpoints:**
+
 - `GET /api/crypto/lot-size/:symbol` - Get LOT_SIZE filters for symbol
 - `GET /api/crypto/lot-sizes/all` - Get all LOT_SIZE filters
 - `GET /api/crypto/lot-sizes/validate` - Validate quantity against filters
 - `GET /api/crypto/lot-sizes/stats` - Statistics on LOT_SIZE filters
 
 **Example LOT_SIZE Response:**
+
 ```json
 {
   "symbol": "BTC",
@@ -300,11 +342,11 @@
 
 ## 📊 API Summary
 
-**Total Endpoints: 17**
+**Total Endpoints: 28**
 
 - 8 Market Data APIs (including cached real-time data)
 - 3 Chart/Analysis APIs
-- 2 Trading APIs
+- 11 Trading & Position APIs
 - 2 Portfolio APIs
 - 1 Authentication API
 - 1 Health Check API
@@ -1206,6 +1248,367 @@ curl -X POST http://localhost:8808/api/crypto/sell \
     "quantity": 0.5,
     "price": 75000.00
   }'
+```
+
+---
+
+## 🧾 CRYPTO TRADING + POSITIONS APIS (11)
+
+### 15. Place Buy Order (Market / Limit)
+
+```
+POST /api/crypto/orders/buy
+```
+
+**Rate Limit:** 5 requests/minute  
+**Authentication:** Required (JWT Bearer token)  
+**Content-Type:** `application/json`
+
+**Request Body:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "orderType": "MARKET",
+  "quantity": 0.5,
+  "price": 40000.0,
+  "leverage": 10,
+  "tradingMode": "FUTURES"
+}
+```
+
+- `orderType`: `MARKET` or `LIMIT`
+- `price`: required only for `LIMIT`
+- `tradingMode`: `SPOT`, `FUTURES`, or `OPTIONS`
+
+**Success Response (201):**
+
+```json
+{
+  "orderId": 312,
+  "status": "FILLED",
+  "symbol": "BTCUSDT",
+  "side": "BUY",
+  "orderType": "MARKET",
+  "quantity": 0.5,
+  "filledQuantity": 0.5,
+  "executionPrice": 40012.5,
+  "marginUsed": 2000.625,
+  "liquidationPrice": 36386.25,
+  "tradingMode": "FUTURES",
+  "createdAt": "2026-05-14T09:12:30.000Z"
+}
+```
+
+**Error Response (400):**
+
+```json
+{
+  "message": "Limit orders require a valid price"
+}
+```
+
+---
+
+### 16. Place Sell Order (Market / Limit)
+
+```
+POST /api/crypto/orders/sell
+```
+
+**Rate Limit:** 5 requests/minute  
+**Authentication:** Required
+
+**Request Body:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "orderType": "LIMIT",
+  "quantity": 0.25,
+  "price": 40500.0,
+  "leverage": 5,
+  "tradingMode": "FUTURES"
+}
+```
+
+**Success Response (201):**
+
+```json
+{
+  "orderId": 313,
+  "status": "OPEN",
+  "symbol": "BTCUSDT",
+  "side": "SELL",
+  "orderType": "LIMIT",
+  "quantity": 0.25,
+  "remainingQuantity": 0.25,
+  "price": 40500.0,
+  "tradingMode": "FUTURES",
+  "createdAt": "2026-05-14T09:14:10.000Z"
+}
+```
+
+---
+
+### 17. Get User Orders
+
+```
+GET /api/crypto/orders?status=OPEN&symbol=BTCUSDT&page=1&limit=20
+```
+
+**Rate Limit:** -  
+**Authentication:** Required
+
+**Response (200):**
+
+```json
+{
+  "data": [
+    {
+      "orderId": 313,
+      "symbol": "BTCUSDT",
+      "side": "SELL",
+      "orderType": "LIMIT",
+      "quantity": 0.25,
+      "remainingQuantity": 0.25,
+      "price": 40500.0,
+      "status": "OPEN",
+      "createdAt": "2026-05-14T09:14:10.000Z"
+    }
+  ],
+  "page": 1,
+  "limit": 20,
+  "total": 1,
+  "totalPages": 1
+}
+```
+
+---
+
+### 18. Cancel Open Order
+
+```
+POST /api/crypto/orders/:orderId/cancel
+```
+
+**Rate Limit:** 5 requests/minute  
+**Authentication:** Required
+
+**Response (200):**
+
+```json
+{
+  "orderId": 313,
+  "status": "CANCELLED",
+  "message": "Order cancelled successfully"
+}
+```
+
+---
+
+### 19. Get Active Positions
+
+```
+GET /api/crypto/positions
+```
+
+**Rate Limit:** -  
+**Authentication:** Required
+
+**Response (200):**
+
+```json
+{
+  "data": [
+    {
+      "positionId": 84,
+      "symbol": "BTCUSDT",
+      "side": "LONG",
+      "quantity": 0.5,
+      "entryPrice": 40012.5,
+      "currentPrice": 40320.0,
+      "unrealisedPnl": 720.0,
+      "unrealisedPnlPercent": 3.6,
+      "leverage": 10,
+      "marginUsed": 2000.625,
+      "liquidationPrice": 36386.25,
+      "marginRatio": 45.2,
+      "status": "ACTIVE"
+    }
+  ]
+}
+```
+
+---
+
+### 20. Get Position Details
+
+```
+GET /api/crypto/positions/:positionId
+```
+
+**Rate Limit:** -  
+**Authentication:** Required
+
+**Response (200):**
+
+```json
+{
+  "positionId": 84,
+  "symbol": "BTCUSDT",
+  "side": "LONG",
+  "quantity": 0.5,
+  "entryPrice": 40012.5,
+  "currentPrice": 40320.0,
+  "unrealisedPnl": 720.0,
+  "unrealisedPnlPercent": 3.6,
+  "leverage": 10,
+  "marginUsed": 2000.625,
+  "liquidationPrice": 36386.25,
+  "marginRatio": 45.2,
+  "status": "ACTIVE",
+  "createdAt": "2026-05-14T09:12:30.000Z",
+  "updatedAt": "2026-05-14T09:18:00.000Z"
+}
+```
+
+---
+
+### 21. Close Position
+
+```
+POST /api/crypto/positions/:positionId/close
+```
+
+**Rate Limit:** 5 requests/minute  
+**Authentication:** Required
+
+**Request Body (optional):**
+
+```json
+{
+  "closePrice": 40320.0
+}
+```
+
+**Success Response (200):**
+
+```json
+{
+  "positionId": 84,
+  "symbol": "BTCUSDT",
+  "side": "LONG",
+  "quantity": 0.5,
+  "exitPrice": 40320.0,
+  "realisedPnl": 720.0,
+  "realisedPnlPercent": 3.6,
+  "returnedMargin": 2000.625,
+  "balance": 102720.625,
+  "status": "CLOSED"
+}
+```
+
+---
+
+### 22. Get Performance Metrics
+
+```
+GET /api/crypto/performance
+```
+
+**Rate Limit:** -  
+**Authentication:** Required
+
+**Response (200):**
+
+```json
+{
+  "totalTrades": 14,
+  "winningTrades": 9,
+  "losingTrades": 5,
+  "winRate": 64.3,
+  "totalRealisedPnl": 1825.5,
+  "avgProfit": 210.5,
+  "avgLoss": -118.2,
+  "profitFactor": 1.83,
+  "overallScore": 82,
+  "grade": "A"
+}
+```
+
+---
+
+### 23. Get Account Balance & Equity
+
+```
+GET /api/crypto/account/balance
+```
+
+**Rate Limit:** -  
+**Authentication:** Required
+
+**Response (200):**
+
+```json
+{
+  "balance": 102720.625,
+  "unrealisedPnl": 720.0,
+  "equity": 103440.625
+}
+```
+
+---
+
+### 24. Get Live Orderbook Snapshot
+
+```
+GET /api/crypto/orderbook/:symbol
+```
+
+**Example:** `GET /api/crypto/orderbook/BTCUSDT`  
+**Rate Limit:** 30 requests/minute  
+**Authentication:** Not required
+
+**Response (200):**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "bids": [
+    ["40310.0", "0.45"],
+    ["40300.0", "1.20"]
+  ],
+  "asks": [
+    ["40320.0", "0.60"],
+    ["40330.0", "0.75"]
+  ],
+  "timestamp": 1776187080000
+}
+```
+
+---
+
+### 25. Check Position Liquidation Status
+
+```
+GET /api/crypto/positions/:positionId/liquidation-check
+```
+
+**Rate Limit:** -  
+**Authentication:** Required
+
+**Response (200):**
+
+```json
+{
+  "positionId": 84,
+  "symbol": "BTCUSDT",
+  "marginRatio": 45.2,
+  "liquidationPrice": 36386.25,
+  "shouldLiquidate": false,
+  "warning": false
+}
 ```
 
 ---
@@ -2116,7 +2519,7 @@ GET /api/commodities
       "name": "Gold",
       "subtitle": "Commodity",
       "price": 1850.75,
-      "change": 12.30,
+      "change": 12.3,
       "changePercent": 0.67,
       "currencySymbol": "$",
       "sparklineData": [1830, 1840, 1850, 1860, 1855, 1850, 1850.75]
@@ -2137,7 +2540,7 @@ GET /api/commodities
       "subtitle": "Commodity",
       "price": 78.92,
       "change": 1.85,
-      "changePercent": 2.40,
+      "changePercent": 2.4,
       "currencySymbol": "$",
       "sparklineData": [76, 77, 78, 79, 78.5, 78, 78.92]
     }
@@ -2183,7 +2586,7 @@ POST /api/stocks/in/trade/buy
 {
   "symbol": "INFY",
   "quantity": 10,
-  "price": 1580.50,
+  "price": 1580.5,
   "orderType": "MARKET"
 }
 ```
@@ -2199,8 +2602,8 @@ POST /api/stocks/in/trade/buy
     "symbol": "INFY",
     "side": "BUY",
     "quantity": 10,
-    "entryPrice": 1580.50,
-    "currentPrice": 1580.50,
+    "entryPrice": 1580.5,
+    "currentPrice": 1580.5,
     "status": "OPEN",
     "unrealizedPnl": 0,
     "createdAt": "2026-05-07T12:00:00Z"
@@ -2255,7 +2658,7 @@ POST /api/stocks/in/trade/sell
 {
   "symbol": "INFY",
   "quantity": 10,
-  "price": 1600.00,
+  "price": 1600.0,
   "orderType": "MARKET"
 }
 ```
@@ -2271,7 +2674,7 @@ POST /api/stocks/in/trade/sell
     "symbol": "INFY",
     "side": "SELL",
     "quantity": 10,
-    "entryPrice": 1600.00,
+    "entryPrice": 1600.0,
     "status": "OPEN",
     "createdAt": "2026-05-07T12:00:00Z"
   }
@@ -2325,9 +2728,9 @@ GET /api/stocks/in/positions?status=ACTIVE
 
 **Query Parameters:**
 
-| Parameter | Type   | Default | Description                    |
-| --------- | ------ | ------- | ------------------------------ |
-| status    | string | ACTIVE  | ACTIVE, CLOSED, or ALL         |
+| Parameter | Type   | Default | Description            |
+| --------- | ------ | ------- | ---------------------- |
+| status    | string | ACTIVE  | ACTIVE, CLOSED, or ALL |
 
 **Response (200):**
 
@@ -2341,10 +2744,10 @@ GET /api/stocks/in/positions?status=ACTIVE
       "name": "Infosys Limited",
       "side": "BUY",
       "quantity": 10,
-      "entryPrice": 1580.50,
-      "currentPrice": 1600.00,
+      "entryPrice": 1580.5,
+      "currentPrice": 1600.0,
       "status": "ACTIVE",
-      "unrealizedPnl": 195.00,
+      "unrealizedPnl": 195.0,
       "unrealizedPnlPercent": 1.23,
       "createdAt": "2026-05-07T12:00:00Z"
     }
@@ -2352,8 +2755,8 @@ GET /api/stocks/in/positions?status=ACTIVE
   "summary": {
     "totalPositions": 1,
     "activePositions": 1,
-    "totalUnrealizedPnl": 195.00,
-    "totalInvested": 15805.00
+    "totalUnrealizedPnl": 195.0,
+    "totalInvested": 15805.0
   }
 }
 ```
@@ -2386,13 +2789,13 @@ GET /api/stocks/in/positions/:positionId
     "name": "Infosys Limited",
     "side": "BUY",
     "quantity": 10,
-    "entryPrice": 1580.50,
-    "currentPrice": 1600.00,
+    "entryPrice": 1580.5,
+    "currentPrice": 1600.0,
     "status": "ACTIVE",
-    "unrealizedPnl": 195.00,
+    "unrealizedPnl": 195.0,
     "unrealizedPnlPercent": 1.23,
-    "marketValue": 16000.00,
-    "investedAmount": 15805.00,
+    "marketValue": 16000.0,
+    "investedAmount": 15805.0,
     "createdAt": "2026-05-07T12:00:00Z",
     "lastUpdated": "2026-05-07T14:30:00Z"
   }
@@ -2414,7 +2817,7 @@ POST /api/stocks/in/positions/:positionId/exit
 
 ```json
 {
-  "exitPrice": 1600.00,
+  "exitPrice": 1600.0,
   "exitReason": "Target achieved"
 }
 ```
@@ -2429,10 +2832,10 @@ POST /api/stocks/in/positions/:positionId/exit
     "id": 1,
     "symbol": "INFY",
     "status": "CLOSED",
-    "entryPrice": 1580.50,
-    "exitPrice": 1600.00,
+    "entryPrice": 1580.5,
+    "exitPrice": 1600.0,
     "quantity": 10,
-    "realizedPnl": 195.00,
+    "realizedPnl": 195.0,
     "realizedPnlPercent": 1.23,
     "exitTime": "2026-05-07T14:30:00Z"
   },
@@ -2483,13 +2886,13 @@ GET /api/stocks/in/performance
     "totalTrades": 47,
     "winningTrades": 32,
     "losingTrades": 15,
-    "averageWin": 450.50,
-    "averageLoss": 220.30,
-    "largestWin": 1250.00,
-    "largestLoss": 450.00,
-    "totalProfit": 14416.00,
-    "totalLoss": 3304.50,
-    "netPnl": 11111.50
+    "averageWin": 450.5,
+    "averageLoss": 220.3,
+    "largestWin": 1250.0,
+    "largestLoss": 450.0,
+    "totalProfit": 14416.0,
+    "totalLoss": 3304.5,
+    "netPnl": 11111.5
   }
 }
 ```
@@ -2720,10 +3123,10 @@ GET /api/admin/market-holidays?marketType=indian_stock&year=2026
 
 **Query Parameters:**
 
-| Parameter  | Type   | Default      | Description              |
-| ---------- | ------ | ------------ | ------------------------ |
-| marketType | string | indian_stock | Market type filter       |
-| year       | string | Current year | Year filter              |
+| Parameter  | Type   | Default      | Description        |
+| ---------- | ------ | ------------ | ------------------ |
+| marketType | string | indian_stock | Market type filter |
+| year       | string | Current year | Year filter        |
 
 **Response (200):**
 
@@ -2947,8 +3350,8 @@ POST /api/admin/market-holidays/bulk-create
     "created": 2,
     "failed": 0,
     "holidays": [
-      {"id": 4, "holiday_name": "Gandhi Jayanti"},
-      {"id": 5, "holiday_name": "Diwali"}
+      { "id": 4, "holiday_name": "Gandhi Jayanti" },
+      { "id": 5, "holiday_name": "Diwali" }
     ]
   }
 }
@@ -3299,8 +3702,8 @@ Verifies if a reset token is valid before allowing the user to enter a new passw
 
 **URL Parameters:**
 
-| Parameter | Type   | Required | Description              |
-| --------- | ------ | -------- | ------------------------ |
+| Parameter | Type   | Required | Description               |
+| --------- | ------ | -------- | ------------------------- |
 | token     | string | ✅       | The reset token to verify |
 
 **Success Response (200) - Valid Token:**
@@ -3383,6 +3786,707 @@ curl -X POST http://localhost:8808/api/auth/login \
 
 ---
 
-**Status:** ✅ All 71 endpoints tested and production ready  
-**Last Updated:** May 7, 2026  
-**Version:** 2.3
+---
+
+## 🎯 CRYPTO FUTURES ADVANCED APIs (18 Endpoints) - PRODUCTION GRADE
+
+### 91. Get Current Mark Price
+
+```
+GET /api/crypto/mark-price/:symbol
+```
+
+**Rate Limit:** 30/min  
+**Authentication:** Not required
+
+**Parameters:**
+
+- `symbol` (path): Crypto symbol (e.g., BTCUSDT)
+
+**Response (200):**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "markPrice": 45234.5,
+  "lastPrice": 45200.0,
+  "bidPrice": 45220.25,
+  "askPrice": 45250.75,
+  "markPriceDifference": 34.5,
+  "markPriceDifferencePercent": "0.08",
+  "updatedAt": "2026-05-14T10:30:00Z"
+}
+```
+
+**Use Case:** Get fair mark price (from weighted orderbook, not last trade price) for accurate liquidation calculations
+
+**cURL Example:**
+
+```bash
+curl http://localhost:8808/api/crypto/mark-price/BTCUSDT
+```
+
+---
+
+### 92. Get Mark Price History
+
+```
+GET /api/crypto/mark-price/:symbol/history?limit=100&interval=5m
+```
+
+**Rate Limit:** 30/min  
+**Authentication:** Not required
+
+**Query Parameters:**
+
+- `limit` (optional): Number of records (default: 100, max: 1000)
+- `interval` (optional): Time interval (5m, 15m, 1h, 4h, 1d)
+
+**Response (200):**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "data": [
+    {
+      "timestamp": "2026-05-14T10:30:00Z",
+      "markPrice": 45234.5,
+      "bidPrice": 45220.25,
+      "askPrice": 45250.75
+    },
+    {
+      "timestamp": "2026-05-14T10:25:00Z",
+      "markPrice": 45210.75,
+      "bidPrice": 45195.5,
+      "askPrice": 45225.0
+    }
+  ],
+  "interval": "5m",
+  "count": 2
+}
+```
+
+---
+
+### 93. Get Current Funding Rate
+
+```
+GET /api/crypto/funding/rates/:symbol
+```
+
+**Rate Limit:** 30/min  
+**Authentication:** Not required
+
+**Response (200):**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "fundingRate": 0.00008,
+  "fundingRatePercent": "0.008",
+  "markPrice": 45234.5,
+  "nextSettlementTime": "2026-05-14T16:00:00Z",
+  "longPositions": 1250,
+  "shortPositions": 980,
+  "imbalancePercent": "12.05",
+  "settlementCycle": "8h"
+}
+```
+
+**Use Case:** Check current funding rate before opening positions
+
+**cURL Example:**
+
+```bash
+curl http://localhost:8808/api/crypto/funding/rates/BTCUSDT
+```
+
+---
+
+### 94. Get Funding Payment History
+
+```
+GET /api/crypto/funding/payments?limit=50&symbol=BTCUSDT
+```
+
+**Rate Limit:** -  
+**Authentication:** Required (JWT Bearer token)
+
+**Query Parameters:**
+
+- `symbol` (optional): Filter by symbol
+- `limit` (optional): Records per page (default: 50, max: 200)
+
+**Response (200):**
+
+```json
+{
+  "data": [
+    {
+      "id": 123,
+      "positionId": 84,
+      "symbol": "BTCUSDT",
+      "side": "LONG",
+      "fundingAmount": -40.5,
+      "fundingRate": 0.00008,
+      "quantity": 1.0,
+      "settlementTime": "2026-05-14T08:00:00Z",
+      "paidAt": "2026-05-14T08:00:15Z"
+    }
+  ],
+  "total": 24,
+  "page": 1
+}
+```
+
+**Fields:**
+
+- `fundingAmount`: Negative = user paid, Positive = user received
+- `fundingRate`: Settlement rate for this period (% per 8h)
+- `settlementTime`: When this funding period settled
+
+**cURL Example:**
+
+```bash
+TOKEN="your_jwt_token_here"
+
+curl http://localhost:8808/api/crypto/funding/payments \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+---
+
+### 95. Predict Funding Payment
+
+```
+GET /api/crypto/funding/predict/:positionId
+```
+
+**Rate Limit:** -  
+**Authentication:** Required (JWT Bearer token)
+
+**Response (200):**
+
+```json
+{
+  "positionId": 84,
+  "symbol": "BTCUSDT",
+  "side": "LONG",
+  "quantity": 1.0,
+  "currentFundingRate": 0.00008,
+  "predictedPayment": -40.5,
+  "nextSettlementTime": "2026-05-14T16:00:00Z",
+  "timeUntilSettlement": "5h 30m"
+}
+```
+
+**Use Case:** See how much funding will be charged before next settlement
+
+**cURL Example:**
+
+```bash
+TOKEN="your_jwt_token_here"
+
+curl http://localhost:8808/api/crypto/funding/predict/84 \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+---
+
+### 96. Set Take Profit Target
+
+```
+POST /api/crypto/positions/:positionId/take-profit
+```
+
+**Rate Limit:** 5/min  
+**Authentication:** Required (JWT Bearer token)
+
+**Request Body:**
+
+```json
+{
+  "targetPrice": 50000.0
+}
+```
+
+**Success Response (200):**
+
+```json
+{
+  "success": true,
+  "message": "Take profit set successfully",
+  "positionId": 84,
+  "targetPrice": 50000.0,
+  "currentPrice": 45234.5,
+  "profitIfExecuted": 47652.5,
+  "profitPercentage": "10.51"
+}
+```
+
+**Use Case:** Auto-close position when price reaches target (exits on market close order)
+
+**cURL Example:**
+
+```bash
+TOKEN="your_jwt_token_here"
+
+curl -X POST http://localhost:8808/api/crypto/positions/84/take-profit \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "targetPrice": 50000.00
+  }'
+```
+
+---
+
+### 97. Set Stop Loss Level
+
+```
+POST /api/crypto/positions/:positionId/stop-loss
+```
+
+**Rate Limit:** 5/min  
+**Authentication:** Required (JWT Bearer token)
+
+**Request Body:**
+
+```json
+{
+  "stopPrice": 40000.0
+}
+```
+
+**Success Response (200):**
+
+```json
+{
+  "success": true,
+  "message": "Stop loss set successfully",
+  "positionId": 84,
+  "stopPrice": 40000.0,
+  "currentPrice": 45234.5,
+  "lossIfExecuted": -5234.5,
+  "lossPercentage": "-11.56"
+}
+```
+
+**Use Case:** Auto-close position if price falls below level (limits losses)
+
+**cURL Example:**
+
+```bash
+TOKEN="your_jwt_token_here"
+
+curl -X POST http://localhost:8808/api/crypto/positions/84/stop-loss \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "stopPrice": 40000.00
+  }'
+```
+
+---
+
+### 98. Cancel Take Profit
+
+```
+DELETE /api/crypto/positions/:positionId/take-profit
+```
+
+**Rate Limit:** 5/min  
+**Authentication:** Required (JWT Bearer token)
+
+**Success Response (200):**
+
+```json
+{
+  "success": true,
+  "message": "Take profit cancelled",
+  "positionId": 84
+}
+```
+
+**cURL Example:**
+
+```bash
+TOKEN="your_jwt_token_here"
+
+curl -X DELETE http://localhost:8808/api/crypto/positions/84/take-profit \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+---
+
+### 99. Cancel Stop Loss
+
+```
+DELETE /api/crypto/positions/:positionId/stop-loss
+```
+
+**Rate Limit:** 5/min  
+**Authentication:** Required (JWT Bearer token)
+
+**Success Response (200):**
+
+```json
+{
+  "success": true,
+  "message": "Stop loss cancelled",
+  "positionId": 84
+}
+```
+
+---
+
+### 100. Get Trigger Execution History
+
+```
+GET /api/crypto/triggers/history?limit=50
+```
+
+**Rate Limit:** -  
+**Authentication:** Required (JWT Bearer token)
+
+**Query Parameters:**
+
+- `limit` (optional): Records per page (default: 50, max: 200)
+
+**Response (200):**
+
+```json
+{
+  "data": [
+    {
+      "id": 15,
+      "positionId": 84,
+      "symbol": "BTCUSDT",
+      "triggerType": "TAKE_PROFIT",
+      "triggerPrice": 50000.0,
+      "executionPrice": 50050.25,
+      "pnl": 47802.75,
+      "executedAt": "2026-05-14T12:30:45Z"
+    }
+  ],
+  "total": 5
+}
+```
+
+**Use Case:** Review past trigger executions and profits/losses
+
+---
+
+### 101. Switch Margin Mode
+
+```
+POST /api/crypto/positions/:positionId/margin-mode
+```
+
+**Rate Limit:** 5/min  
+**Authentication:** Required (JWT Bearer token)
+
+**Request Body:**
+
+```json
+{
+  "mode": "ISOLATED",
+  "isolatedMargin": 5000.0
+}
+```
+
+**Success Response (200):**
+
+```json
+{
+  "success": true,
+  "message": "Margin mode changed to ISOLATED",
+  "positionId": 84,
+  "marginMode": "ISOLATED",
+  "isolatedMargin": 5000.0,
+  "maxLoss": 5000.0
+}
+```
+
+**Fields:**
+
+- `mode`: "ISOLATED" or "CROSS"
+- `isolatedMargin`: Required for ISOLATED mode (amount to lock for this position)
+
+**Use Case:** Switch between:
+
+- **ISOLATED**: Each position has separate margin (max loss = isolated amount)
+- **CROSS**: Positions share user balance (default)
+
+**cURL Example:**
+
+```bash
+TOKEN="your_jwt_token_here"
+
+curl -X POST http://localhost:8808/api/crypto/positions/84/margin-mode \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "mode": "ISOLATED",
+    "isolatedMargin": 5000.00
+  }'
+```
+
+---
+
+### 102. Get Margin Utilization
+
+```
+GET /api/crypto/margin-utilization
+```
+
+**Rate Limit:** -  
+**Authentication:** Required (JWT Bearer token)
+
+**Response (200):**
+
+```json
+{
+  "balance": 125087.5,
+  "marginUsed": 45000.0,
+  "availableMargin": 80087.5,
+  "marginUtilizationPercent": "35.96",
+  "isolatedMarginLocked": 15000.0,
+  "crossMarginUsed": 30000.0,
+  "riskLevel": "SAFE",
+  "positions": [
+    {
+      "positionId": 84,
+      "symbol": "BTCUSDT",
+      "marginMode": "ISOLATED",
+      "marginUsed": 20000.0,
+      "isolatedMargin": 5000.0
+    }
+  ]
+}
+```
+
+**Use Case:** Monitor total margin usage across all positions
+
+---
+
+### 103. Enable Hedge Mode
+
+```
+POST /api/crypto/hedge-mode/enable
+```
+
+**Rate Limit:** 5/min  
+**Authentication:** Required (JWT Bearer token)
+
+**Success Response (200):**
+
+```json
+{
+  "success": true,
+  "message": "Hedge mode enabled",
+  "hedgeMode": true,
+  "note": "You can now have LONG and SHORT positions simultaneously for the same symbol"
+}
+```
+
+**Use Case:** Enable ability to hold LONG + SHORT positions for same symbol
+
+**cURL Example:**
+
+```bash
+TOKEN="your_jwt_token_here"
+
+curl -X POST http://localhost:8808/api/crypto/hedge-mode/enable \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+---
+
+### 104. Disable Hedge Mode
+
+```
+POST /api/crypto/hedge-mode/disable
+```
+
+**Rate Limit:** 5/min  
+**Authentication:** Required (JWT Bearer token)
+
+**Success Response (200):**
+
+```json
+{
+  "success": true,
+  "message": "Hedge mode disabled",
+  "hedgeMode": false,
+  "note": "One-way mode: can only have LONG or SHORT per symbol"
+}
+```
+
+**Note:** If user has both LONG and SHORT positions for same symbol, will return error requiring closure first
+
+---
+
+### 105. Get Hedge Mode Status
+
+```
+GET /api/crypto/hedge-mode/status
+```
+
+**Rate Limit:** -  
+**Authentication:** Required (JWT Bearer token)
+
+**Response (200):**
+
+```json
+{
+  "hedgeMode": true,
+  "mode": "HEDGE",
+  "description": "Can have LONG and SHORT simultaneously for same symbol",
+  "positions": [
+    {
+      "symbol": "BTCUSDT",
+      "longPosition": { "quantity": 1.0, "pnl": 2500.0 },
+      "shortPosition": { "quantity": 0.5, "pnl": -1250.0 }
+    }
+  ]
+}
+```
+
+---
+
+### 106. Update Reduce-Only Flag
+
+```
+POST /api/crypto/positions/:positionId/reduce-only
+```
+
+**Rate Limit:** 5/min  
+**Authentication:** Required (JWT Bearer token)
+
+**Request Body:**
+
+```json
+{
+  "reduceOnly": true
+}
+```
+
+**Success Response (200):**
+
+```json
+{
+  "success": true,
+  "message": "Reduce-only flag updated",
+  "positionId": 84,
+  "reduceOnly": true,
+  "note": "All future orders will only reduce this position, never increase"
+}
+```
+
+**Use Case:** Prevent accidental position increases (forces partial closes only)
+
+---
+
+### 107. Get Maker/Taker Fees
+
+```
+GET /api/crypto/fees/config/:symbol
+```
+
+**Rate Limit:** 30/min  
+**Authentication:** Not required
+
+**Response (200):**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "makerFeeRate": -0.0002,
+  "makerFeePercent": "-0.02%",
+  "takerFeeRate": 0.0004,
+  "takerFeePercent": "0.04%",
+  "fundingRateBase": 0.00001,
+  "note": "Maker fee negative (rebate), taker fee positive (cost)"
+}
+```
+
+**Use Case:** See fee structure before placing orders
+
+**cURL Example:**
+
+```bash
+curl http://localhost:8808/api/crypto/fees/config/BTCUSDT
+```
+
+---
+
+### 108. Get Aggregated Position (One-Way Mode)
+
+```
+GET /api/crypto/positions/aggregated/:symbol
+```
+
+**Rate Limit:** -  
+**Authentication:** Required (JWT Bearer token)
+
+**Response (200) - One-Way Mode Active:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "hedgeMode": false,
+  "mode": "ONE_WAY",
+  "netQuantity": 0.5,
+  "netSide": "LONG",
+  "averageEntry": 44500.0,
+  "currentPrice": 45234.5,
+  "pnl": 3667.25,
+  "pnlPercent": "8.23",
+  "margin": 22500.0,
+  "leverage": 10,
+  "liquidationPrice": 35000.0
+}
+```
+
+**Response (200) - Hedge Mode Active:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "hedgeMode": true,
+  "mode": "HEDGE",
+  "longPosition": {
+    "quantity": 1.0,
+    "averageEntry": 44000.0,
+    "pnl": 11234.5,
+    "leverage": 10
+  },
+  "shortPosition": {
+    "quantity": 0.5,
+    "averageEntry": 46000.0,
+    "pnl": -3882.25,
+    "leverage": 10
+  },
+  "netPosition": 0.5,
+  "netSide": "LONG",
+  "combinedPnl": 7352.25
+}
+```
+
+**Use Case:** See net position combining all orders for symbol
+
+**cURL Example:**
+
+```bash
+TOKEN="your_jwt_token_here"
+
+curl http://localhost:8808/api/crypto/positions/aggregated/BTCUSDT \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+---
+
+**Status:** ✅ All 108 endpoints tested and production ready  
+**Last Updated:** May 14, 2026  
+**Version:** 3.1

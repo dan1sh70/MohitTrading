@@ -27,10 +27,10 @@ A comprehensive guide for testing all APIs in Postman.
 
 ### 2. Set Collection Variables
 
-| Variable | Initial Value | Description |
-|----------|---------------|-------------|
-| `base_url` | `http://localhost:8808` | Your API base URL |
-| `auth_token` | *(empty)* | Will be set after login |
+| Variable     | Initial Value           | Description             |
+| ------------ | ----------------------- | ----------------------- |
+| `base_url`   | `http://localhost:8808` | Your API base URL       |
+| `auth_token` | _(empty)_               | Will be set after login |
 
 ### 3. Create Environment (Optional)
 
@@ -41,11 +41,13 @@ Create separate environments for local/development/production with different `ba
 ## Public Endpoints
 
 ### Health Check
+
 **Method:** GET  
 **URL:** `{{base_url}}/health`  
 **Auth:** None
 
 **Expected Response (200):**
+
 ```json
 {
   "status": "ok",
@@ -58,12 +60,14 @@ Create separate environments for local/development/production with different `ba
 ### Authentication
 
 #### Login
+
 **Method:** POST  
 **URL:** `{{base_url}}/api/auth/login`  
 **Auth:** None  
 **Rate Limit:** 10 req/minute
 
 **Request Body:**
+
 ```json
 {
   "email": "admin@example.com",
@@ -72,6 +76,7 @@ Create separate environments for local/development/production with different `ba
 ```
 
 **Expected Response (200):**
+
 ```json
 {
   "token": "eyJhbGciOiJIUzI1NiIs...",
@@ -87,12 +92,14 @@ Create separate environments for local/development/production with different `ba
 ---
 
 #### Register
+
 **Method:** POST  
 **URL:** `{{base_url}}/api/auth/register`  
 **Auth:** None  
 **Rate Limit:** 10 req/minute
 
 **Request Body:**
+
 ```json
 {
   "fullName": "John Doe",
@@ -103,6 +110,7 @@ Create separate environments for local/development/production with different `ba
 ```
 
 **Expected Response (201):**
+
 ```json
 {
   "message": "User registered successfully",
@@ -117,11 +125,13 @@ Create separate environments for local/development/production with different `ba
 ```
 
 **Postman Setup:**
+
 1. In **Tests** tab, add this script to save the token:
+
 ```javascript
 if (pm.response.code === 200) {
-    var jsonData = pm.response.json();
-    pm.collectionVariables.set("auth_token", jsonData.token);
+  var jsonData = pm.response.json();
+  pm.collectionVariables.set("auth_token", jsonData.token);
 }
 ```
 
@@ -130,17 +140,19 @@ if (pm.response.code === 200) {
 ## Crypto Endpoints
 
 ### Get All Crypto Prices
+
 **Method:** GET  
 **URL:** `{{base_url}}/api/crypto/prices`  
 **Auth:** None  
 **Rate Limit:** 30 req/minute
 
 **Expected Response:**
+
 ```json
 {
   "data": [
-    { "symbol": "BTC", "price": 65000.00, "change24h": 2.5 },
-    { "symbol": "ETH", "price": 3500.00, "change24h": -1.2 }
+    { "symbol": "BTC", "price": 65000.0, "change24h": 2.5 },
+    { "symbol": "ETH", "price": 3500.0, "change24h": -1.2 }
   ],
   "count": 50,
   "timestamp": 1715278901234
@@ -150,19 +162,22 @@ if (pm.response.code === 200) {
 ---
 
 ### Get Single Crypto Price
+
 **Method:** GET  
 **URL:** `{{base_url}}/api/crypto/prices/:symbol`  
 **Auth:** None  
 **Rate Limit:** 30 req/minute
 
 **Path Variable:**
+
 - `symbol` - e.g., `BTC`, `ETH`, `SOL`
 
 **Expected Response:**
+
 ```json
 {
   "symbol": "BTC",
-  "price": 65000.00,
+  "price": 65000.0,
   "change24h": 2.5,
   "volume24h": 35000000000,
   "timestamp": 1715278901234
@@ -172,23 +187,27 @@ if (pm.response.code === 200) {
 ---
 
 ### Get Crypto Stats
+
 **Method:** GET  
 **URL:** `{{base_url}}/api/crypto/stats/:symbol`  
 **Auth:** None  
 **Rate Limit:** 30 req/minute
 
 **Path Variable:**
+
 - `symbol` - e.g., `BTC`, `ETH`
 
 ---
 
 ### Get Historical Prices
+
 **Method:** GET  
 **URL:** `{{base_url}}/api/crypto/:symbol/historical`  
 **Auth:** None  
 **Rate Limit:** 30 req/minute
 
 **Path Variable:**
+
 - `symbol` - e.g., `BTC`
 
 **Query Parameters:**
@@ -202,6 +221,7 @@ if (pm.response.code === 200) {
 ---
 
 ### Get Chart Data
+
 **Method:** GET  
 **URL:** `{{base_url}}/api/crypto/:symbol/chart`  
 **Auth:** None  
@@ -216,6 +236,7 @@ if (pm.response.code === 200) {
 ---
 
 ### Get Technical Indicators
+
 **Method:** GET  
 **URL:** `{{base_url}}/api/crypto/:symbol/indicators`  
 **Auth:** None  
@@ -229,6 +250,7 @@ if (pm.response.code === 200) {
 ---
 
 ### Get Top 3 Famous Cryptos
+
 **Method:** GET  
 **URL:** `{{base_url}}/api/crypto/top-3/famous`  
 **Auth:** None
@@ -236,6 +258,7 @@ if (pm.response.code === 200) {
 ---
 
 ### Get Top 10 Trending
+
 **Method:** GET  
 **URL:** `{{base_url}}/api/crypto/trending/top-10`  
 **Auth:** None
@@ -243,6 +266,7 @@ if (pm.response.code === 200) {
 ---
 
 ### Get All Trending
+
 **Method:** GET  
 **URL:** `{{base_url}}/api/crypto/trending/all`  
 **Auth:** None
@@ -255,6 +279,7 @@ if (pm.response.code === 200) {
 ---
 
 ### Get Top 10 Ranked (Cached)
+
 **Method:** GET  
 **URL:** `{{base_url}}/api/crypto/top-10/ranked`  
 **Auth:** None
@@ -262,6 +287,7 @@ if (pm.response.code === 200) {
 ---
 
 ### Get All Stats (Cached)
+
 **Method:** GET  
 **URL:** `{{base_url}}/api/crypto/all/stats`  
 **Auth:** None
@@ -271,6 +297,7 @@ if (pm.response.code === 200) {
 ## US Stocks Endpoints
 
 ### Get All US Stocks
+
 **Method:** GET  
 **URL:** `{{base_url}}/api/stocks/us`  
 **Auth:** None  
@@ -279,11 +306,13 @@ if (pm.response.code === 200) {
 ---
 
 ### Get US Stock Price
+
 **Method:** GET  
 **URL:** `{{base_url}}/api/stocks/us/:symbol`  
 **Auth:** None
 
 **Path Variable:**
+
 - `symbol` - e.g., `AAPL`, `MSFT`, `GOOGL`
 
 **Example:** `{{base_url}}/api/stocks/us/AAPL`
@@ -291,6 +320,7 @@ if (pm.response.code === 200) {
 ---
 
 ### Get Stock Daily Data
+
 **Method:** GET  
 **URL:** `{{base_url}}/api/stocks/us/:symbol/daily`  
 **Auth:** None
@@ -303,6 +333,7 @@ if (pm.response.code === 200) {
 ---
 
 ### Get SMA Indicator
+
 **Method:** GET  
 **URL:** `{{base_url}}/api/stocks/us/:symbol/sma`  
 **Auth:** None
@@ -316,6 +347,7 @@ if (pm.response.code === 200) {
 ---
 
 ### Get RSI Indicator
+
 **Method:** GET  
 **URL:** `{{base_url}}/api/stocks/us/:symbol/rsi`  
 **Auth:** None
@@ -331,6 +363,7 @@ if (pm.response.code === 200) {
 ## Forex Endpoints
 
 ### Get All Forex Pairs
+
 **Method:** GET  
 **URL:** `{{base_url}}/api/forex/pairs`  
 **Auth:** None
@@ -338,6 +371,7 @@ if (pm.response.code === 200) {
 ---
 
 ### Get Tested Forex Pairs (Free Tier)
+
 **Method:** GET  
 **URL:** `{{base_url}}/api/forex/pairs/tested`  
 **Auth:** None
@@ -345,6 +379,7 @@ if (pm.response.code === 200) {
 ---
 
 ### Get Upcoming Forex Pairs
+
 **Method:** GET  
 **URL:** `{{base_url}}/api/forex/pairs/upcoming`  
 **Auth:** None
@@ -352,11 +387,13 @@ if (pm.response.code === 200) {
 ---
 
 ### Get Exchange Rate
+
 **Method:** GET  
 **URL:** `{{base_url}}/api/forex/rate/:from/:to`  
 **Auth:** None
 
 **Path Variables:**
+
 - `from` - Base currency (e.g., `EUR`)
 - `to` - Quote currency (e.g., `USD`)
 
@@ -367,6 +404,7 @@ if (pm.response.code === 200) {
 ## Indian Stocks Endpoints
 
 ### Get All Indian Stocks
+
 **Method:** GET  
 **URL:** `{{base_url}}/api/stocks/in`  
 **Auth:** None
@@ -374,6 +412,7 @@ if (pm.response.code === 200) {
 ---
 
 ### Get Top Indian Stocks
+
 **Method:** GET  
 **URL:** `{{base_url}}/api/stocks/in/top`  
 **Auth:** None
@@ -386,16 +425,19 @@ if (pm.response.code === 200) {
 ---
 
 ### Get Indian Stock Price
+
 **Method:** GET  
 **URL:** `{{base_url}}/api/stocks/in/:symbol`  
 **Auth:** None
 
 **Path Variable:**
+
 - `symbol` - e.g., `RELIANCE`, `TCS`, `INFY`
 
 ---
 
 ### Get Intraday Data
+
 **Method:** GET  
 **URL:** `{{base_url}}/api/stocks/in/:symbol/intraday`  
 **Auth:** None
@@ -408,6 +450,7 @@ if (pm.response.code === 200) {
 ---
 
 ### Get Daily Data
+
 **Method:** GET  
 **URL:** `{{base_url}}/api/stocks/in/:symbol/daily`  
 **Auth:** None
@@ -417,6 +460,7 @@ if (pm.response.code === 200) {
 ## News Endpoints
 
 ### Get Latest News
+
 **Method:** GET  
 **URL:** `{{base_url}}/api/news/latest`  
 **Auth:** None  
@@ -431,6 +475,7 @@ if (pm.response.code === 200) {
 ---
 
 ### Search News
+
 **Method:** GET  
 **URL:** `{{base_url}}/api/news/search`  
 **Auth:** None
@@ -447,6 +492,7 @@ if (pm.response.code === 200) {
 ---
 
 ### Get News by Symbols
+
 **Method:** GET  
 **URL:** `{{base_url}}/api/news/symbols`  
 **Auth:** None
@@ -461,6 +507,7 @@ if (pm.response.code === 200) {
 ---
 
 ### Get Trending News
+
 **Method:** GET  
 **URL:** `{{base_url}}/api/news/trending`  
 **Auth:** None
@@ -468,6 +515,7 @@ if (pm.response.code === 200) {
 ---
 
 ### Get News by Date Range
+
 **Method:** GET  
 **URL:** `{{base_url}}/api/news/date-range`  
 **Auth:** None
@@ -483,6 +531,7 @@ if (pm.response.code === 200) {
 ---
 
 ### Get Crypto News
+
 **Method:** GET  
 **URL:** `{{base_url}}/api/news/crypto`  
 **Auth:** None
@@ -490,6 +539,7 @@ if (pm.response.code === 200) {
 ---
 
 ### Get Stock Market News
+
 **Method:** GET  
 **URL:** `{{base_url}}/api/news/stocks`  
 **Auth:** None
@@ -497,6 +547,7 @@ if (pm.response.code === 200) {
 ---
 
 ### Advanced News Search
+
 **Method:** GET  
 **URL:** `{{base_url}}/api/news/advanced`  
 **Auth:** None
@@ -516,31 +567,36 @@ if (pm.response.code === 200) {
 ## Authenticated Trading Endpoints
 
 **All endpoints below require Authentication Header:**
+
 ```
 Authorization: Bearer {{auth_token}}
 ```
 
 ### Buy Crypto
+
 **Method:** POST  
 **URL:** `{{base_url}}/api/crypto/buy`  
 **Auth:** Required  
 **Rate Limit:** 5 req/minute
 
 **Request Body:**
+
 ```json
 {
   "symbol": "BTC",
   "quantity": 0.5,
-  "price": 65000.00
+  "price": 65000.0
 }
 ```
 
 **Validation Rules:**
+
 - `symbol`: 3-20 characters, uppercase
 - `quantity`: Positive number
 - `price`: Positive number
 
 **Expected Response (201):**
+
 ```json
 {
   "message": "Buy order created successfully",
@@ -550,7 +606,7 @@ Authorization: Bearer {{auth_token}}
     "symbol": "BTC",
     "side": "BUY",
     "quantity": 0.5,
-    "price": 65000.00,
+    "price": 65000.0,
     "status": "OPEN",
     "created_at": "2024-05-01T12:00:00Z"
   }
@@ -560,39 +616,43 @@ Authorization: Bearer {{auth_token}}
 ---
 
 ### Sell Crypto
+
 **Method:** POST  
 **URL:** `{{base_url}}/api/crypto/sell`  
 **Auth:** Required  
 **Rate Limit:** 5 req/minute
 
 **Request Body:**
+
 ```json
 {
   "symbol": "BTC",
   "quantity": 0.25,
-  "price": 66000.00
+  "price": 66000.0
 }
 ```
 
 ---
 
 ### Get Portfolio
+
 **Method:** GET  
 **URL:** `{{base_url}}/api/crypto/portfolio`  
 **Auth:** Required
 
 **Expected Response:**
+
 ```json
 {
-  "balance": 95000.00,
+  "balance": 95000.0,
   "positions": [
     {
       "symbol": "BTC",
       "quantity": 0.5,
-      "avgPrice": 65000.00,
-      "currentPrice": 66000.00,
-      "value": 33000.00,
-      "pnl": 500.00,
+      "avgPrice": 65000.0,
+      "currentPrice": 66000.0,
+      "value": 33000.0,
+      "pnl": 500.0,
       "pnlPercent": "1.54"
     }
   ],
@@ -603,6 +663,7 @@ Authorization: Bearer {{auth_token}}
 ---
 
 ### Get User Trades
+
 **Method:** GET  
 **URL:** `{{base_url}}/api/crypto/trades`  
 **Auth:** Required
@@ -613,33 +674,622 @@ Authorization: Bearer {{auth_token}}
 | `page` | number | `1` | Page number |
 | `limit` | number | `20` | 5-100 items per page |
 
+**Expected Response:**
+
+```json
+{
+  "data": [
+    {
+      "id": 123,
+      "symbol": "BTCUSDT",
+      "side": "BUY",
+      "quantity": 0.5,
+      "price": "40012.5",
+      "status": "FILLED",
+      "pnl": "720.00",
+      "created_at": "2026-05-14T09:12:30.000Z",
+      "closed_at": "2026-05-14T10:00:00.000Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 1,
+    "totalPages": 1
+  }
+}
+```
+
+---
+
+### NEW: Place Buy Order (Market / Limit)
+
+**Method:** POST  
+**URL:** `{{base_url}}/api/crypto/orders/buy`  
+**Auth:** Required  
+**Rate Limit:** 5 req/minute
+
+**Request Body:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "orderType": "MARKET",
+  "quantity": 0.25,
+  "price": 40000.0,
+  "leverage": 10,
+  "tradingMode": "FUTURES"
+}
+```
+
+**Expected Response:**
+
+```json
+{
+  "orderId": 312,
+  "status": "FILLED",
+  "symbol": "BTCUSDT",
+  "side": "BUY",
+  "orderType": "MARKET",
+  "quantity": 0.25,
+  "filledQuantity": 0.25,
+  "executionPrice": 40012.5,
+  "marginUsed": 1000.3125,
+  "liquidationPrice": 36393.75
+}
+```
+
+---
+
+### NEW: Place Sell Order (Market / Limit)
+
+**Method:** POST  
+**URL:** `{{base_url}}/api/crypto/orders/sell`  
+**Auth:** Required  
+**Rate Limit:** 5 req/minute
+
+**Request Body:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "orderType": "LIMIT",
+  "quantity": 0.15,
+  "price": 40500.0,
+  "leverage": 5,
+  "tradingMode": "FUTURES"
+}
+```
+
+**Expected Response:**
+
+```json
+{
+  "orderId": 313,
+  "status": "OPEN",
+  "symbol": "BTCUSDT",
+  "side": "SELL",
+  "orderType": "LIMIT",
+  "quantity": 0.15,
+  "remainingQuantity": 0.15,
+  "price": 40500.0
+}
+```
+
+---
+
+### NEW: Get Active Orders
+
+**Method:** GET  
+**URL:** `{{base_url}}/api/crypto/orders?status=OPEN&symbol=BTCUSDT&page=1&limit=20`  
+**Auth:** Required
+
+---
+
+### NEW: Cancel Order
+
+**Method:** POST  
+**URL:** `{{base_url}}/api/crypto/orders/{{orderId}}/cancel`  
+**Auth:** Required
+
+**Expected Response:**
+
+```json
+{
+  "orderId": 313,
+  "status": "CANCELLED",
+  "message": "Order cancelled successfully"
+}
+```
+
+---
+
+### NEW: Get Active Positions
+
+**Method:** GET  
+**URL:** `{{base_url}}/api/crypto/positions`  
+**Auth:** Required
+
+---
+
+### NEW: Get Position Details
+
+**Method:** GET  
+**URL:** `{{base_url}}/api/crypto/positions/{{positionId}}`  
+**Auth:** Required
+
+---
+
+### NEW: Close Position
+
+**Method:** POST  
+**URL:** `{{base_url}}/api/crypto/positions/{{positionId}}/close`  
+**Auth:** Required  
+**Rate Limit:** 5 req/minute
+
+**Request Body (optional):**
+
+```json
+{ "closePrice": 40320.0 }
+```
+
+---
+
+### NEW: Get Performance Metrics
+
+**Method:** GET  
+**URL:** `{{base_url}}/api/crypto/performance`  
+**Auth:** Required
+
+---
+
+### NEW: Get Account Balance
+
+**Method:** GET  
+**URL:** `{{base_url}}/api/crypto/account/balance`  
+**Auth:** Required
+
+---
+
+### NEW: Get Orderbook Snapshot
+
+**Method:** GET  
+**URL:** `{{base_url}}/api/crypto/orderbook/BTCUSDT`  
+**Auth:** Not required
+
+---
+
+### NEW: Check Liquidation Status
+
+**Method:** GET  
+**URL:** `{{base_url}}/api/crypto/positions/{{positionId}}/liquidation-check`  
+**Auth:** Required
+
+---
+
+### NEW: Get Current Mark Price
+
+**Method:** GET  
+**URL:** `{{base_url}}/api/crypto/mark-price/BTCUSDT`  
+**Auth:** Not required
+
+**Expected Response:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "markPrice": 45234.5,
+  "lastPrice": 45200.0,
+  "bidPrice": 45220.25,
+  "askPrice": 45250.75,
+  "updatedAt": "2026-05-14T10:30:00Z"
+}
+```
+
+---
+
+### NEW: Get Mark Price History
+
+**Method:** GET  
+**URL:** `{{base_url}}/api/crypto/mark-price/BTCUSDT/history?limit=20&interval=5m`  
+**Auth:** Not required
+
+**Expected Response:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "data": [
+    {
+      "timestamp": "2026-05-14T10:30:00Z",
+      "markPrice": 45234.5,
+      "bidPrice": 45220.25,
+      "askPrice": 45250.75
+    },
+    {
+      "timestamp": "2026-05-14T10:25:00Z",
+      "markPrice": 45210.75,
+      "bidPrice": 45195.5,
+      "askPrice": 45225.0
+    }
+  ]
+}
+```
+
+---
+
+### NEW: Get Current Funding Rate
+
+**Method:** GET  
+**URL:** `{{base_url}}/api/crypto/funding/rates/BTCUSDT`  
+**Auth:** Not required
+
+**Expected Response:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "fundingRate": 0.00008,
+  "markPrice": 45234.5,
+  "nextSettlementTime": "2026-05-14T16:00:00Z"
+}
+```
+
+---
+
+### NEW: Get Funding Payment History
+
+**Method:** GET  
+**URL:** `{{base_url}}/api/crypto/funding/payments?limit=20&symbol=BTCUSDT`  
+**Auth:** Required
+
+**Expected Response:**
+
+```json
+{
+  "data": [
+    {
+      "positionId": 84,
+      "symbol": "BTCUSDT",
+      "side": "LONG",
+      "fundingAmount": -40.5,
+      "fundingRate": 0.00008,
+      "settlementTime": "2026-05-14T08:00:00Z"
+    }
+  ]
+}
+```
+
+---
+
+### NEW: Predict Funding Payment
+
+**Method:** GET  
+**URL:** `{{base_url}}/api/crypto/funding/predict/84`  
+**Auth:** Required
+
+**Expected Response:**
+
+```json
+{
+  "positionId": 84,
+  "symbol": "BTCUSDT",
+  "predictedPayment": -40.5,
+  "nextSettlementTime": "2026-05-14T16:00:00Z"
+}
+```
+
+---
+
+### NEW: Set Take Profit Target
+
+**Method:** POST  
+**URL:** `{{base_url}}/api/crypto/positions/{{positionId}}/take-profit`  
+**Auth:** Required
+
+**Request Body:**
+
+```json
+{
+  "targetPrice": 50000.0
+}
+```
+
+**Expected Response:**
+
+```json
+{
+  "success": true,
+  "message": "Take profit set successfully",
+  "positionId": 84,
+  "targetPrice": 50000.0
+}
+```
+
+---
+
+### NEW: Set Stop Loss Level
+
+**Method:** POST  
+**URL:** `{{base_url}}/api/crypto/positions/{{positionId}}/stop-loss`  
+**Auth:** Required
+
+**Request Body:**
+
+```json
+{
+  "stopPrice": 40000.0
+}
+```
+
+**Expected Response:**
+
+```json
+{
+  "success": true,
+  "message": "Stop loss set successfully",
+  "positionId": 84,
+  "stopPrice": 40000.0
+}
+```
+
+---
+
+### NEW: Cancel Take Profit
+
+**Method:** DELETE  
+**URL:** `{{base_url}}/api/crypto/positions/{{positionId}}/take-profit`  
+**Auth:** Required
+
+**Expected Response:**
+
+```json
+{
+  "success": true,
+  "message": "Take profit cancelled",
+  "positionId": 84
+}
+```
+
+---
+
+### NEW: Cancel Stop Loss
+
+**Method:** DELETE  
+**URL:** `{{base_url}}/api/crypto/positions/{{positionId}}/stop-loss`  
+**Auth:** Required
+
+**Expected Response:**
+
+```json
+{
+  "success": true,
+  "message": "Stop loss cancelled",
+  "positionId": 84
+}
+```
+
+---
+
+### NEW: Get Trigger Execution History
+
+**Method:** GET  
+**URL:** `{{base_url}}/api/crypto/triggers/history?limit=20`  
+**Auth:** Required
+
+**Expected Response:**
+
+```json
+{
+  "data": [
+    {
+      "id": 15,
+      "positionId": 84,
+      "triggerType": "TAKE_PROFIT",
+      "executionPrice": 50050.25,
+      "pnl": 47802.75,
+      "executedAt": "2026-05-14T12:30:45Z"
+    }
+  ]
+}
+```
+
+---
+
+### NEW: Switch Margin Mode
+
+**Method:** POST  
+**URL:** `{{base_url}}/api/crypto/positions/{{positionId}}/margin-mode`  
+**Auth:** Required
+
+**Request Body:**
+
+```json
+{
+  "mode": "ISOLATED",
+  "isolatedMargin": 5000.0
+}
+```
+
+**Expected Response:**
+
+```json
+{
+  "success": true,
+  "message": "Margin mode changed to ISOLATED",
+  "positionId": 84,
+  "marginMode": "ISOLATED"
+}
+```
+
+---
+
+### NEW: Get Margin Utilization
+
+**Method:** GET  
+**URL:** `{{base_url}}/api/crypto/margin-utilization`  
+**Auth:** Required
+
+**Expected Response:**
+
+```json
+{
+  "balance": 125087.5,
+  "marginUsed": 45000.0,
+  "availableMargin": 80087.5,
+  "marginUtilizationPercent": "35.96"
+}
+```
+
+---
+
+### NEW: Enable Hedge Mode
+
+**Method:** POST  
+**URL:** `{{base_url}}/api/crypto/hedge-mode/enable`  
+**Auth:** Required
+
+**Expected Response:**
+
+```json
+{
+  "success": true,
+  "message": "Hedge mode enabled",
+  "hedgeMode": true
+}
+```
+
+---
+
+### NEW: Disable Hedge Mode
+
+**Method:** POST  
+**URL:** `{{base_url}}/api/crypto/hedge-mode/disable`  
+**Auth:** Required
+
+**Expected Response:**
+
+```json
+{
+  "success": true,
+  "message": "Hedge mode disabled",
+  "hedgeMode": false
+}
+```
+
+---
+
+### NEW: Get Hedge Mode Status
+
+**Method:** GET  
+**URL:** `{{base_url}}/api/crypto/hedge-mode/status`  
+**Auth:** Required
+
+**Expected Response:**
+
+```json
+{
+  "hedgeMode": true,
+  "mode": "HEDGE"
+}
+```
+
+---
+
+### NEW: Update Reduce-Only Flag
+
+**Method:** POST  
+**URL:** `{{base_url}}/api/crypto/positions/{{positionId}}/reduce-only`  
+**Auth:** Required
+
+**Request Body:**
+
+```json
+{
+  "reduceOnly": true
+}
+```
+
+**Expected Response:**
+
+```json
+{
+  "success": true,
+  "message": "Reduce-only flag updated",
+  "positionId": 84,
+  "reduceOnly": true
+}
+```
+
+---
+
+### NEW: Get Maker/Taker Fees
+
+**Method:** GET  
+**URL:** `{{base_url}}/api/crypto/fees/config/BTCUSDT`  
+**Auth:** Not required
+
+**Expected Response:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "makerFeeRate": -0.0002,
+  "takerFeeRate": 0.0004,
+  "fundingRateBase": 0.00001
+}
+```
+
+---
+
+### NEW: Get Aggregated Position
+
+**Method:** GET  
+**URL:** `{{base_url}}/api/crypto/positions/aggregated/BTCUSDT`  
+**Auth:** Required
+
+**Expected Response:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "netQuantity": 0.5,
+  "netSide": "LONG",
+  "pnl": 3667.25
+}
+```
+
 ---
 
 ## Admin Endpoints
 
 **All endpoints below require:**
+
 1. Authentication Header: `Authorization: Bearer {{auth_token}}`
 2. Admin Role (role = "admin" in JWT token)
 
 ### Get Admin Stats
+
 **Method:** GET  
 **URL:** `{{base_url}}/api/admin/stats`  
 **Auth:** Admin Only
 
 **Expected Response:**
+
 ```json
 {
   "totalTraders": 150,
   "openTrades": 45,
   "closedTrades": 320,
-  "totalVolume": 12500000.00,
-  "totalPnl": 85000.00
+  "totalVolume": 12500000.0,
+  "totalPnl": 85000.0
 }
 ```
 
 ---
 
 ### List Users
+
 **Method:** GET  
 **URL:** `{{base_url}}/api/admin/users`  
 **Auth:** Admin Only
@@ -655,11 +1305,13 @@ Authorization: Bearer {{auth_token}}
 ---
 
 ### Create User
+
 **Method:** POST  
 **URL:** `{{base_url}}/api/admin/users`  
 **Auth:** Admin Only
 
 **Request Body:**
+
 ```json
 {
   "fullName": "John Doe",
@@ -671,6 +1323,7 @@ Authorization: Bearer {{auth_token}}
 ```
 
 **Validation:**
+
 - `fullName`: 2-120 characters
 - `email`: Valid email format
 - `role`: `admin` or `trader`
@@ -680,6 +1333,7 @@ Authorization: Bearer {{auth_token}}
 ---
 
 ### Get Positions
+
 **Method:** GET  
 **URL:** `{{base_url}}/api/admin/positions`  
 **Auth:** Admin Only
@@ -695,6 +1349,7 @@ Authorization: Bearer {{auth_token}}
 ---
 
 ### List All Trades
+
 **Method:** GET  
 **URL:** `{{base_url}}/api/admin/trades`  
 **Auth:** Admin Only
@@ -711,41 +1366,47 @@ Authorization: Bearer {{auth_token}}
 ---
 
 ### Create Trade (Admin)
+
 **Method:** POST  
 **URL:** `{{base_url}}/api/admin/trades`  
 **Auth:** Admin Only
 
 **Request Body:**
+
 ```json
 {
   "userId": 2,
   "symbol": "BTC",
   "side": "BUY",
   "quantity": 1.0,
-  "price": 65000.00
+  "price": 65000.0
 }
 ```
 
 ---
 
 ### Close Trade
+
 **Method:** PATCH  
 **URL:** `{{base_url}}/api/admin/trades/:id/close`  
 **Auth:** Admin Only
 
 **Path Variable:**
+
 - `id` - Trade ID
 
 **Request Body:**
+
 ```json
 {
-  "pnl": 1500.00
+  "pnl": 1500.0
 }
 ```
 
 ---
 
 ### List Audit Logs
+
 **Method:** GET  
 **URL:** `{{base_url}}/api/admin/audit-logs`  
 **Auth:** Admin Only
@@ -761,14 +1422,15 @@ Authorization: Bearer {{auth_token}}
 
 ## Rate Limits
 
-| Endpoint Category | Limit | Window |
-|-------------------|-------|--------|
-| Login | 10 | 1 minute |
-| Crypto Trading (buy/sell) | 5 | 1 minute |
-| Crypto Price Queries | 30 | 1 minute |
-| News Queries | 40 | 1 minute |
+| Endpoint Category         | Limit | Window   |
+| ------------------------- | ----- | -------- |
+| Login                     | 10    | 1 minute |
+| Crypto Trading (buy/sell) | 5     | 1 minute |
+| Crypto Price Queries      | 30    | 1 minute |
+| News Queries              | 40    | 1 minute |
 
 **Rate Limit Response (429):**
+
 ```json
 {
   "message": "Too many requests. Try again shortly."
@@ -780,21 +1442,25 @@ Authorization: Bearer {{auth_token}}
 ## Testing Workflow in Postman
 
 ### Step 1: Test Public Endpoints
+
 1. Test `GET /health` - Should return 200
 2. Test `GET /api/crypto/prices` - Should return prices
 3. Test `GET /api/stocks/us` - Should return stock list
 
 ### Step 2: Authenticate
+
 1. Send `POST /api/auth/login` with valid credentials
 2. Verify token is saved to collection variable
 3. Check the Tests tab shows "Token saved"
 
 ### Step 3: Test Authenticated Endpoints
+
 1. `GET /api/crypto/portfolio` - Should return user portfolio
 2. `POST /api/crypto/buy` - Create a test buy order
 3. `GET /api/crypto/trades` - Verify trade appears
 
 ### Step 4: Test Admin Endpoints (if admin user)
+
 1. `GET /api/admin/stats` - Should return admin stats
 2. `GET /api/admin/users` - Should return user list
 3. `GET /api/admin/trades` - Should return all trades
@@ -803,17 +1469,17 @@ Authorization: Bearer {{auth_token}}
 
 ## Common Response Codes
 
-| Code | Meaning | Description |
-|------|---------|-------------|
-| 200 | OK | Successful request |
-| 201 | Created | Resource created successfully |
-| 400 | Bad Request | Invalid input data |
-| 401 | Unauthorized | Missing or invalid token |
-| 403 | Forbidden | Not admin (for admin endpoints) |
-| 404 | Not Found | Resource not found |
-| 409 | Conflict | Resource already exists/closed |
-| 429 | Too Many Requests | Rate limit exceeded |
-| 500 | Server Error | Internal server error |
+| Code | Meaning           | Description                     |
+| ---- | ----------------- | ------------------------------- |
+| 200  | OK                | Successful request              |
+| 201  | Created           | Resource created successfully   |
+| 400  | Bad Request       | Invalid input data              |
+| 401  | Unauthorized      | Missing or invalid token        |
+| 403  | Forbidden         | Not admin (for admin endpoints) |
+| 404  | Not Found         | Resource not found              |
+| 409  | Conflict          | Resource already exists/closed  |
+| 429  | Too Many Requests | Rate limit exceeded             |
+| 500  | Server Error      | Internal server error           |
 
 ---
 
