@@ -23,12 +23,10 @@ const corsOptions = {
   origin: '*',
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  optionsSuccessStatus: 200, // some legacy browsers choke on 204
 };
 
 // Handle preflight OPTIONS requests for all routes
 app.options('*', cors(corsOptions));
-
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(morgan("dev"));
