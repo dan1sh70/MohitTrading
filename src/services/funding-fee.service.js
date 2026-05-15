@@ -5,8 +5,8 @@
 // Matches Binance's 8-hour funding cycle
 // Funding Rate = Base Rate + Interest Rate (depends on market imbalance)
 
-import { sql } from "../../db/mysql.js";
-import { redis, cacheSet, cacheGet } from "../../db/redis.js";
+import { sql } from "../db/mysql.js";
+import { redis, cacheSet, cacheGet } from "../db/redis.js";
 
 const FUNDING_CYCLE_HOURS = 8; // Settlement every 8 hours
 const BASE_FUNDING_RATE = 0.0001; // 0.01% per 8-hour cycle

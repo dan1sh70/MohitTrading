@@ -7,8 +7,8 @@
 // - Real-time orderbook management via Redis
 // - WebSocket event broadcasting
 
-import { redis } from "../../db/redis.js";
-import { sql } from "../../db/mysql.js";
+import { redis } from "../db/redis.js";
+import { sql } from "../db/mysql.js";
 
 const ORDERBOOK_PREFIX = "orderbook";
 const MATCH_HISTORY_PREFIX = "match_history";

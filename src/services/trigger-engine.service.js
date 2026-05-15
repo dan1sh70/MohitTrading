@@ -5,10 +5,10 @@
 // Executes market orders when triggered
 // Checks every 100ms for accuracy
 
-import { sql } from "../../db/mysql.js";
+import { sql } from "../db/mysql.js";
 import { getMarkPrice } from "./mark-price.service.js";
 import { closePosition } from "./trade-execution.service.js";
-import { redis } from "../../db/redis.js";
+import { redis } from "../db/redis.js";
 
 const CHECK_INTERVAL_MS = 100; // Check every 100ms
 const TRIGGER_TOLERANCE = 0.0001; // 0.01% tolerance for trigger execution

@@ -8,8 +8,8 @@
 // - Auto-liquidation when margin breaches threshold
 // - Funding costs for leverage positions
 
-import { sql } from "../../db/mysql.js";
-import { cacheSet, cacheGet } from "../../db/redis.js";
+import { sql } from "../db/mysql.js";
+import { cacheSet, cacheGet } from "../db/redis.js";
 import { getMarkPrice } from "./mark-price.service.js";
 
 const LIQUIDATION_THRESHOLD = 0.05; // 5% margin ratio = liquidation

@@ -5,8 +5,8 @@
 // Used for liquidation, position valuation, and funding rate calculations
 // Compatible with Binance & Delta Exchange
 
-import { sql } from "../../db/mysql.js";
-import { redis, cacheSet, cacheGet } from "../../db/redis.js";
+import { sql } from "../db/mysql.js";
+import { redis, cacheSet, cacheGet } from "../db/redis.js";
 import { getCryptoPrice } from "../modules/crypto/crypto.service.js";
 
 const MARK_PRICE_CACHE_TTL = 500; // Update every 500ms

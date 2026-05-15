@@ -3,8 +3,8 @@
 // ═════════════════════════════════════════════════════════════════════════════
 
 import express from 'express';
-import { authenticate } from '../../middleware/auth.js';
-import { validateRequest } from '../../middleware/validation.js';
+import { requireAuth } from '../../middleware/auth.js';
+import { validateBody } from '../../middleware/validate.js';
 import {
   placeBuyOrder,
   placeSellOrder,
@@ -27,7 +27,7 @@ const router = express.Router();
 // ───────────────────────────────────────────────────────────────────────────
 
 // All routes require authentication
-router.use(authenticate);
+router.use(requireAuth);
 
 // ───────────────────────────────────────────────────────────────────────────
 // ORDER PLACEMENT
@@ -38,14 +38,14 @@ router.use(authenticate);
  * Place a BUY order
  * Body: { symbol, quantity, price?, leverage?, tradingMode?, orderType? }
  */
-router.post('/orders/buy', validateRequest('body'), placeBuyOrder);
+router.post('/orders/buy', placeBuyOrder);
 
 /**
  * POST /api/crypto/orders/sell
  * Place a SELL order
  * Body: { symbol, quantity, price?, leverage?, tradingMode?, orderType? }
  */
-router.post('/orders/sell', validateRequest('body'), placeSellOrder);
+router.post('/orders/sell', placeSellOrder);
 
 // ───────────────────────────────────────────────────────────────────────────
 // ORDER MANAGEMENT

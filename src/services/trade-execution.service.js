@@ -3,8 +3,8 @@
 // ═════════════════════════════════════════════════════════════════════════════
 // Orchestrates order placement, matching, and settlement
 
-import { sql } from "../../db/mysql.js";
-import { redis } from "../../db/redis.js";
+import { sql } from "../db/mysql.js";
+import { redis } from "../db/redis.js";
 import {
   addOrderToBook,
   matchOrder,

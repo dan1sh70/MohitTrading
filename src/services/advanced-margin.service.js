@@ -8,7 +8,7 @@
 // - Position merging for one-way mode
 // - Margin reallocation
 
-import { sql } from "../../db/mysql.js";
+import { sql } from "../db/mysql.js";
 import { getMarkPrice } from "./mark-price.service.js";
 
 /**
