@@ -37,15 +37,24 @@ CREATE TABLE IF NOT EXISTS market_hours (
 );
 
 -- Insert default Indian stock market hours
-INSERT INTO market_hours (market_type, market_name, open_time, close_time, timezone, notes) 
+INSERT INTO
+    market_hours (
+        market_type,
+        market_name,
+        open_time,
+        close_time,
+        timezone,
+        notes
+    )
 VALUES (
-    'indian_stock', 
-    'Indian Stock Market (NSE/BSE)', 
-    '09:15:00', 
-    '15:30:00', 
-    'Asia/Kolkata',
-    'Standard Indian stock market trading hours. Pre-market: 9:00-9:15, Regular: 9:15-15:30, Post-market: 15:40-16:00'
-) ON DUPLICATE KEY UPDATE 
+        'indian_stock',
+        'Indian Stock Market (NSE/BSE)',
+        '09:15:00',
+        '15:30:00',
+        'Asia/Kolkata',
+        'Standard Indian stock market trading hours. Pre-market: 9:00-9:15, Regular: 9:15-15:30, Post-market: 15:40-16:00'
+    )
+ON DUPLICATE KEY UPDATE
     market_name = VALUES(market_name),
     notes = VALUES(notes);
 
@@ -61,7 +70,7 @@ CREATE TABLE IF NOT EXISTS market_hours_audit (
     changed_by INT,
     changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     reason TEXT,
-    FOREIGN KEY (market_hours_id) REFERENCES market_hours(id)
+    FOREIGN KEY (market_hours_id) REFERENCES market_hours (id)
 );
 
 -- ===== USERS TABLE =====
@@ -175,7 +184,11 @@ CREATE TABLE IF NOT EXISTS market_holidays (
     holiday_date DATE NOT NULL,
     holiday_name VARCHAR(100) NOT NULL,
     description TEXT,
-    closure_type ENUM('FULL_DAY', 'HALF_DAY', 'CUSTOM_HOURS') NOT NULL DEFAULT 'FULL_DAY',
+    closure_type ENUM(
+        'FULL_DAY',
+        'HALF_DAY',
+        'CUSTOM_HOURS'
+    ) NOT NULL DEFAULT 'FULL_DAY',
     custom_open_time TIME NULL,
     custom_close_time TIME NULL,
     is_recurring BOOLEAN DEFAULT FALSE, -- For annual holidays like Diwali
@@ -193,22 +206,143 @@ CREATE TABLE IF NOT EXISTS market_holidays (
 );
 
 -- Insert some default Indian market holidays for 2024-2025
-INSERT INTO market_holidays (market_type, holiday_date, holiday_name, description, closure_type, is_recurring, recurring_pattern) VALUES
-('indian_stock', '2024-01-26', 'Republic Day', 'National holiday celebrating the adoption of the Constitution of India', 'FULL_DAY', TRUE, 'REPUBLIC_DAY'),
-('indian_stock', '2024-03-25', 'Holi', 'Festival of Colors', 'FULL_DAY', TRUE, 'HOLI'),
-('indian_stock', '2024-04-11', 'Eid-ul-Fitr', 'Islamic festival marking the end of Ramadan', 'FULL_DAY', TRUE, 'EID_AL_FITR'),
-('indian_stock', '2024-04-14', 'Dr. Baba Saheb Ambedkar Jayanti', 'Birth anniversary of Dr. B.R. Ambedkar', 'FULL_DAY', TRUE, 'AMBEDKAR_JAYANTI'),
-('indian_stock', '2024-05-01', 'Maharashtra Day', 'Formation day of Maharashtra state', 'FULL_DAY', TRUE, 'MAHARASHTRA_DAY'),
-('indian_stock', '2024-06-17', 'Bakri Id', 'Islamic festival of sacrifice', 'FULL_DAY', TRUE, 'BAKRI_ID'),
-('indian_stock', '2024-07-17', 'Muharram', 'Islamic New Year', 'FULL_DAY', TRUE, 'MUHARRAM'),
-('indian_stock', '2024-08-15', 'Independence Day', 'National holiday celebrating independence from British rule', 'FULL_DAY', TRUE, 'INDEPENDENCE_DAY'),
-('indian_stock', '2024-10-02', 'Mahatma Gandhi Jayanti', 'Birth anniversary of Mahatma Gandhi', 'FULL_DAY', TRUE, 'GANDHI_JAYANTI'),
-('indian_stock', '2024-10-12', 'Dussehra', 'Hindu festival celebrating victory of good over evil', 'FULL_DAY', TRUE, 'DUSSEHRA'),
-('indian_stock', '2024-11-01', 'Diwali Laxmi Pujan', 'Main day of Diwali festival', 'FULL_DAY', TRUE, 'DIWALI'),
-('indian_stock', '2024-11-02', 'Diwali Balipratipada', 'Second day of Diwali', 'FULL_DAY', TRUE, 'DIWALI_2'),
-('indian_stock', '2024-11-15', 'Guru Nanak Jayanti', 'Birth anniversary of Guru Nanak Dev Ji', 'FULL_DAY', TRUE, 'GURU_NANAK_JAYANTI'),
-('indian_stock', '2024-12-25', 'Christmas', 'Christian festival celebrating birth of Jesus Christ', 'FULL_DAY', TRUE, 'CHRISTMAS')
-ON DUPLICATE KEY UPDATE 
+INSERT INTO
+    market_holidays (
+        market_type,
+        holiday_date,
+        holiday_name,
+        description,
+        closure_type,
+        is_recurring,
+        recurring_pattern
+    )
+VALUES (
+        'indian_stock',
+        '2024-01-26',
+        'Republic Day',
+        'National holiday celebrating the adoption of the Constitution of India',
+        'FULL_DAY',
+        TRUE,
+        'REPUBLIC_DAY'
+    ),
+    (
+        'indian_stock',
+        '2024-03-25',
+        'Holi',
+        'Festival of Colors',
+        'FULL_DAY',
+        TRUE,
+        'HOLI'
+    ),
+    (
+        'indian_stock',
+        '2024-04-11',
+        'Eid-ul-Fitr',
+        'Islamic festival marking the end of Ramadan',
+        'FULL_DAY',
+        TRUE,
+        'EID_AL_FITR'
+    ),
+    (
+        'indian_stock',
+        '2024-04-14',
+        'Dr. Baba Saheb Ambedkar Jayanti',
+        'Birth anniversary of Dr. B.R. Ambedkar',
+        'FULL_DAY',
+        TRUE,
+        'AMBEDKAR_JAYANTI'
+    ),
+    (
+        'indian_stock',
+        '2024-05-01',
+        'Maharashtra Day',
+        'Formation day of Maharashtra state',
+        'FULL_DAY',
+        TRUE,
+        'MAHARASHTRA_DAY'
+    ),
+    (
+        'indian_stock',
+        '2024-06-17',
+        'Bakri Id',
+        'Islamic festival of sacrifice',
+        'FULL_DAY',
+        TRUE,
+        'BAKRI_ID'
+    ),
+    (
+        'indian_stock',
+        '2024-07-17',
+        'Muharram',
+        'Islamic New Year',
+        'FULL_DAY',
+        TRUE,
+        'MUHARRAM'
+    ),
+    (
+        'indian_stock',
+        '2024-08-15',
+        'Independence Day',
+        'National holiday celebrating independence from British rule',
+        'FULL_DAY',
+        TRUE,
+        'INDEPENDENCE_DAY'
+    ),
+    (
+        'indian_stock',
+        '2024-10-02',
+        'Mahatma Gandhi Jayanti',
+        'Birth anniversary of Mahatma Gandhi',
+        'FULL_DAY',
+        TRUE,
+        'GANDHI_JAYANTI'
+    ),
+    (
+        'indian_stock',
+        '2024-10-12',
+        'Dussehra',
+        'Hindu festival celebrating victory of good over evil',
+        'FULL_DAY',
+        TRUE,
+        'DUSSEHRA'
+    ),
+    (
+        'indian_stock',
+        '2024-11-01',
+        'Diwali Laxmi Pujan',
+        'Main day of Diwali festival',
+        'FULL_DAY',
+        TRUE,
+        'DIWALI'
+    ),
+    (
+        'indian_stock',
+        '2024-11-02',
+        'Diwali Balipratipada',
+        'Second day of Diwali',
+        'FULL_DAY',
+        TRUE,
+        'DIWALI_2'
+    ),
+    (
+        'indian_stock',
+        '2024-11-15',
+        'Guru Nanak Jayanti',
+        'Birth anniversary of Guru Nanak Dev Ji',
+        'FULL_DAY',
+        TRUE,
+        'GURU_NANAK_JAYANTI'
+    ),
+    (
+        'indian_stock',
+        '2024-12-25',
+        'Christmas',
+        'Christian festival celebrating birth of Jesus Christ',
+        'FULL_DAY',
+        TRUE,
+        'CHRISTMAS'
+    )
+ON DUPLICATE KEY UPDATE
     holiday_name = VALUES(holiday_name),
     description = VALUES(description),
     is_recurring = VALUES(is_recurring),
@@ -236,13 +370,17 @@ CREATE TABLE IF NOT EXISTS instruments (
     exchange VARCHAR(32) NOT NULL,
     instrument_key VARCHAR(255),
     lot_size INT DEFAULT 1,
-    instrument_type ENUM('EQ','FUT','OPT','IDX') DEFAULT 'EQ',
+    instrument_type ENUM('EQ', 'FUT', 'OPT', 'IDX') DEFAULT 'EQ',
     expiry_date DATE NULL,
-    strike_price DECIMAL(12,2) NULL,
-    option_type ENUM('CE','PE') NULL,
+    strike_price DECIMAL(12, 2) NULL,
+    option_type ENUM('CE', 'PE') NULL,
     raw JSON NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE KEY unique_instrument (exchange, symbol, instrument_key)
+    UNIQUE KEY unique_instrument (
+        exchange,
+        symbol,
+        instrument_key
+    )
 );
 
 -- ===== CANDLES TABLE =====
@@ -251,10 +389,10 @@ CREATE TABLE IF NOT EXISTS candles (
     symbol VARCHAR(64) NOT NULL,
     timeframe VARCHAR(16) NOT NULL,
     ts BIGINT NOT NULL,
-    open DECIMAL(18,6) NOT NULL,
-    high DECIMAL(18,6) NOT NULL,
-    low DECIMAL(18,6) NOT NULL,
-    close DECIMAL(18,6) NOT NULL,
+    open DECIMAL(18, 6) NOT NULL,
+    high DECIMAL(18, 6) NOT NULL,
+    low DECIMAL(18, 6) NOT NULL,
+    close DECIMAL(18, 6) NOT NULL,
     volume BIGINT DEFAULT 0,
     open_interest BIGINT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -293,7 +431,7 @@ CREATE TABLE IF NOT EXISTS watchlists (
     items JSON NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );
 
 -- ===== WEBSOCKET SESSIONS =====
