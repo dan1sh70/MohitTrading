@@ -155,17 +155,19 @@
 | --- | ------------------ | ------ | ---- | ---------- | --------------- |
 | 47  | `/api/commodities` | GET    | ❌   | 30/min     | All commodities |
 
-### 🇮🇳 Indian Stock Trading APIs (7)
+### 🇮🇳 Indian Stock Trading APIs (9)
 
-| #   | Endpoint                            | Method | Auth | Rate Limit | Purpose                 |
-| --- | ----------------------------------- | ------ | ---- | ---------- | ----------------------- |
-| 48  | `/api/stocks/in/trade/buy`          | POST   | ✅   | 5/min      | Buy Indian stock        |
-| 49  | `/api/stocks/in/trade/sell`         | POST   | ✅   | 5/min      | Sell Indian stock       |
-| 50  | `/api/stocks/in/trade/update`       | PUT    | ✅   | 5/min      | Update trade (not impl) |
-| 51  | `/api/stocks/in/positions`          | GET    | ✅   | -          | List positions          |
-| 52  | `/api/stocks/in/positions/:id`      | GET    | ✅   | -          | Position details        |
-| 53  | `/api/stocks/in/positions/:id/exit` | POST   | ✅   | 5/min      | Exit position           |
-| 54  | `/api/stocks/in/performance`        | GET    | ✅   | -          | Performance metrics     |
+| #   | Endpoint                              | Method | Auth | Rate Limit | Purpose                      |
+| --- | ------------------------------------- | ------ | ---- | ---------- | ---------------------------- |
+| 48  | `/api/stocks/in/trade/buy`            | POST   | ✅   | 5/min      | Buy Indian stock             |
+| 49  | `/api/stocks/in/trade/sell`           | POST   | ✅   | 5/min      | Sell Indian stock            |
+| 50  | `/api/stocks/in/trade/orders`         | GET    | ✅   | -          | List pending limit orders    |
+| 51  | `/api/stocks/in/trade/orders/process` | POST   | ✅   | 5/min      | Process pending limit orders |
+| 52  | `/api/stocks/in/trade/update`         | PUT    | ✅   | 5/min      | Update trade (not impl)      |
+| 53  | `/api/stocks/in/positions`            | GET    | ✅   | -          | List positions               |
+| 54  | `/api/stocks/in/positions/:id`        | GET    | ✅   | -          | Position details             |
+| 55  | `/api/stocks/in/positions/:id/exit`   | POST   | ✅   | 5/min      | Exit position                |
+| 56  | `/api/stocks/in/performance`          | GET    | ✅   | -          | Performance metrics          |
 
 ### 📦 Indian Stock Lot Size APIs (4) - Upstox
 
@@ -2581,7 +2583,7 @@ curl http://localhost:8808/api/commodities
 
 ---
 
-## 🇮🇳 INDIAN STOCK TRADING APIs (7)
+## 🇮🇳 INDIAN STOCK TRADING APIs (9)
 
 Complete trading system for Indian stocks (NSE) with real-time balance management, P&L calculation, and performance metrics.
 
@@ -2601,8 +2603,11 @@ POST /api/stocks/in/trade/buy
 {
   "symbol": "INFY",
   "quantity": 10,
-  "price": 1580.5,
-  "orderType": "MARKET"
+  "entryPrice": 1580.5,
+  "orderType": "MARKET",
+  "timeFrame": "Intraday",
+  "marginUsed": 0,
+  "charges": 0
 }
 ```
 
@@ -2651,8 +2656,11 @@ curl -X POST http://localhost:8808/api/stocks/in/trade/buy \
   -d '{
     "symbol": "INFY",
     "quantity": 10,
-    "price": 1580.50,
-    "orderType": "MARKET"
+    "entryPrice": 1580.50,
+    "orderType": "MARKET",
+    "timeFrame": "Intraday",
+    "marginUsed": 0,
+    "charges": 0
   }'
 ```
 
@@ -2673,10 +2681,15 @@ POST /api/stocks/in/trade/sell
 {
   "symbol": "INFY",
   "quantity": 10,
-  "price": 1600.0,
-  "orderType": "MARKET"
+  "entryPrice": 1600.0,
+  "orderType": "MARKET",
+  "timeFrame": "Intraday",
+  "marginUsed": 0,
+  "charges": 0
 }
 ```
+
+**Note:** For delivery trades, the backend only allows sell when the user has an existing active `BUY` position for the same symbol. Intraday sell-first behavior is allowed.
 
 **Success Response (201):**
 
@@ -2705,13 +2718,81 @@ curl -X POST http://localhost:8808/api/stocks/in/trade/sell \
   -d '{
     "symbol": "INFY",
     "quantity": 10,
-    "price": 1600.00
+    "entryPrice": 1600.00,
+    "orderType": "MARKET",
+    "timeFrame": "Intraday",
+    "marginUsed": 0,
+    "charges": 0
   }'
 ```
 
 ---
 
-### 50. Update Indian Stock Trade (Stub)
+### 50. List Pending Indian Stock Orders
+
+```
+GET /api/stocks/in/trade/orders
+```
+
+**Authentication:** Required (JWT Bearer token)  
+**Rate Limit:** -  
+**Purpose:** Returns pending Indian stock `LIMIT` orders for the authenticated user.
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "count": 2,
+  "data": [
+    {
+      "id": 123,
+      "user_id": 1,
+      "symbol": "INFY",
+      "quantity": 10,
+      "price": 1580.5,
+      "side": "BUY",
+      "time_frame": "Intraday",
+      "margin_used": 0,
+      "charges": 0,
+      "status": "PENDING",
+      "created_at": "2026-05-07T12:00:00Z"
+    }
+  ]
+}
+```
+
+---
+
+### 51. Process Pending Indian Stock Orders
+
+```
+POST /api/stocks/in/trade/orders/process
+```
+
+**Authentication:** Required (JWT Bearer token)  
+**Rate Limit:** 5 requests/minute  
+**Purpose:** Evaluates pending Indian stock `LIMIT` orders and fills any orders that meet market conditions.
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "processed": 1,
+  "executed": [
+    {
+      "orderId": 123,
+      "positionId": 45,
+      "executedPrice": 1580.5
+    }
+  ]
+}
+```
+
+---
+
+### 52. Update Indian Stock Trade (Stub)
 
 ```
 PUT /api/stocks/in/trade/update
@@ -2733,7 +2814,7 @@ PUT /api/stocks/in/trade/update
 
 ---
 
-### 51. Get Indian Stock Positions
+### 53. Get Indian Stock Positions
 
 ```
 GET /api/stocks/in/positions?status=ACTIVE
@@ -2785,7 +2866,7 @@ curl http://localhost:8808/api/stocks/in/positions?status=ACTIVE \
 
 ---
 
-### 52. Get Position Details
+### 54. Get Position Details
 
 ```
 GET /api/stocks/in/positions/:positionId
@@ -2819,7 +2900,7 @@ GET /api/stocks/in/positions/:positionId
 
 ---
 
-### 53. Exit Position
+### 55. Exit Position
 
 ```
 POST /api/stocks/in/positions/:positionId/exit
@@ -2876,7 +2957,7 @@ curl -X POST http://localhost:8808/api/stocks/in/positions/1/exit \
 
 ---
 
-### 54. Get Performance Metrics
+### 56. Get Performance Metrics
 
 ```
 GET /api/stocks/in/performance
