@@ -8,17 +8,64 @@ import { sql } from "./mysql.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+async function executeSqlFile(filePath) {
+  const content = await fs.readFile(filePath, "utf8");
+  const statements = content
+    .split(";")
+    .map(st => st.trim())
+    .filter(st => st.length > 0);
+
+  let successCount = 0;
+  let skippedCount = 0;
+
+  for (const statement of statements) {
+    const cleanStatement = statement
+      .split("\n")
+      .filter(line => !line.trim().startsWith("--"))
+      .join("\n")
+      .trim();
+
+    if (!cleanStatement) continue;
+
+    try {
+      await sql(cleanStatement);
+      successCount++;
+    } catch (error) {
+      const msg = error.message || "";
+      if (
+        error.code === "ER_DUP_FIELDNAME" ||
+        error.code === "ER_DUP_KEYNAME" ||
+        error.code === "ER_TABLE_EXISTS_ERROR" ||
+        error.code === "ER_CANT_DROP_FIELD_OR_KEY" ||
+        msg.includes("Duplicate column name") ||
+        msg.includes("Duplicate key name") ||
+        msg.includes("already exists") ||
+        msg.includes("Duplicate entry")
+      ) {
+        skippedCount++;
+      } else {
+        console.error(`[DB Init] Error executing statement in ${path.basename(filePath)}:\n${cleanStatement}\nError:`, error.message);
+      }
+    }
+  }
+  console.log(`[DB Init] Finished ${path.basename(filePath)}: ${successCount} succeeded, ${skippedCount} skipped/duplicate.`);
+}
+
 export async function initDb() {
   const schemaPath = path.join(__dirname, "schema.sql");
-  const schema = await fs.readFile(schemaPath, "utf8");
-  await sql(schema);
+  await executeSqlFile(schemaPath);
+
+  const cryptoSchemaPath = path.join(__dirname, "crypto-schema.sql");
+  await executeSqlFile(cryptoSchemaPath);
+
+  const cryptoMigrationPath = path.join(__dirname, "crypto-futures-migration.sql");
+  await executeSqlFile(cryptoMigrationPath);
 
   // Fix: Ensure trading_type column exists in trades table
   try {
     await sql(`ALTER TABLE trades ADD COLUMN trading_type ENUM('indian_stock', 'crypto', 'other') NOT NULL DEFAULT 'crypto'`);
     console.log("[DB Init] Added trading_type column to trades table");
   } catch (error) {
-    // Column already exists or other error - ignore
     if (error.code !== 'ER_DUP_FIELDNAME' && !error.message?.includes('Duplicate')) {
       console.log("[DB Init] trading_type column check:", error.message);
     }
@@ -55,7 +102,6 @@ export async function initDb() {
   console.log("Database initialized and sample users seeded.");
 }
 
-// Run only if executed directly (not imported)
 if (import.meta.url === `file://${process.argv[1]}`) {
   initDb()
     .catch((error) => {

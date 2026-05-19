@@ -18,34 +18,34 @@
 
 -- Add margin mode support
 ALTER TABLE crypto_positions
-ADD COLUMN IF NOT EXISTS margin_mode ENUM('ISOLATED', 'CROSS') NOT NULL DEFAULT 'CROSS' COMMENT 'Margin mode: isolated (per-position) or cross (shared)';
+ADD COLUMN margin_mode ENUM('ISOLATED', 'CROSS') NOT NULL DEFAULT 'CROSS' COMMENT 'Margin mode: isolated (per-position) or cross (shared)';
 
 -- Add isolated margin tracking
 ALTER TABLE crypto_positions
-ADD COLUMN IF NOT EXISTS isolated_margin DECIMAL(18, 8) NOT NULL DEFAULT 0 COMMENT 'Isolated margin amount for this position';
+ADD COLUMN isolated_margin DECIMAL(18, 8) NOT NULL DEFAULT 0 COMMENT 'Isolated margin amount for this position';
 
 -- Add mark price tracking
 ALTER TABLE crypto_positions
-ADD COLUMN IF NOT EXISTS mark_price DECIMAL(18, 8) NOT NULL DEFAULT 0 COMMENT 'Fair mark price (used for liquidation, not last trade price)';
+ADD COLUMN mark_price DECIMAL(18, 8) NOT NULL DEFAULT 0 COMMENT 'Fair mark price (used for liquidation, not last trade price)';
 
 -- Add funding rate info
 ALTER TABLE crypto_positions
-ADD COLUMN IF NOT EXISTS funding_rate DECIMAL(8, 6) NOT NULL DEFAULT 0 COMMENT 'Current funding rate for this position (% per 8h)';
+ADD COLUMN funding_rate DECIMAL(8, 6) NOT NULL DEFAULT 0 COMMENT 'Current funding rate for this position (% per 8h)';
 
 -- Add next funding settlement time
 ALTER TABLE crypto_positions
-ADD COLUMN IF NOT EXISTS next_funding_time DATETIME NULL COMMENT 'Next funding settlement time';
+ADD COLUMN next_funding_time DATETIME NULL COMMENT 'Next funding settlement time';
 
 -- Add position mode (for hedge mode tracking)
 ALTER TABLE crypto_positions
-ADD COLUMN IF NOT EXISTS position_mode ENUM('ONE_WAY', 'HEDGE') NOT NULL DEFAULT 'ONE_WAY' COMMENT 'Position mode (one-way or hedge)';
+ADD COLUMN position_mode ENUM('ONE_WAY', 'HEDGE') NOT NULL DEFAULT 'ONE_WAY' COMMENT 'Position mode (one-way or hedge)';
 
 -- Add exit_price column (was missing!)
 ALTER TABLE crypto_positions
-ADD COLUMN IF NOT EXISTS exit_price DECIMAL(18, 8) NOT NULL DEFAULT 0 COMMENT 'Exit price when position closed';
+ADD COLUMN exit_price DECIMAL(18, 8) NOT NULL DEFAULT 0 COMMENT 'Exit price when position closed';
 
 -- Create index for finding positions that need liquidation check
-CREATE INDEX IF NOT EXISTS idx_crypto_pos_margin_ratio ON crypto_positions (user_id, margin_ratio, status);
+CREATE INDEX idx_crypto_pos_margin_ratio ON crypto_positions (user_id, margin_ratio, status);
 
 -- ═════════════════════════════════════════════════════════════════════════════
 -- SECTION 2: ORDERS TABLE ENHANCEMENTS
@@ -53,22 +53,22 @@ CREATE INDEX IF NOT EXISTS idx_crypto_pos_margin_ratio ON crypto_positions (user
 
 -- Add reduce-only flag
 ALTER TABLE crypto_orders
-ADD COLUMN IF NOT EXISTS reduce_only BOOLEAN NOT NULL DEFAULT FALSE COMMENT 'If true, order only reduces position, never increases';
+ADD COLUMN reduce_only BOOLEAN NOT NULL DEFAULT FALSE COMMENT 'If true, order only reduces position, never increases';
 
 -- Add maker/taker indicator
 ALTER TABLE crypto_orders
-ADD COLUMN IF NOT EXISTS is_maker BOOLEAN DEFAULT NULL COMMENT 'NULL=unknown, TRUE=maker (added liquidity), FALSE=taker (removed liquidity)';
+ADD COLUMN is_maker BOOLEAN DEFAULT NULL COMMENT 'NULL=unknown, TRUE=maker (added liquidity), FALSE=taker (removed liquidity)';
 
 -- Add fee rate for this specific order
 ALTER TABLE crypto_orders
-ADD COLUMN IF NOT EXISTS fee_rate DECIMAL(8, 6) NOT NULL DEFAULT 0.0004 COMMENT 'Taker fee rate (maker fee lower)';
+ADD COLUMN fee_rate DECIMAL(8, 6) NOT NULL DEFAULT 0.0004 COMMENT 'Taker fee rate (maker fee lower)';
 
 -- Add exchange order ID (for API connections)
 ALTER TABLE crypto_orders
-ADD COLUMN IF NOT EXISTS exchange_order_id VARCHAR(100) NULL COMMENT 'External exchange order ID';
+ADD COLUMN exchange_order_id VARCHAR(100) NULL COMMENT 'External exchange order ID';
 
 -- Create index for reduce-only orders
-CREATE INDEX IF NOT EXISTS idx_crypto_order_reduce_only ON crypto_orders (user_id, reduce_only, status);
+CREATE INDEX idx_crypto_order_reduce_only ON crypto_orders (user_id, reduce_only, status);
 
 -- ═════════════════════════════════════════════════════════════════════════════
 -- SECTION 3: USERS TABLE ENHANCEMENTS
@@ -76,11 +76,11 @@ CREATE INDEX IF NOT EXISTS idx_crypto_order_reduce_only ON crypto_orders (user_i
 
 -- Add hedge mode toggle
 ALTER TABLE users
-ADD COLUMN IF NOT EXISTS hedge_mode BOOLEAN NOT NULL DEFAULT FALSE COMMENT 'Can have LONG and SHORT simultaneously for same symbol';
+ADD COLUMN hedge_mode BOOLEAN NOT NULL DEFAULT FALSE COMMENT 'Can have LONG and SHORT simultaneously for same symbol';
 
 -- Add isolated margin total tracking
 ALTER TABLE users
-ADD COLUMN IF NOT EXISTS isolated_margin_total DECIMAL(18, 8) NOT NULL DEFAULT 0 COMMENT 'Total isolated margin locked across positions';
+ADD COLUMN isolated_margin_total DECIMAL(18, 8) NOT NULL DEFAULT 0 COMMENT 'Total isolated margin locked across positions';
 
 -- ═════════════════════════════════════════════════════════════════════════════
 -- SECTION 4: NEW TABLES FOR ADVANCED FEATURES
@@ -94,7 +94,6 @@ CREATE TABLE IF NOT EXISTS mark_price_history (
     bid_price DECIMAL(18, 8) NOT NULL DEFAULT 0,
     ask_price DECIMAL(18, 8) NOT NULL DEFAULT 0,
     recorded_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_mark_history_symbol FOREIGN KEY (symbol) REFERENCES crypto_orders (symbol),
     INDEX idx_mark_history_symbol_time (symbol, recorded_at),
     INDEX idx_mark_history_time (recorded_at)
 ) COMMENT = 'Historical mark prices for analytics';
@@ -164,7 +163,6 @@ CREATE TABLE IF NOT EXISTS crypto_fee_config (
     taker_fee_rate DECIMAL(8, 6) NOT NULL DEFAULT 0.0004 COMMENT '0.04%',
     funding_rate_base DECIMAL(8, 6) NOT NULL DEFAULT 0.00001 COMMENT 'Base funding rate',
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_fee_symbol FOREIGN KEY (symbol) REFERENCES crypto_orders (symbol),
     UNIQUE INDEX idx_fee_symbol (symbol)
 ) COMMENT = 'Fee rates and funding configuration per symbol';
 
@@ -174,25 +172,25 @@ CREATE TABLE IF NOT EXISTS crypto_fee_config (
 
 -- Add column to track position mode at creation time
 ALTER TABLE crypto_trades
-ADD COLUMN IF NOT EXISTS position_mode ENUM('ONE_WAY', 'HEDGE') NOT NULL DEFAULT 'ONE_WAY' COMMENT 'Mode at time of trade';
+ADD COLUMN position_mode ENUM('ONE_WAY', 'HEDGE') NOT NULL DEFAULT 'ONE_WAY' COMMENT 'Mode at time of trade';
 
 -- ═════════════════════════════════════════════════════════════════════════════
 -- SECTION 7: INDEXES FOR PERFORMANCE
 -- ═════════════════════════════════════════════════════════════════════════════
 
 -- Indexes for finding positions that need processing
-CREATE INDEX IF NOT EXISTS idx_crypto_pos_active_futures ON crypto_positions (symbol, status, trading_mode);
+CREATE INDEX idx_crypto_pos_active_futures ON crypto_positions (symbol, status, trading_mode);
 
-CREATE INDEX IF NOT EXISTS idx_crypto_pos_isolated ON crypto_positions (user_id, margin_mode, status);
+CREATE INDEX idx_crypto_pos_isolated ON crypto_positions (user_id, margin_mode, status);
 
-CREATE INDEX IF NOT EXISTS idx_crypto_pos_triggers ON crypto_positions (
+CREATE INDEX idx_crypto_pos_triggers ON crypto_positions (
     status,
     take_profit,
     stop_loss
 );
 
 -- Indexes for funding settlement
-CREATE INDEX IF NOT EXISTS idx_funding_settlement_needed ON crypto_funding_rates (next_settlement_time, symbol);
+CREATE INDEX idx_funding_settlement_needed ON crypto_funding_rates (next_settlement_time, symbol);
 
 -- ═════════════════════════════════════════════════════════════════════════════
 -- SECTION 8: DEFAULT CONFIGURATIONS

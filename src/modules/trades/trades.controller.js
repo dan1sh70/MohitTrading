@@ -1,5 +1,5 @@
-import { cacheDel } from "../../db/redis.js";
 import { sql } from "../../db/mysql.js";
+import { cacheDel } from "../../db/redis.js";
 import { writeAuditLog } from "../../utils/audit-log.js";
 
 function parsePagination(query) {
@@ -213,6 +213,22 @@ export async function resetAccount(req, res) {
 
     // Delete indian stock performance data for the user
     await sql(`DELETE FROM indian_stock_performance WHERE user_id = $1`, [userId]);
+
+    // Delete all crypto positions, orders, trades, fills, and performance for the user
+    try {
+      await sql(`DELETE FROM crypto_positions WHERE user_id = $1`, [userId]);
+      await sql(`DELETE FROM crypto_orders WHERE user_id = $1`, [userId]);
+      await sql(`DELETE FROM crypto_order_fills WHERE user_id = $1`, [userId]);
+      await sql(`DELETE FROM crypto_trades WHERE user_id = $1`, [userId]);
+      await sql(`DELETE FROM crypto_performance WHERE user_id = $1`, [userId]);
+      await sql(`DELETE FROM crypto_balance_history WHERE user_id = $1`, [userId]);
+      await sql(`DELETE FROM crypto_liquidations WHERE user_id = $1`, [userId]);
+      await sql(`DELETE FROM crypto_funding_payments WHERE user_id = $1`, [userId]);
+      await sql(`DELETE FROM trigger_events WHERE user_id = $1`, [userId]);
+      console.log(`[ResetAccount] Successfully cleared all crypto tables for user ${userId}`);
+    } catch (cryptoErr) {
+      console.error("[ResetAccount] Error clearing crypto tables:", cryptoErr.message);
+    }
 
     // Reset user balance to default
     await sql(

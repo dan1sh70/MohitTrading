@@ -47,20 +47,69 @@ function convertPgPlaceholders(query, params) {
 }
 
 export async function sql(query, params = []) {
-  const { mysqlQuery, mysqlParams } = convertPgPlaceholders(query, params);
+  let { mysqlQuery, mysqlParams } = convertPgPlaceholders(query, params);
+
+  // Automatically parse and strip PostgreSQL 'RETURNING ...' syntax for MySQL compatibility
+  const hasReturning = /RETURNING\s+(\w+)/i.test(mysqlQuery);
+  const returningMatch = mysqlQuery.match(/RETURNING\s+(\w+)/i);
+  const returningCol = returningMatch ? returningMatch[1] : 'id';
+  mysqlQuery = mysqlQuery.replace(/\s+RETURNING\s+\w+/gi, "");
+
   const [result] = await pool.query(mysqlQuery, mysqlParams);
 
   if (Array.isArray(result)) {
-    return {
-      rows: result,
-      rowCount: result.length,
-      insertId: undefined
-    };
+    // Add pg compatibility properties to the array
+    Object.defineProperties(result, {
+      rows: {
+        value: result,
+        writable: true,
+        configurable: true,
+        enumerable: false // Keep it non-enumerable so it doesn't show up in loops/serialization
+      },
+      rowCount: {
+        value: result.length,
+        writable: true,
+        configurable: true,
+        enumerable: false
+      },
+      insertId: {
+        value: undefined,
+        writable: true,
+        configurable: true,
+        enumerable: false
+      }
+    });
+    return result;
   }
 
-  return {
-    rows: [],
-    rowCount: result.affectedRows ?? 0,
-    insertId: result.insertId ?? undefined
-  };
+  // For non-array results (OkPacket / ResultSetHeader)
+  const rowsArray = [];
+  if (result.insertId && hasReturning) {
+    rowsArray.push({
+      [returningCol]: result.insertId,
+      id: result.insertId
+    });
+  }
+
+  Object.defineProperties(rowsArray, {
+    rows: {
+      value: rowsArray,
+      writable: true,
+      configurable: true,
+      enumerable: false
+    },
+    rowCount: {
+      value: result.affectedRows ?? 0,
+      writable: true,
+      configurable: true,
+      enumerable: false
+    },
+    insertId: {
+      value: result.insertId ?? undefined,
+      writable: true,
+      configurable: true,
+      enumerable: false
+    }
+  });
+  return rowsArray;
 }

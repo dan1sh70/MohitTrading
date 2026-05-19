@@ -60,7 +60,7 @@ const closePositionSchema = z.object({
  * Place a BUY order
  */
 export async function placeBuyOrder(req, res) {
-  const { symbol, quantity, price, leverage, tradingMode, orderType } = req.validatedBody;
+  const { symbol, quantity, price, leverage, tradingMode, orderType } = req.body;
   const userId = req.user.id;
   
   try {
@@ -95,7 +95,7 @@ export async function placeBuyOrder(req, res) {
  * Place a SELL order
  */
 export async function placeSellOrder(req, res) {
-  const { symbol, quantity, price, leverage, tradingMode, orderType } = req.validatedBody;
+  const { symbol, quantity, price, leverage, tradingMode, orderType } = req.body;
   const userId = req.user.id;
   
   try {
