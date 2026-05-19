@@ -4,11 +4,12 @@ import {
   getIndianStockDaily,
   getTopIndianStocks,
   getSupportedIndianStocks,
-  getLotSizeFromDhanHQ,
-  getAllLotSizesFromDhanHQ,
-  validateLotMultipleFromDhanHQ,
-  calculateQuantityFromDhanHQ
-} from "../../services/dhanhq.service.js";
+  getLotSizeFromUpstox,
+  getAllLotSizesFromUpstox,
+  validateLotMultipleFromUpstox,
+  calculateQuantityFromUpstox
+  , getUpstoxTokenStatus, fetchUpstoxInstruments
+} from "../../services/upstox.service.js";
 
 /**
  * Get Indian stock price
@@ -22,6 +23,12 @@ export async function getIndianStock(req, res) {
     }
 
     try {
+      // Ensure we have Upstox token available
+      const status = await getUpstoxTokenStatus("default");
+      if (!status.exists || !status.hasAccessToken) {
+        return res.status(401).json({ message: "Upstox not authorized. Complete OAuth: GET /api/auth/upstox/login" });
+      }
+
       const price = await getIndianStockPrice(symbol.toUpperCase());
       const marketOpen = isIndianMarketOpen();
       
@@ -48,6 +55,12 @@ export async function getIndianStock(req, res) {
  */
 export async function getIndianStocks(req, res) {
   try {
+    // Ensure Upstox token exists before attempting to fetch many prices
+    const status = await getUpstoxTokenStatus("default");
+    if (!status.exists || !status.hasAccessToken) {
+      return res.status(401).json({ message: "Upstox not authorized. Complete OAuth: GET /api/auth/upstox/login" });
+    }
+
     const stocks = getSupportedIndianStocks();
     const marketOpen = isIndianMarketOpen();
     
@@ -111,6 +124,11 @@ export async function getIndianStocks(req, res) {
  */
 export async function getIndianStocksBatch(req, res) {
   try {
+    const status = await getUpstoxTokenStatus("default");
+    if (!status.exists || !status.hasAccessToken) {
+      return res.status(401).json({ message: "Upstox not authorized. Complete OAuth: GET /api/auth/upstox/login" });
+    }
+
     const stocks = getSupportedIndianStocks();
     const limit = parseInt(req.query.limit) || 10; // Default to 10 stocks
     const limitedStocks = stocks.slice(0, limit);
@@ -140,7 +158,7 @@ export async function getIndianStocksBatch(req, res) {
       data: results,
       count: results.length,
       timestamp: Date.now(),
-      source: "DhanHQ"
+      source: "Upstox"
     });
   } catch (error) {
     console.error("Error fetching batch Indian stocks:", error.message);
@@ -166,6 +184,11 @@ export async function getIndianStockIntradayData(req, res) {
       return res.status(400).json({ message: `Invalid interval. Must be one of: ${validIntervals.join(", ")}` });
     }
 
+    const status = await getUpstoxTokenStatus("default");
+    if (!status.exists || !status.hasAccessToken) {
+      return res.status(401).json({ message: "Upstox not authorized. Complete OAuth: GET /api/auth/upstox/login" });
+    }
+
     const data = await getIndianStockIntraday(symbol.toUpperCase(), interval);
     res.json(data);
   } catch (error) {
@@ -183,6 +206,11 @@ export async function getIndianStockDailyData(req, res) {
 
     if (!symbol) {
       return res.status(400).json({ message: "Stock symbol is required" });
+    }
+
+    const status = await getUpstoxTokenStatus("default");
+    if (!status.exists || !status.hasAccessToken) {
+      return res.status(401).json({ message: "Upstox not authorized. Complete OAuth: GET /api/auth/upstox/login" });
     }
 
     const data = await getIndianStockDaily(symbol.toUpperCase());
@@ -209,6 +237,11 @@ export async function getTopIndian(req, res) {
     }
 
     try {
+      const status = await getUpstoxTokenStatus("default");
+      if (!status.exists || !status.hasAccessToken) {
+        return res.status(401).json({ message: "Upstox not authorized. Complete OAuth: GET /api/auth/upstox/login" });
+      }
+
       const data = await getTopIndianStocks(sortBy);
       const marketOpen = isIndianMarketOpen();
       
@@ -357,7 +390,12 @@ export async function getLotSizeForSymbol(req, res) {
       });
     }
 
-    const lotInfo = await getLotSizeFromDhanHQ(symbol.toUpperCase());
+    const status = await getUpstoxTokenStatus("default");
+    if (!status.exists || !status.hasAccessToken) {
+      return res.status(401).json({ message: "Upstox not authorized. Complete OAuth: GET /api/auth/upstox/login" });
+    }
+
+    const lotInfo = await getLotSizeFromUpstox(symbol.toUpperCase());
 
     // If lots parameter provided, calculate quantity
     if (lots && !isNaN(parseInt(lots))) {
@@ -391,16 +429,16 @@ export async function getAllLotSizes(req, res) {
   try {
     const { segment } = req.query;
     
-    // Default to NSE_FNO segment, or use NSE_EQ for equity
-    const exchangeSegment = segment || "NSE_FNO";
-    const lotSizes = await getAllLotSizesFromDhanHQ(exchangeSegment);
+    // Default to NSE_EQ segment, or use NSE_FNO for futures
+    const exchangeSegment = segment || "NSE_EQ";
+    const lotSizes = await getAllLotSizesFromUpstox(exchangeSegment);
 
     res.json({
       success: true,
       data: lotSizes,
       count: lotSizes.length,
       timestamp: Date.now(),
-      source: "DhanHQ API"
+      source: "Upstox API"
     });
   } catch (error) {
     console.error("[LotSize] Error getting all lot sizes:", error.message);
@@ -434,11 +472,11 @@ export async function validateLotSize(req, res) {
       });
     }
 
-    const lotInfo = await getLotSizeFromDhanHQ(symbol.toUpperCase());
+    const lotInfo = await getLotSizeFromUpstox(symbol.toUpperCase());
 
     let validation;
     if (quantity) {
-      validation = await validateLotMultipleFromDhanHQ(symbol.toUpperCase(), parseInt(quantity));
+      validation = await validateLotMultipleFromUpstox(symbol.toUpperCase(), parseInt(quantity));
     } else {
       const numLots = parseInt(lots);
       const calcQuantity = lotInfo.lotSize * numLots;
@@ -478,13 +516,13 @@ export async function validateLotSize(req, res) {
  */
 export async function getLotSizeStats(req, res) {
   try {
-    // Fetch all FNO instruments for statistics
-    const fnoInstruments = await getAllLotSizesFromDhanHQ("NSE_FNO");
+    // Fetch all EQ instruments for statistics
+    const instruments = await getAllLotSizesFromUpstox("NSE_EQ");
     
     // Calculate statistics
-    const lotSizes = fnoInstruments.map(i => i.lotSize);
+    const lotSizes = instruments.map(i => i.lotSize);
     const stats = {
-      totalCount: fnoInstruments.length,
+      totalCount: instruments.length,
       uniqueLotSizes: [...new Set(lotSizes)].sort((a, b) => a - b),
       averageLotSize: lotSizes.length > 0 
         ? Math.round(lotSizes.reduce((a, b) => a + b, 0) / lotSizes.length) 
@@ -492,16 +530,16 @@ export async function getLotSizeStats(req, res) {
       minLotSize: lotSizes.length > 0 ? Math.min(...lotSizes) : 0,
       maxLotSize: lotSizes.length > 0 ? Math.max(...lotSizes) : 0,
       categories: {
-        fno: fnoInstruments.length
+        equity: instruments.length
       },
-      source: "DhanHQ API"
+      source: "Upstox API"
     };
 
     res.json({
       success: true,
       data: stats,
       timestamp: Date.now(),
-      source: "DhanHQ API"
+      source: "Upstox API"
     });
   } catch (error) {
     console.error("[LotSize] Error getting lot size stats:", error.message);
@@ -510,5 +548,61 @@ export async function getLotSizeStats(req, res) {
       message: "Failed to get lot size statistics",
       error: error.message
     });
+  }
+}
+
+/**
+ * Get Equity instruments (NSE_EQ)
+ */
+export async function getEquityInstruments(req, res) {
+  try {
+    const status = await getUpstoxTokenStatus("default");
+    if (!status.exists || !status.hasAccessToken) {
+      return res.status(401).json({ message: "Upstox not authorized. Complete OAuth: GET /api/auth/upstox/login" });
+    }
+
+    const instruments = await fetchUpstoxInstruments("NSE_EQ");
+    res.json({ success: true, count: instruments.length, data: instruments });
+  } catch (error) {
+    console.error('[Instruments] Error fetching equity instruments:', error.message);
+    res.status(500).json({ success: false, message: error.message });
+  }
+}
+
+/**
+ * Get Futures instruments (NSE_FO)
+ */
+export async function getFuturesInstruments(req, res) {
+  try {
+    const status = await getUpstoxTokenStatus("default");
+    if (!status.exists || !status.hasAccessToken) {
+      return res.status(401).json({ message: "Upstox not authorized. Complete OAuth: GET /api/auth/upstox/login" });
+    }
+
+    const instruments = await fetchUpstoxInstruments("NSE_FO");
+    res.json({ success: true, count: instruments.length, data: instruments });
+  } catch (error) {
+    console.error('[Instruments] Error fetching futures instruments:', error.message);
+    res.status(500).json({ success: false, message: error.message });
+  }
+}
+
+/**
+ * Get Options instruments (NSE_FO)
+ */
+export async function getOptionsInstruments(req, res) {
+  try {
+    const status = await getUpstoxTokenStatus("default");
+    if (!status.exists || !status.hasAccessToken) {
+      return res.status(401).json({ message: "Upstox not authorized. Complete OAuth: GET /api/auth/upstox/login" });
+    }
+
+    const instruments = await fetchUpstoxInstruments("NSE_FO");
+    // Filter for option-like symbols if Upstox returns them in same segment
+    const options = instruments.filter(i => /CE|PE|OPT|OPTIDX/.test(i.symbol) || i.segment === 'FNO');
+    res.json({ success: true, count: options.length, data: options });
+  } catch (error) {
+    console.error('[Instruments] Error fetching options instruments:', error.message);
+    res.status(500).json({ success: false, message: error.message });
   }
 }

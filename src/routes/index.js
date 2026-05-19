@@ -15,6 +15,7 @@ import {
   resetPassword, 
   verifyResetToken 
 } from "../modules/auth/auth.controller.js";
+import { upstoxLogin, upstoxCallback, upstoxConnected } from "../modules/auth/upstox.controller.js";
 import {
   createUser,
   getPositions,
@@ -103,8 +104,15 @@ import {
   getLotSizeForSymbol,
   getAllLotSizes,
   validateLotSize,
-  getLotSizeStats as getLotStats
+  getLotSizeStats as getLotStats,
+  getEquityInstruments,
+  getFuturesInstruments,
+  getOptionsInstruments
 } from "../modules/stocks/indian.controller.js";
+import { fetchUpstoxInstruments } from "../services/upstox.service.js";
+import { getUpstoxTokenStatus } from "../services/upstox-token-manager.js";
+import { getLiveQuote, getOHLC, getOptionChain as getUpstoxOptionChain } from "../services/upstox-market-engine.js";
+import { getHealthStatus, updateHealthStatus } from "../services/health-monitor.service.js";
 import {
   buyIndianStock,
   sellIndianStock,
@@ -112,7 +120,9 @@ import {
   getPositionDetails,
   exitPosition,
   getPerformanceMetrics,
-  updateIndianStock
+  updateIndianStock,
+  getIndianStockOrders,
+  processPendingIndianOrders
 } from "../modules/stocks/indian-trade.controller.js";
 import {
   buyIndianStockSchema,
@@ -129,6 +139,9 @@ import {
   getStockNewsHandler,
   getAdvancedNewsHandler
 } from "../modules/news/news.controller.js";
+import { tvSearch, tvResolve, tvHistory } from "../modules/tradingview/tradingview.controller.js";
+import { getOptionChain, getOptionAnalytics } from "../modules/options/options.controller.js";
+import { aggregateAndCache } from "../services/candle-aggregator.service.js";
 
 // Rate limiters
 const loginLimiter = rateLimit({
@@ -166,8 +179,15 @@ apiRouter.use((req, res, next) => {
   next();
 });
 
-apiRouter.get("/health", (_req, res) => {
-  res.json({ status: "ok", service: "paper-trading-backend" });
+apiRouter.get("/health", async (_req, res) => {
+  try {
+    const health = await updateHealthStatus();
+    res.json({ status: "ok", service: "paper-trading-backend", health });
+  } catch (error) {
+    console.error('[Health] Error updating health status:', error.message);
+    const cached = await getHealthStatus();
+    res.json({ status: "ok", service: "paper-trading-backend", health: cached });
+  }
 });
 
 apiRouter.post("/auth/login", loginLimiter, validateBody(loginSchema), login);
@@ -175,6 +195,60 @@ apiRouter.post("/auth/register", loginLimiter, validateBody(registerSchema), reg
 apiRouter.post("/auth/forgot-password", loginLimiter, validateBody(forgotPasswordSchema), forgotPassword);
 apiRouter.post("/auth/reset-password", loginLimiter, validateBody(resetPasswordSchema), resetPassword);
 apiRouter.get("/auth/verify-reset-token/:token", verifyResetToken);
+
+// Upstox OAuth routes
+apiRouter.get("/auth/upstox/login", upstoxLogin);
+apiRouter.get("/auth/upstox/callback", upstoxCallback);
+apiRouter.get("/auth/upstox/connected", upstoxConnected);
+
+// Upstox market data routes
+apiRouter.get("/upstox/quote/:symbol", async (req, res) => {
+  try {
+    const symbol = (req.params.symbol || "").toUpperCase();
+    if (!symbol) return res.status(400).json({ success: false, message: "Symbol is required" });
+    const quote = await getLiveQuote(symbol, req.user?.id || "default");
+    res.json({ success: true, data: quote });
+  } catch (err) {
+    console.error('[Upstox] /upstox/quote error:', err.message);
+    res.status(err.statusCode || 500).json({ success: false, message: err.message });
+  }
+});
+
+apiRouter.get("/upstox/ohlc/:symbol", async (req, res) => {
+  try {
+    const symbol = (req.params.symbol || "").toUpperCase();
+    const interval = req.query.interval || "1m";
+    if (!symbol) return res.status(400).json({ success: false, message: "Symbol is required" });
+    const ohlc = await getOHLC(symbol, interval, req.user?.id || "default");
+    res.json({ success: true, data: ohlc });
+  } catch (err) {
+    console.error('[Upstox] /upstox/ohlc error:', err.message);
+    res.status(err.statusCode || 500).json({ success: false, message: err.message });
+  }
+});
+
+apiRouter.get("/upstox/options/:symbol", async (req, res) => {
+  try {
+    const symbol = (req.params.symbol || "").toUpperCase();
+    if (!symbol) return res.status(400).json({ success: false, message: "Symbol is required" });
+    const chain = await getUpstoxOptionChain(symbol, req.user?.id || "default");
+    res.json({ success: true, data: chain });
+  } catch (err) {
+    console.error('[Upstox] /upstox/options error:', err.message);
+    res.status(err.statusCode || 500).json({ success: false, message: err.message });
+  }
+});
+
+// Debug: expose raw Upstox instruments (requires valid OAuth token cached)
+apiRouter.get("/debug/upstox/instruments", async (_req, res) => {
+  try {
+    const instruments = await fetchUpstoxInstruments("NSE_EQ");
+    res.json({ success: true, count: instruments.length, data: instruments.slice(0, 200) });
+  } catch (err) {
+    console.error('[Debug] Failed to fetch Upstox instruments:', err.message);
+    res.status(500).json({ success: false, message: 'Failed to fetch instruments', error: err.message });
+  }
+});
 
 // Crypto price endpoints (public, rate limited)
 apiRouter.get("/crypto/prices", cryptoPriceLimiter, getAllPrices);
@@ -242,6 +316,9 @@ apiRouter.get("/stocks/in/lot-size/:symbol", getLotSizeForSymbol);
 apiRouter.get("/stocks/in/lot-sizes/all", getAllLotSizes);
 apiRouter.get("/stocks/in/lot-sizes/stats", getLotStats);
 apiRouter.get("/stocks/in/lot-sizes/validate", validateLotSize);
+apiRouter.get("/stocks/in/instruments/equity", getEquityInstruments);
+apiRouter.get("/stocks/in/instruments/futures", getFuturesInstruments);
+apiRouter.get("/stocks/in/instruments/options", getOptionsInstruments);
 
 // ========== INDIAN STOCK TRADING ENDPOINTS (AUTHENTICATED) ==========
 // 
@@ -264,6 +341,8 @@ apiRouter.get("/stocks/in/lot-sizes/validate", validateLotSize);
 
 apiRouter.post("/stocks/in/trade/buy", requireAuth, validateBody(buyIndianStockSchema), buyIndianStock);
 apiRouter.post("/stocks/in/trade/sell", requireAuth, validateBody(sellIndianStockSchema), sellIndianStock);
+apiRouter.get("/stocks/in/trade/orders", requireAuth, getIndianStockOrders);
+apiRouter.post("/stocks/in/trade/orders/process", requireAuth, processPendingIndianOrders);
 apiRouter.put("/stocks/in/trade/update", requireAuth, updateIndianStock);
 apiRouter.get("/stocks/in/positions", requireAuth, getIndianStockPositions);
 apiRouter.get("/stocks/in/positions/:positionId", requireAuth, getPositionDetails);
@@ -352,3 +431,48 @@ apiRouter.post("/admin/market-holidays/bulk-create", requireAuth, requireAdmin, 
 apiRouter.get("/market-hours/status/:marketType", checkMarketStatus);
 apiRouter.get("/market-holidays/check/:marketType", checkTodayHoliday);
 apiRouter.get("/market-holidays/:marketType", getMarketHolidays);
+
+// TradingView-compatible endpoints
+apiRouter.get("/tv/search", tvSearch);
+apiRouter.get("/tv/resolve", tvResolve);
+apiRouter.get("/tv/history", tvHistory);
+
+// Options chain endpoints
+apiRouter.get("/options/chain", getOptionChain);
+apiRouter.get("/options/analytics", getOptionAnalytics);
+
+// Candle aggregation endpoint (POST expected with base candles)
+apiRouter.post("/candles/aggregate", async (req, res) => {
+  try {
+    const { symbol, fromResolution, toResolution, fromTs, toTs, candles } = req.body;
+    if (!symbol || !fromResolution || !toResolution || !candles) return res.status(400).json({ error: 'missing_params' });
+    const agg = await aggregateAndCache(symbol, fromResolution, toResolution, fromTs, toTs, candles);
+    res.json({ success: true, data: agg });
+  } catch (err) {
+    console.error('[API] /candles/aggregate error', err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Admin: Upstox token status (shows whether refresh token exists, expiry, next scheduled refresh)
+apiRouter.get("/admin/upstox/token-status", requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const userId = req.user?.id || "default";
+    const status = await getUpstoxTokenStatus(userId);
+    res.json({ success: true, data: status });
+  } catch (err) {
+    console.error('[Admin] Failed to get Upstox token status:', err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+apiRouter.get("/upstox/token-status", async (req, res) => {
+  try {
+    const userId = req.user?.id || "default";
+    const status = await getUpstoxTokenStatus(userId);
+    res.json({ success: true, data: status });
+  } catch (err) {
+    console.error('[Upstox] Failed to get token status:', err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});

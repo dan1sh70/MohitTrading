@@ -401,13 +401,48 @@ if (pm.response.code === 200) {
 
 ---
 
-## Indian Stocks Endpoints
+## Indian Stocks Endpoints (Upstox Powered)
+
+**Data Source:** Upstox API (OAuth 2.0)  
+**Authentication:** Upstox credentials configured in `.env`  
+**Rate Limit:** 30 req/minute
+
+---
 
 ### Get All Indian Stocks
 
 **Method:** GET  
 **URL:** `{{base_url}}/api/stocks/in`  
 **Auth:** None
+
+**Expected Response (200):**
+
+```json
+{
+  "data": [
+    {
+      "symbol": "INFY",
+      "name": "Infosys Limited",
+      "exchange": "NSE",
+      "price": 1580.5,
+      "open": 1570.0,
+      "high": 1595.0,
+      "low": 1565.0,
+      "close": 1565.25,
+      "change": 15.25,
+      "changePercent": 0.97,
+      "volume": 8500000,
+      "timestamp": 1715278901234,
+      "marketOpen": true,
+      "isStale": false
+    }
+  ],
+  "count": 15,
+  "timestamp": 1715278901234,
+  "marketOpen": true,
+  "source": "Upstox"
+}
+```
 
 ---
 
@@ -422,6 +457,8 @@ if (pm.response.code === 200) {
 |-------|------|---------|-------------|
 | `sortBy` | string | `volume` | `volume`, `changePercent`, `price` |
 
+**Example:** `{{base_url}}/api/stocks/in/top?sortBy=changePercent`
+
 ---
 
 ### Get Indian Stock Price
@@ -432,11 +469,48 @@ if (pm.response.code === 200) {
 
 **Path Variable:**
 
-- `symbol` - e.g., `RELIANCE`, `TCS`, `INFY`
+- `symbol` - e.g., `RELIANCE`, `TCS`, `INFY`, `HDFCBANK`, `ICICIBANK`
+
+**Supported Symbols:** INFY, TCS, RELIANCE, HDFC, ICICIBANK, SBIN, WIPRO, MARUTI, BAJAJFINSV, LT, HINDUNILVR, SUNPHARMA, ADANIGREEN, BHARTIARTL, HDFCBANK
+
+**Expected Response (200):**
+
+```json
+{
+  "symbol": "INFY",
+  "name": "Infosys Limited",
+  "exchange": "NSE",
+  "price": 1580.5,
+  "open": 1570.0,
+  "high": 1595.0,
+  "low": 1565.0,
+  "close": 1565.25,
+  "change": 15.25,
+  "changePercent": 0.97,
+  "volume": 8500000,
+  "timestamp": 1715278901234,
+  "marketOpen": true,
+  "isStale": false,
+  "source": "Upstox"
+}
+```
 
 ---
 
-### Get Intraday Data
+### Get Batch Indian Stocks
+
+**Method:** GET  
+**URL:** `{{base_url}}/api/stocks/in/batch`  
+**Auth:** None
+
+**Query Parameters:**
+| Param | Type | Default | Description |
+|-------|------|---------|-------------|
+| `limit` | number | `10` | Max stocks to return (1-15) |
+
+---
+
+### Get Intraday Candlestick Data
 
 **Method:** GET  
 **URL:** `{{base_url}}/api/stocks/in/:symbol/intraday`  
@@ -445,15 +519,144 @@ if (pm.response.code === 200) {
 **Query Parameters:**
 | Param | Type | Default | Description |
 |-------|------|---------|-------------|
-| `interval` | string | `1min` | `1min`, `5min`, `15min` |
+| `interval` | string | `1min` | `1minute`, `5minute`, `15minute` |
+
+**Expected Response (200):**
+
+```json
+{
+  "symbol": "INFY",
+  "name": "Infosys Limited",
+  "exchange": "NSE",
+  "interval": "1minute",
+  "data": [
+    {
+      "timestamp": 1715278800000,
+      "open": 1570.0,
+      "high": 1575.5,
+      "low": 1568.0,
+      "close": 1573.25,
+      "volume": 450000
+    }
+  ],
+  "timestamp": 1715278901234,
+  "source": "Upstox"
+}
+```
 
 ---
 
-### Get Daily Data
+### Get Daily Candlestick Data
 
 **Method:** GET  
 **URL:** `{{base_url}}/api/stocks/in/:symbol/daily`  
 **Auth:** None
+
+**Expected Response (200):**
+
+```json
+{
+  "symbol": "INFY",
+  "name": "Infosys Limited",
+  "exchange": "NSE",
+  "data": [
+    {
+      "date": "2024-05-17",
+      "open": 1570.0,
+      "high": 1595.5,
+      "low": 1565.0,
+      "close": 1580.5,
+      "volume": 8500000
+    }
+  ],
+  "timestamp": 1715278901234,
+  "source": "Upstox"
+}
+```
+
+---
+
+### Get Lot Size for Symbol
+
+**Method:** GET  
+**URL:** `{{base_url}}/api/stocks/in/lot-size/:symbol`  
+**Auth:** None
+
+**Expected Response (200):**
+
+```json
+{
+  "symbol": "RELIANCE",
+  "lotSize": 1,
+  "name": "Reliance Industries",
+  "exchange": "NSE",
+  "category": "equity",
+  "source": "Upstox"
+}
+```
+
+---
+
+### Get All Lot Sizes
+
+**Method:** GET  
+**URL:** `{{base_url}}/api/stocks/in/lot-sizes/all`  
+**Auth:** None
+
+**Expected Response (200):**
+
+```json
+{
+  "data": [
+    {
+      "symbol": "NIFTY",
+      "lotSize": 50,
+      "name": "Nifty 50",
+      "exchange": "NSE",
+      "category": "fno"
+    },
+    {
+      "symbol": "RELIANCE",
+      "lotSize": 1,
+      "name": "Reliance Industries",
+      "exchange": "NSE",
+      "category": "equity"
+    }
+  ],
+  "count": 150,
+  "timestamp": 1715278901234,
+  "source": "Upstox"
+}
+```
+
+---
+
+### Validate Lot Multiple
+
+**Method:** GET  
+**URL:** `{{base_url}}/api/stocks/in/lot-sizes/validate`  
+**Auth:** None
+
+**Query Parameters:**
+| Param | Type | Required | Description |
+|-------|------|----------|-------------|
+| `symbol` | string | Yes | Stock symbol |
+| `quantity` | number | Yes | Quantity to validate |
+
+**Example:** `{{base_url}}/api/stocks/in/lot-sizes/validate?symbol=RELIANCE&quantity=100`
+
+**Expected Response (200):**
+
+```json
+{
+  "symbol": "RELIANCE",
+  "quantity": 100,
+  "lotSize": 1,
+  "isValid": true,
+  "remainder": 0,
+  "suggestion": "Quantity is valid (multiple of 1)"
+}
+```
 
 ---
 

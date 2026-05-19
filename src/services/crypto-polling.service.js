@@ -1,20 +1,31 @@
 import { cacheSet, redis } from "../db/redis.js";
 import { broadcastPriceUpdate } from "./websocket.service.js";
+import { getSupportedSymbols } from "../modules/crypto/crypto.service.js";
 
 const BINANCE_REST_API = "https://api.binance.com/api/v3";
 
 // Supported cryptocurrencies - Top 10 by market cap (as per screenshot)
 // 1. BTC, 2. ETH, 3. USDT, 4. BNB, 5. XRP, 6. USDC, 7. SOL, 8. TRX, 9. DOGE, 10. HYPE
-const SUPPORTED_SYMBOLS = [
-  "BTCUSDT",
-  "ETHUSDT",
-  "BNBUSDT",
-  "SOLUSDT",
-  "XRPUSDT",
-  "TRXUSDT",
-  "DOGEUSDT",
-  "HYPEUSDT"
-];
+// Use canonical supported symbols from the crypto module (single source of truth)
+function getPollingSymbols() {
+  try {
+    const symbols = getSupportedSymbols();
+    if (Array.isArray(symbols) && symbols.length > 0) return symbols;
+  } catch (e) {
+    // fallback minimal list if module import fails
+  }
+
+  return [
+    "BTCUSDT",
+    "ETHUSDT",
+    "BNBUSDT",
+    "SOLUSDT",
+    "XRPUSDT",
+    "TRXUSDT",
+    "DOGEUSDT",
+    "MATICUSDT"
+  ];
+}
 
 // Top 10 ranked by market cap (fixed order matching the screenshot)
 const TOP_10_RANKED = [
@@ -42,20 +53,27 @@ let pollingIntervalId = null;
  */
 async function fetchAllPricesFromBinance() {
   try {
-    const symbols = SUPPORTED_SYMBOLS.join(",");
-    const response = await fetch(
-      `${BINANCE_REST_API}/ticker/price?symbols=[${symbols.split(",").map(s => `"${s}"`).join(",")}]`
-    );
-
+    // Use the public all-tickers endpoint and filter locally to avoid malformed symbol lists
+    const response = await fetch(`${BINANCE_REST_API}/ticker/price`);
     if (!response.ok) {
-      throw new Error(`Binance API error: ${response.status}`);
+      const txt = await response.text().catch(() => "");
+      throw new Error(`Binance API error: ${response.status} - ${txt.substring(0,200)}`);
     }
 
-    const data = await response.json();
-    return data;
+    const all = await response.json();
+    const pollingSymbols = getPollingSymbols();
+    // Normalize and filter
+    const set = new Set(pollingSymbols.map(s => s.toUpperCase()));
+    const filtered = all.filter(p => set.has(String(p.symbol).toUpperCase()));
+
+    if (!Array.isArray(filtered) || filtered.length === 0) {
+      throw new Error("No matching Binance prices found for configured symbols");
+    }
+
+    return filtered;
   } catch (error) {
     console.error("Error fetching all prices from Binance:", error.message);
-    return null;
+    throw error;
   }
 }
 
@@ -66,29 +84,37 @@ async function fetchAllStatsFromBinance() {
   try {
     const stats = [];
 
-    // Fetch stats for each symbol
-    for (const symbol of SUPPORTED_SYMBOLS) {
-      try {
-        const response = await fetch(`${BINANCE_REST_API}/ticker/24hr?symbol=${symbol}`);
-
-        if (response.ok) {
-          const data = await response.json();
-          stats.push({
-            symbol: data.symbol,
-            price: parseFloat(data.lastPrice),
-            priceChange: parseFloat(data.priceChange),
-            priceChangePercent: parseFloat(data.priceChangePercent),
-            highPrice: parseFloat(data.highPrice),
-            lowPrice: parseFloat(data.lowPrice),
-            volume: parseFloat(data.volume),
-            quoteAssetVolume: parseFloat(data.quoteAssetVolume),
-            timestamp: Date.now()
-          });
+      // Fetch stats for each configured polling symbol (use canonical source)
+      const pollingSymbols = getPollingSymbols();
+      for (const rawSymbol of pollingSymbols) {
+        // Normalize and ensure symbol is a valid Binance USDT trading pair
+        const candidate = String(rawSymbol).toUpperCase();
+        const symbol = candidate.endsWith("USDT") ? candidate : `${candidate}USDT`;
+        if (!/^[A-Z0-9]{3,12}USDT$/.test(symbol)) {
+          // skip non-crypto symbols (e.g., commodity or Indian stock symbols)
+          continue;
         }
-      } catch (error) {
-        console.warn(`Failed to fetch stats for ${symbol}:`, error.message);
+        try {
+          const response = await fetch(`${BINANCE_REST_API}/ticker/24hr?symbol=${symbol}`);
+
+          if (response.ok) {
+            const data = await response.json();
+            stats.push({
+              symbol: data.symbol,
+              price: parseFloat(data.lastPrice),
+              priceChange: parseFloat(data.priceChange),
+              priceChangePercent: parseFloat(data.priceChangePercent),
+              highPrice: parseFloat(data.highPrice),
+              lowPrice: parseFloat(data.lowPrice),
+              volume: parseFloat(data.volume),
+              quoteAssetVolume: parseFloat(data.quoteAssetVolume),
+              timestamp: Date.now()
+            });
+          }
+        } catch (error) {
+          console.warn(`Failed to fetch stats for ${symbol}:`, error.message);
+        }
       }
-    }
 
     return stats;
   } catch (error) {

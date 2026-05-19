@@ -109,15 +109,19 @@
 | 24  | `/api/forex/pairs/upcoming` | GET    | ❌   | 30/min     | 30 upcoming pairs 🚀 |
 | 25  | `/api/forex/rate/:from/:to` | GET    | ❌   | 30/min     | Exchange rate        |
 
-### 🇮🇳 Indian Stocks APIs (5 - DhanHQ)
+### 🇮🇳 Indian Stocks APIs (8 - Upstox)
 
-| #   | Endpoint                          | Method | Auth | Rate Limit | Purpose              |
-| --- | --------------------------------- | ------ | ---- | ---------- | -------------------- |
-| 26  | `/api/stocks/in`                  | GET    | ❌   | 30/min     | All supported stocks |
-| 27  | `/api/stocks/in/top`              | GET    | ❌   | 30/min     | Top stocks           |
-| 28  | `/api/stocks/in/:symbol`          | GET    | ❌   | 30/min     | Stock price          |
-| 29  | `/api/stocks/in/:symbol/intraday` | GET    | ❌   | 30/min     | Intraday data        |
-| 30  | `/api/stocks/in/:symbol/daily`    | GET    | ❌   | 30/min     | Daily OHLCV          |
+| #   | Endpoint                             | Method | Auth | Rate Limit | Purpose                  |
+| --- | ------------------------------------ | ------ | ---- | ---------- | ------------------------ |
+| 26  | `/api/stocks/in`                     | GET    | ❌   | 30/min     | All supported stocks     |
+| 27  | `/api/stocks/in/top`                 | GET    | ❌   | 30/min     | Top stocks               |
+| 28  | `/api/stocks/in/batch`               | GET    | ❌   | 30/min     | Batch stock price lookup |
+| 29  | `/api/stocks/in/:symbol`             | GET    | ❌   | 30/min     | Stock price              |
+| 30  | `/api/stocks/in/:symbol/intraday`    | GET    | ❌   | 30/min     | Intraday data            |
+| 31  | `/api/stocks/in/:symbol/daily`       | GET    | ❌   | 30/min     | Daily OHLCV              |
+| 32  | `/api/stocks/in/instruments/equity`  | GET    | ❌   | 30/min     | Equity instruments       |
+| 33  | `/api/stocks/in/instruments/futures` | GET    | ❌   | 30/min     | Futures instruments      |
+| 34  | `/api/stocks/in/instruments/options` | GET    | ❌   | 30/min     | Options instruments      |
 
 ### 📰 News APIs (8 - MarketAux)
 
@@ -163,7 +167,7 @@
 | 53  | `/api/stocks/in/positions/:id/exit` | POST   | ✅   | 5/min      | Exit position           |
 | 54  | `/api/stocks/in/performance`        | GET    | ✅   | -          | Performance metrics     |
 
-### 📦 Indian Stock Lot Size APIs (4) - DhanHQ
+### 📦 Indian Stock Lot Size APIs (4) - Upstox
 
 | #   | Endpoint                            | Method | Auth | Rate Limit | Purpose                 |
 | --- | ----------------------------------- | ------ | ---- | ---------- | ----------------------- |
@@ -225,32 +229,43 @@
 
 ---
 
-### 🇮🇳 DhanHQ Service (Indian Stocks)
+### 🇮🇳 Upstox Service (Indian Stocks)
 
 **NSE Stocks (15 symbols):**
 
 - INFY, TCS, RELIANCE, HDFC, ICICIBANK, SBIN, WIPRO, MARUTI, BAJAJFINSV, LT, HINDUNILVR, SUNPHARMA, ADANIGREEN, BHARTIARTL, HDFCBANK
-- ✅ Real-time stock prices
-- ✅ Intraday data (1min, 5min, 15min intervals)
-- ✅ Daily OHLCV data
+- ✅ Real-time stock prices via Upstox Market Data API
+- ✅ Intraday data (1minute, 5minute, 15minute intervals)
+- ✅ Daily OHLCV historical data
 - ✅ Top stocks ranking (by volume, price change, price)
-- ✅ Mock data fallback for free tier
+- ✅ OAuth 2.0 authentication with token management
+- ✅ Intelligent mock data fallback when API unavailable
 
-**📦 Lot Size API (New):**
+**📦 Lot Size API:**
 
-- ✅ **Real NSE F&O lot sizes** via DhanHQ Instrument API
-- ✅ **Dynamic lot size lookup** for 200+ F&O instruments
+- ✅ **Real NSE lot sizes** via Upstox Instruments API
+- ✅ **Dynamic lot size lookup** for 200+ NSE instruments
 - ✅ **Lot validation** - ensures quantity is multiple of lot size
 - ✅ **Lot-to-quantity conversion** - calculate shares from lots
-- ✅ **Redis caching** - 24-hour cache for lot sizes (they rarely change)
-- ✅ **Fallback to equity** (lot size = 1) if symbol not found in F&O
+- ✅ **Redis caching** - 24-hour cache for lot sizes
+- ✅ **Fallback data** - sensible defaults for equity (lot size = 1)
 
 **API Endpoints:**
 
-- `GET /api/stocks/in/lot-size/:symbol` - Get lot size for any symbol
+- `GET /api/stocks/in` - Get all supported Indian stocks with prices
+- `GET /api/stocks/in/top` - Get top Indian stocks (sortBy: volume, changePercent, price)
+- `GET /api/stocks/in/batch` - Get batch Indian stocks
+- `GET /api/stocks/in/:symbol` - Get specific stock price and data
+- `GET /api/stocks/in/:symbol/intraday` - Get intraday candlestick data
+- `GET /api/stocks/in/:symbol/daily` - Get daily candlestick data
+- `GET 
+` - Get equity instruments via Upstox
+- `GET /api/stocks/in/instruments/futures` - Get futures instruments via Upstox
+- `GET /api/stocks/in/instruments/options` - Get options instruments via Upstox
+- `GET /api/stocks/in/lot-size/:symbol` - Get lot size for symbol
 - `GET /api/stocks/in/lot-sizes/all` - Get all F&O lot sizes
 - `GET /api/stocks/in/lot-sizes/validate` - Validate quantity/lots
-- `GET /api/stocks/in/lot-sizes/stats` - Statistics on lot sizes
+- `GET /api/stocks/in/lot-sizes/stats` - Get lot size statistics
 
 ---
 
@@ -3482,6 +3497,27 @@ POST /api/auth/login
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "user": {
     "id": 2,
+
+---
+
+## 📈 TradingView Compatibility Endpoints
+
+These endpoints are compatible with the TradingView Charting Library (resolve/search/history) and support Indian symbols backed by Upstox/demo data.
+
+- `GET /api/tv/search?query=INFY&limit=30` - search symbols
+- `GET /api/tv/resolve?symbol=INFY` - resolve symbol metadata
+- `GET /api/tv/history?symbol=INFY&resolution=1&from=...&to=...` - get bars in TradingView format
+
+## 🧾 Options Chain Endpoints
+
+- `GET /api/options/chain?symbol=INFY&expiry=2026-06-25` - returns options chain (CE/PE) for symbol and expiry
+- `GET /api/options/analytics?symbol=INFY&expiry=2026-06-25` - returns ATM, PCR, Max Pain and OI analytics
+
+## 🕰️ Candle Aggregation
+
+- `POST /api/candles/aggregate` - aggregate base candles to target timeframe (body: symbol, fromResolution, toResolution, candles)
+
+
     "name": "Aarav Patel",
     "email": "trader1@papertrading.local",
     "role": "trader"

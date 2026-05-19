@@ -97,13 +97,12 @@ export async function getStockPrice(symbol) {
 
     // Check for API rate limit or error
     if (data["Note"] || data["Error Message"]) {
-      console.warn("Alpha Vantage API limit reached, returning mock data");
-      return getMockStockPrice(symbol);
+      throw new Error("Alpha Vantage API limit reached or returned error");
     }
 
     if (!data["Global Quote"] || !data["Global Quote"]["05. price"]) {
-      console.warn(`No price data for ${symbol}, returning mock data`);
-      return getMockStockPrice(symbol);
+      console.error(`Alpha Vantage returned unexpected data for ${symbol}:`, JSON.stringify(data).substring(0, 500));
+      throw new Error(`No price data for ${symbol} from Alpha Vantage`);
     }
 
     const quote = data["Global Quote"];
@@ -128,8 +127,7 @@ export async function getStockPrice(symbol) {
     return price;
   } catch (error) {
     console.error(`Error fetching stock price for ${symbol}:`, error.message);
-    // Return mock data if real API fails
-    return getMockStockPrice(symbol);
+    throw error;
   }
 }
 
@@ -163,13 +161,12 @@ export async function getStockDaily(symbol, outputSize = "compact") {
     const data = await response.json();
 
     if (data["Note"] || data["Error Message"]) {
-      console.warn("Alpha Vantage API limit reached, returning mock data");
-      return getMockStockDaily(symbol);
+      console.error(`Alpha Vantage error for ${symbol}:`, JSON.stringify(data).substring(0, 500));
+      throw new Error("Alpha Vantage API limit reached or returned error");
     }
 
     if (!data["Time Series (Daily)"]) {
-      console.warn(`No daily data for ${symbol}, returning mock data`);
-      return getMockStockDaily(symbol);
+      throw new Error(`No daily data for ${symbol} from Alpha Vantage`);
     }
 
     const timeSeries = data["Time Series (Daily)"];
@@ -199,7 +196,7 @@ export async function getStockDaily(symbol, outputSize = "compact") {
     return result;
   } catch (error) {
     console.error(`Error fetching stock daily for ${symbol}:`, error.message);
-    return getMockStockDaily(symbol);
+    throw error;
   }
 }
 
@@ -233,13 +230,11 @@ export async function getStockSMA(symbol, interval = "daily", timePeriod = 20) {
     const data = await response.json();
 
     if (data["Note"] || data["Error Message"]) {
-      console.warn("Alpha Vantage API limit reached, returning mock SMA");
-      return getMockStockSMA(symbol, timePeriod);
+      throw new Error("Alpha Vantage API limit reached or returned error");
     }
 
     if (!data["Technical Analysis: SMA"]) {
-      console.warn(`No SMA data for ${symbol}, returning mock data`);
-      return getMockStockSMA(symbol, timePeriod);
+      throw new Error(`No SMA data for ${symbol} from Alpha Vantage`);
     }
 
     const smaData = data["Technical Analysis: SMA"];
@@ -266,7 +261,7 @@ export async function getStockSMA(symbol, interval = "daily", timePeriod = 20) {
     return result;
   } catch (error) {
     console.error(`Error fetching SMA for ${symbol}:`, error.message);
-    return getMockStockSMA(symbol, timePeriod);
+    throw error;
   }
 }
 
@@ -300,13 +295,11 @@ export async function getStockRSI(symbol, interval = "daily", timePeriod = 14) {
     const data = await response.json();
 
     if (data["Note"] || data["Error Message"]) {
-      console.warn("Alpha Vantage API limit reached, returning mock RSI");
-      return getMockStockRSI(symbol, timePeriod);
+      throw new Error("Alpha Vantage API limit reached or returned error");
     }
 
     if (!data["Technical Analysis: RSI"]) {
-      console.warn(`No RSI data for ${symbol}, returning mock data`);
-      return getMockStockRSI(symbol, timePeriod);
+      throw new Error(`No RSI data for ${symbol} from Alpha Vantage`);
     }
 
     const rsiData = data["Technical Analysis: RSI"];
@@ -333,7 +326,7 @@ export async function getStockRSI(symbol, interval = "daily", timePeriod = 14) {
     return result;
   } catch (error) {
     console.error(`Error fetching RSI for ${symbol}:`, error.message);
-    return getMockStockRSI(symbol, timePeriod);
+    throw error;
   }
 }
 
@@ -385,13 +378,11 @@ export async function getForexRate(fromCurrency, toCurrency) {
     const data = await response.json();
 
     if (data["Note"] || data["Error Message"]) {
-      console.warn("Alpha Vantage API limit reached, returning mock forex");
-      return getMockForexRate(fromCurrency, toCurrency);
+      throw new Error("Alpha Vantage API limit reached or returned error");
     }
 
     if (!data["Realtime Currency Exchange Rate"]) {
-      console.warn(`No forex data for ${pair}, returning mock data`);
-      return getMockForexRate(fromCurrency, toCurrency);
+      throw new Error(`No forex data for ${pair} from Alpha Vantage`);
     }
 
     const rate = data["Realtime Currency Exchange Rate"];
@@ -416,7 +407,7 @@ export async function getForexRate(fromCurrency, toCurrency) {
     return result;
   } catch (error) {
     console.error(`Error fetching forex for ${pair}:`, error.message);
-    return getMockForexRate(fromCurrency, toCurrency);
+    throw error;
   }
 }
 
@@ -457,13 +448,11 @@ export async function getForexChart(fromCurrency, toCurrency, interval = "daily"
 
     const data = await response.json();
     if (data["Note"] || data["Error Message"]) {
-      console.warn("Alpha Vantage API limit reached, returning mock forex chart");
-      return getMockForexChart(fromCurrency, toCurrency, interval, limit);
+      throw new Error("Alpha Vantage API limit reached or returned error");
     }
 
     if (!data[timeSeriesKey]) {
-      console.warn(`No forex chart data for ${pair} (${interval}), returning mock data`);
-      return getMockForexChart(fromCurrency, toCurrency, interval, limit);
+      throw new Error(`No forex chart data for ${pair} (${interval}) from Alpha Vantage`);
     }
 
     const timeSeries = data[timeSeriesKey];
@@ -497,7 +486,7 @@ export async function getForexChart(fromCurrency, toCurrency, interval = "daily"
     return result;
   } catch (error) {
     console.error(`Error fetching forex chart for ${pair}:`, error.message);
-    return getMockForexChart(fromCurrency, toCurrency, interval, limit);
+    throw error;
   }
 }
 

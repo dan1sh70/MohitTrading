@@ -82,23 +82,7 @@ export async function getCandleData(symbol, timeframe = "1d", limit = 100) {
     return candles;
   } catch (error) {
     console.error(`Error fetching candle data for ${symbol}:`, error.message);
-    // Return mock candle data as fallback
-    console.log(`No chart data for ${symbol}, returning mock data`);
-    const now = Date.now();
-    const candles = [];
-    for (let i = 99; i >= 0; i--) {
-      const timestamp = now - i * 86400000; // 1 day intervals
-      candles.push({
-        timestamp,
-        open: 45000 + Math.random() * 5000,
-        high: 46000 + Math.random() * 5000,
-        low: 44000 + Math.random() * 5000,
-        close: 45000 + Math.random() * 5000,
-        volume: Math.random() * 1000,
-        quoteAssetVolume: Math.random() * 50000000
-      });
-    }
-    return candles;
+    throw error;
   }
 }
 
@@ -166,22 +150,7 @@ export async function getHistoricalData(symbol, timeframe = "1d", days = 30) {
     return historicalData;
   } catch (error) {
     console.error(`Error fetching historical data for ${symbol}:`, error.message);
-    // Return mock historical data as fallback
-    console.log(`No historical data for ${symbol}, returning mock data`);
-    const now = Date.now();
-    const historicalData = [];
-    for (let i = parseInt(days) - 1; i >= 0; i--) {
-      historicalData.push({
-        timestamp: now - i * 86400000,
-        open: 45000 + Math.random() * 5000,
-        high: 46000 + Math.random() * 5000,
-        low: 44000 + Math.random() * 5000,
-        close: 45000 + Math.random() * 5000,
-        volume: Math.random() * 1000,
-        quoteAssetVolume: Math.random() * 50000000
-      });
-    }
-    return historicalData;
+    throw error;
   }
 }
 

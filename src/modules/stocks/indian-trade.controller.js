@@ -41,7 +41,12 @@
 
 import { sql } from "../../db/mysql.js";
 import { writeAuditLog } from "../../utils/audit-log.js";
-import { getIndianStockPrice } from "../../services/dhanhq.service.js";
+import { getIndianStockPrice } from "../../services/upstox.service.js";
+import {
+  createIndianStockLimitOrder,
+  getIndianStockLimitOrders,
+  processPendingIndianStockLimitOrders
+} from "../../services/indian-order.service.js";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // PLACE BUY ORDER
@@ -51,7 +56,7 @@ export async function buyIndianStock(req, res) {
   console.log(`[IndianTrade] Buy request received - Path: ${req.path}, User: ${req.user?.id}`);
   console.log(`[IndianTrade] Request body:`, JSON.stringify(req.validatedBody));
   
-  const { symbol, quantity, entryPrice, timeFrame, marginUsed, charges } = req.validatedBody;
+  const { symbol, quantity, entryPrice: bodyEntryPrice, timeFrame, marginUsed, charges, orderType } = req.validatedBody;
   const userId = req.user?.id;
 
   if (!userId) {
@@ -62,6 +67,18 @@ export async function buyIndianStock(req, res) {
   console.log(`[IndianTrade] Processing buy - User: ${userId}, Symbol: ${symbol}, Qty: ${quantity}, TimeFrame: ${timeFrame}`);
 
   try {
+    // If market order, fetch live price and override entryPrice
+    let entryPrice = bodyEntryPrice;
+    if (orderType === 'MARKET') {
+      try {
+        const priceData = await getIndianStockPrice(symbol.toUpperCase());
+        entryPrice = parseFloat(priceData.price || priceData.currentPrice || entryPrice);
+        console.log(`[IndianTrade] MARKET order - using live price ${entryPrice} for ${symbol}`);
+      } catch (err) {
+        console.warn(`[IndianTrade] Failed to fetch live price for MARKET order, falling back to provided entryPrice: ${err.message}`);
+      }
+    }
+
     // Get current user balance
     console.log(`[IndianTrade] Fetching user balance for user ${userId}`);
     const userResult = await sql(`SELECT balance FROM users WHERE id = $1`, [userId]);
@@ -77,7 +94,30 @@ export async function buyIndianStock(req, res) {
     
     console.log(`[IndianTrade] Balance check - Current: ${currentBalance}, Required: ${totalCost}`);
 
-    // Check if user has sufficient balance
+    if (orderType === 'LIMIT') {
+      if (!entryPrice) {
+        return res.status(400).json({ message: 'Price is required for LIMIT orders' });
+      }
+
+      const orderId = await createIndianStockLimitOrder({
+        userId,
+        symbol,
+        quantity,
+        price: entryPrice,
+        side: 'BUY',
+        timeFrame,
+        marginUsed,
+        charges
+      });
+
+      return res.status(201).json({
+        message: 'Limit order placed (pending)',
+        orderId,
+        status: 'PENDING'
+      });
+    }
+
+    // Check if user has sufficient balance for immediate execution
     if (currentBalance < totalCost) {
       console.log(`[IndianTrade] 400 - Insufficient balance`);
       return res.status(400).json({ 
@@ -96,7 +136,7 @@ export async function buyIndianStock(req, res) {
     console.log(`[IndianTrade] Balance updated successfully`);
 
     // Create position record
-    console.log(`[IndianTrade] Creating position record with: symbol=${symbol}, quantity=${quantity}, entryPrice=${entryPrice}, timeFrame=${timeFrame}`);
+    console.log(`[IndianTrade] Creating position record with: symbol=${symbol}, quantity=${quantity}, entryPrice=${entryPrice}, timeFrame=${timeFrame}, orderType=${orderType}`);
     const result = await sql(
       `
         INSERT INTO indian_stock_positions 
@@ -178,7 +218,7 @@ export async function sellIndianStock(req, res) {
   console.log(`[IndianTrade] Sell request received - Path: ${req.path}, User: ${req.user?.id}`);
   console.log(`[IndianTrade] Request body:`, JSON.stringify(req.validatedBody));
   
-  const { symbol, quantity, entryPrice, timeFrame, marginUsed, charges } = req.validatedBody;
+  const { symbol, quantity, entryPrice: bodyEntryPrice, timeFrame, marginUsed, charges, orderType } = req.validatedBody;
   const userId = req.user?.id;
 
   if (!userId) {
@@ -189,6 +229,18 @@ export async function sellIndianStock(req, res) {
   console.log(`[IndianTrade] Processing sell - User: ${userId}, Symbol: ${symbol}, Qty: ${quantity}, TimeFrame: ${timeFrame}`);
 
   try {
+    // If market order, fetch live price and override entryPrice
+    let entryPrice = bodyEntryPrice;
+    if (orderType === 'MARKET') {
+      try {
+        const priceData = await getIndianStockPrice(symbol.toUpperCase());
+        entryPrice = parseFloat(priceData.price || priceData.currentPrice || entryPrice);
+        console.log(`[IndianTrade] MARKET sell order - using live price ${entryPrice} for ${symbol}`);
+      } catch (err) {
+        console.warn(`[IndianTrade] Failed to fetch live price for MARKET sell order, falling back to provided entryPrice: ${err.message}`);
+      }
+    }
+
     // Get current user balance
     console.log(`[IndianTrade] Fetching user balance for user ${userId}`);
     const userResult = await sql(`SELECT balance FROM users WHERE id = $1`, [userId]);
@@ -200,6 +252,47 @@ export async function sellIndianStock(req, res) {
     }
 
     const currentBalance = parseFloat(userResult.rows[0].balance);
+
+    const normalizedTimeFrame = (timeFrame || '').toString().trim().toLowerCase();
+    const isIntraday = normalizedTimeFrame === 'intraday';
+
+    if (!isIntraday) {
+      const holdingsResult = await sql(
+        `SELECT COALESCE(SUM(quantity), 0) AS total_quantity FROM indian_stock_positions WHERE user_id = $1 AND symbol = $2 AND status = 'ACTIVE' AND trade_type = 'BUY'`,
+        [userId, symbol.toUpperCase()]
+      );
+
+      const availableQuantity = parseFloat(holdingsResult.rows[0]?.total_quantity || 0);
+      console.log(`[IndianTrade] Delivery sell check for ${symbol}: available holdings ${availableQuantity}, requested ${quantity}`);
+
+      if (availableQuantity < quantity) {
+        return res.status(400).json({ message: 'Delivery sell is not allowed without an existing long holding for this symbol' });
+      }
+    }
+
+    if (orderType === 'LIMIT') {
+      if (!entryPrice) {
+        return res.status(400).json({ message: 'Price is required for LIMIT orders' });
+      }
+
+      const orderId = await createIndianStockLimitOrder({
+        userId,
+        symbol,
+        quantity,
+        price: entryPrice,
+        side: 'SELL',
+        timeFrame,
+        marginUsed,
+        charges
+      });
+
+      return res.status(201).json({
+        message: 'Limit sell order placed (pending)',
+        orderId,
+        status: 'PENDING'
+      });
+    }
+
     const sellProceeds = quantity * entryPrice;
     const netProceeds = sellProceeds - charges; // Only deduct charges, not margin
     
@@ -648,6 +741,33 @@ async function updatePerformanceMetrics(userId) {
     );
   } catch (error) {
     console.error("Error updating performance metrics:", error.message);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PENDING LIMIT ORDERS: List and Processing
+// ═══════════════════════════════════════════════════════════════════════════
+
+export async function getIndianStockOrders(req, res) {
+  const userId = req.user?.id;
+  if (!userId) return res.status(401).json({ message: 'User not authenticated' });
+
+  try {
+    const orders = await getIndianStockLimitOrders(userId);
+    return res.json({ success: true, count: orders.length, data: orders });
+  } catch (err) {
+    console.error('Error fetching Indian stock orders:', err.message);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+}
+
+export async function processPendingIndianOrders(req, res) {
+  try {
+    const result = await processPendingIndianStockLimitOrders();
+    return res.json({ success: true, ...result });
+  } catch (err) {
+    console.error('Error processing pending Indian orders:', err.message);
+    return res.status(500).json({ success: false, message: err.message });
   }
 }
 

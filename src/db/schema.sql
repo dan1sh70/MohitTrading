@@ -228,3 +228,105 @@ CREATE TABLE IF NOT EXISTS password_reset_tokens (
     INDEX idx_reset_tokens_token (token),
     INDEX idx_reset_tokens_expires (expires_at)
 );
+
+-- ===== INSTRUMENTS MASTER =====
+CREATE TABLE IF NOT EXISTS instruments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    symbol VARCHAR(64) NOT NULL,
+    exchange VARCHAR(32) NOT NULL,
+    instrument_key VARCHAR(255),
+    lot_size INT DEFAULT 1,
+    instrument_type ENUM('EQ','FUT','OPT','IDX') DEFAULT 'EQ',
+    expiry_date DATE NULL,
+    strike_price DECIMAL(12,2) NULL,
+    option_type ENUM('CE','PE') NULL,
+    raw JSON NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_instrument (exchange, symbol, instrument_key)
+);
+
+-- ===== CANDLES TABLE =====
+CREATE TABLE IF NOT EXISTS candles (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    symbol VARCHAR(64) NOT NULL,
+    timeframe VARCHAR(16) NOT NULL,
+    ts BIGINT NOT NULL,
+    open DECIMAL(18,6) NOT NULL,
+    high DECIMAL(18,6) NOT NULL,
+    low DECIMAL(18,6) NOT NULL,
+    close DECIMAL(18,6) NOT NULL,
+    volume BIGINT DEFAULT 0,
+    open_interest BIGINT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_candles_symbol_tf_ts (symbol, timeframe, ts),
+    INDEX idx_candles_ts (ts)
+);
+
+-- ===== OPTION CHAIN CACHE =====
+CREATE TABLE IF NOT EXISTS option_chain_cache (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    symbol VARCHAR(64) NOT NULL,
+    expiry DATE NOT NULL,
+    payload JSON NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_oc (symbol, expiry)
+);
+
+-- ===== FUTURES DATA =====
+CREATE TABLE IF NOT EXISTS futures_data (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    symbol VARCHAR(64) NOT NULL,
+    expiry DATE NOT NULL,
+    lot_size INT DEFAULT 1,
+    contract_size INT DEFAULT 1,
+    margin_info JSON NULL,
+    rollover_info JSON NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_fut (symbol, expiry)
+);
+
+-- ===== WATCHLISTS =====
+CREATE TABLE IF NOT EXISTS watchlists (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    name VARCHAR(120) NOT NULL,
+    items JSON NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- ===== WEBSOCKET SESSIONS =====
+CREATE TABLE IF NOT EXISTS websocket_sessions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    socket_id VARCHAR(128) NOT NULL,
+    user_id INT NULL,
+    connected_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    meta JSON NULL,
+    INDEX idx_ws_socket (socket_id)
+);
+
+-- ===== MARKET DEPTH (ORDER BOOK SNAPSHOTS) =====
+CREATE TABLE IF NOT EXISTS market_depth (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    symbol VARCHAR(64) NOT NULL,
+    ts BIGINT NOT NULL,
+    bids JSON NULL,
+    asks JSON NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_md_symbol_ts (symbol, ts)
+);
+
+-- ===== HISTORICAL REQUESTS (audit) =====
+CREATE TABLE IF NOT EXISTS historical_requests (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NULL,
+    symbol VARCHAR(64) NOT NULL,
+    timeframe VARCHAR(32) NOT NULL,
+    from_ts BIGINT NOT NULL,
+    to_ts BIGINT NOT NULL,
+    request_params JSON NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_hist_symbol (symbol)
+);
