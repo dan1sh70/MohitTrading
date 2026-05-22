@@ -5,6 +5,7 @@ Generated: 2026-05-22
 This audit log lists important backend files, a short description of their purpose, immediate findings, and recommended next steps for handover.
 
 Summary of critical findings:
+
 - Secrets/default keys present in code or defaults (Upstox keys in `env.js`) — rotate and remove defaults.
 - Redis is required (`REDIS_URL`) — app tolerates Redis failure but ensure production Redis availability or disable caching explicitly.
 - No automated tests or CI seen in backend folder — add basic integration tests for auth, DB init, and key APIs.
@@ -24,7 +25,7 @@ Files reviewed (selection)
 
 - `src/app.js`
   - Purpose: Express app wiring.
-  - Findings: CORS configured permissively (origin '*'), helmet enabled, global error handler logs errors.
+  - Findings: CORS configured permissively (origin '\*'), helmet enabled, global error handler logs errors.
   - Action: restrict `CLIENT_ORIGIN` in production and consider adding stricter CSP.
 
 - `src/config/env.js`
@@ -65,11 +66,13 @@ Files reviewed (selection)
   - Action: add unit/integration tests for trade flows and edge cases (concurrent matching, partial fills, rounding).
 
 Other observations
+
 - Logging is console-based (`console.log`, `console.error`) — for production, integrate structured logging and central log aggregation.
 - Rate limiting is configured in `src/routes/index.js` per-route using `express-rate-limit` — review limits for production traffic and IP trust settings.
 - Image proxy endpoint (`/api/proxy-image`) fetches arbitrary URLs — this can be abused. Consider whitelist or content-size limits.
 
 Recommended immediate tasks for handover
+
 1. Remove placeholder API keys in code and add instruction to populate real secrets in the environment.
 2. Add graceful shutdown logic in `src/server.js` to stop timers, close DB pool and Redis cleanly.
 3. Add basic smoke tests (auth login, DB init, one crypto price, one upstox route) and CI pipeline.
@@ -78,11 +81,13 @@ Recommended immediate tasks for handover
 6. Review `/api/proxy-image` and restrict for safety.
 
 Questions for the original maintainer (to pass to new developer)
+
 - Are there any undocumented environment values or secrets stored externally? (e.g., Render, Docker secrets)
 - Are scheduled jobs (if any) managed externally or by `server.js` process?
 - Are there expectations for uptime/SLAs for the polling services?
 
 Appendix: quick file checklist
+
 - DB schema: `src/db/schema.sql`, `src/db/crypto-schema.sql`, `src/db/crypto-futures-migration.sql`
 - Entrypoints: `src/server.js`, `src/app.js`
 - Routes: `src/routes/index.js` (controller mapping)
