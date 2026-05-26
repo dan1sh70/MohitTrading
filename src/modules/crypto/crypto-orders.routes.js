@@ -5,6 +5,7 @@
 import express from 'express';
 import { requireAuth } from '../../middleware/auth.js';
 import { validateBody } from '../../middleware/validate.js';
+import { placeBuyOrderSchema, placeSellOrderSchema, closePositionSchema } from './crypto-orders.controller.js';
 import {
   placeBuyOrder,
   placeSellOrder,
@@ -38,14 +39,14 @@ router.use(requireAuth);
  * Place a BUY order
  * Body: { symbol, quantity, price?, leverage?, tradingMode?, orderType? }
  */
-router.post('/orders/buy', placeBuyOrder);
+router.post('/orders/buy', validateBody(placeBuyOrderSchema), placeBuyOrder);
 
 /**
  * POST /api/crypto/orders/sell
  * Place a SELL order
  * Body: { symbol, quantity, price?, leverage?, tradingMode?, orderType? }
  */
-router.post('/orders/sell', placeSellOrder);
+router.post('/orders/sell', validateBody(placeSellOrderSchema), placeSellOrder);
 
 // ───────────────────────────────────────────────────────────────────────────
 // ORDER MANAGEMENT
@@ -85,7 +86,7 @@ router.get('/positions/:positionId', getPositionDetails);
  * Close a position
  * Body: { closingPrice? }
  */
-router.post('/positions/:positionId/close', closePositionEndpoint);
+router.post('/positions/:positionId/close', validateBody(closePositionSchema), closePositionEndpoint);
 
 /**
  * GET /api/crypto/positions/:positionId/liquidation-check

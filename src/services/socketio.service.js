@@ -1,6 +1,6 @@
 import { Server } from "socket.io";
 import { createAdapter } from "@socket.io/redis-adapter";
-import { redis } from "../db/redis.js";
+import { redis, isCacheEnabled } from "../db/redis.js";
 
 let io = null;
 
@@ -12,13 +12,19 @@ export function initializeSocketIO(server, opts = {}) {
   });
 
   // If redis is available, plug in adapter for scaling
-  try {
-    const pubClient = redis.duplicate();
-    const subClient = redis.duplicate();
-    io.adapter(createAdapter(pubClient, subClient));
-    console.log("[SocketIO] Redis adapter initialized");
-  } catch (err) {
-    console.warn("[SocketIO] Redis adapter unavailable, running single-node", err?.message);
+  if (isCacheEnabled()) {
+    try {
+      const pubClient = redis.duplicate();
+      const subClient = redis.duplicate();
+      pubClient.on("error", () => {});
+      subClient.on("error", () => {});
+      io.adapter(createAdapter(pubClient, subClient));
+      console.log("[SocketIO] Redis adapter initialized");
+    } catch (err) {
+      console.warn("[SocketIO] Redis adapter unavailable, running single-node", err?.message);
+    }
+  } else {
+    console.log("[SocketIO] Redis disabled, running single-node");
   }
 
   io.use((socket, next) => {

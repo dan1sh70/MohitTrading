@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const required = ["REDIS_URL", "JWT_SECRET"];
+const required = ["JWT_SECRET"];
 
 const hasDatabaseUrl = Boolean(process.env.DATABASE_URL);
 const hasSimpleDbConfig = Boolean(process.env.DB_HOST && process.env.DB_USER && process.env.DB_NAME);
@@ -42,8 +42,8 @@ export const env = {
   adminPassword: process.env.ADMIN_PASSWORD ?? "Admin123!",
   traderPassword: process.env.TRADER_PASSWORD ?? "Trader123!",
   alphaVantageApiKey: process.env.ALPHA_VANTAGE_API_KEY ?? "demo",
-  upstoxApiKey: process.env.UPSTOX_API_KEY ?? "2fc81491-6fbd-43bb-8b15-955d8e0a727f",
-  upstoxApiSecret: process.env.UPSTOX_API_SECRET ?? "kklm46v5r9",
+  upstoxApiKey: process.env.UPSTOX_API_KEY || undefined,
+  upstoxApiSecret: process.env.UPSTOX_API_SECRET || undefined,
   upstoxRedirectUri: process.env.UPSTOX_REDIRECT_URI ?? "http://localhost:8808/api/auth/upstox/callback",
   marketauxApiKey: process.env.MARKETAUX_API_KEY ?? "demo"
 };

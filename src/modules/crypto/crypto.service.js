@@ -62,15 +62,62 @@ const SUPPORTED_SYMBOLS = [
 const BINANCE_REST_API = "https://api.binance.com/api/v3";
 const CACHE_TTL = 30; // 30 seconds for crypto prices
 
+function normalizeSearchSymbol(symbol) {
+  const normalized = String(symbol)
+    .toUpperCase()
+    .trim()
+    .replace(/[^A-Z0-9]/g, "");
+
+  if (!normalized) {
+    return normalized;
+  }
+
+  if (normalized.endsWith("USDT")) {
+    return normalized;
+  }
+
+  return `${normalized}USDT`;
+}
+
 function normalizeCryptoSymbol(symbol) {
-  const normalized = String(symbol).toUpperCase().trim();
+  const normalized = normalizeSearchSymbol(symbol);
+
+  if (!normalized) {
+    return normalized;
+  }
+
   if (SUPPORTED_SYMBOLS.includes(normalized)) {
     return normalized;
   }
-  if (!normalized.endsWith("USDT") && SUPPORTED_SYMBOLS.includes(`${normalized}USDT`)) {
-    return `${normalized}USDT`;
-  }
+
   return normalized;
+}
+
+async function cachePriceSnapshot(priceData) {
+  const cacheKey = `crypto:price:${priceData.symbol}`;
+  const price = {
+    symbol: priceData.symbol,
+    price: parseFloat(priceData.price),
+    timestamp: Date.now()
+  };
+
+  try {
+    await cacheSet(cacheKey, JSON.stringify(price), CACHE_TTL);
+  } catch (cacheError) {
+    console.warn(`Failed to cache price for ${priceData.symbol}:`, cacheError.message);
+  }
+
+  return price;
+}
+
+async function fetchAllPricesFromBinance() {
+  const response = await fetch(`${BINANCE_REST_API}/ticker/price`);
+
+  if (!response.ok) {
+    throw new Error(`Binance API error: ${response.status}`);
+  }
+
+  return response.json();
 }
 
 /**
@@ -99,20 +146,7 @@ export async function getCryptoPrice(symbol) {
     }
 
     const data = await response.json();
-    const price = {
-      symbol: data.symbol,
-      price: parseFloat(data.price),
-      timestamp: Date.now()
-    };
-
-    // Cache the price
-    try {
-      await cacheSet(normalizedCacheKey, JSON.stringify(price), CACHE_TTL);
-    } catch (cacheError) {
-      console.warn(`Failed to cache price for ${normalizedSymbol}:`, cacheError.message);
-    }
-
-    return price;
+    return await cachePriceSnapshot(data);
   } catch (error) {
     console.error(`Error fetching price for ${symbol}:`, error.message);
     throw new Error(`Unable to fetch price for ${symbol}`);
@@ -177,18 +211,25 @@ export async function getAllCryptoPrices() {
   try {
     const cached = await cacheGet(cacheKey);
     if (cached) {
-      return JSON.parse(cached);
+      const parsed = JSON.parse(cached);
+      return Array.isArray(parsed) ? parsed : (parsed.data || []);
     }
   } catch (error) {
     console.warn("Cache error for all prices:", error.message);
   }
 
   try {
-    const prices = await Promise.all(
-      SUPPORTED_SYMBOLS.map((symbol) => getCryptoPrice(symbol).catch(() => null))
-    );
+    const allTickers = await fetchAllPricesFromBinance();
+    const supportedSymbols = new Set(SUPPORTED_SYMBOLS);
+    const validPrices = allTickers
+      .filter((ticker) => supportedSymbols.has(String(ticker.symbol).toUpperCase()))
+      .map((ticker) => ({
+        symbol: String(ticker.symbol).toUpperCase(),
+        price: parseFloat(ticker.price),
+        timestamp: Date.now()
+      }));
 
-    const validPrices = prices.filter((price) => price !== null);
+    await Promise.all(validPrices.map((priceData) => cachePriceSnapshot(priceData)));
 
     try {
       await cacheSet(cacheKey, JSON.stringify(validPrices), CACHE_TTL);

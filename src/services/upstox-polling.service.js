@@ -3,6 +3,7 @@ import { getLiveQuote } from "./upstox-market-engine.js";
 import { broadcastToSymbol } from "./socketio.service.js";
 import { setJson, CacheKey } from "../cache/index.js";
 import { canRequest } from "./rate-limit.service.js";
+import { getUpstoxTokenStatus } from "./upstox-token-manager.js";
 
 const DEFAULT_POLLING_INTERVAL_MS = 5000;
 const DEFAULT_SYMBOLS = ["INFY", "TCS", "RELIANCE", "HDFC", "ICICIBANK"];
@@ -34,6 +35,12 @@ async function cacheQuote(symbol, data) {
 export async function pollUpstoxQuotes(symbols = [], userId = "default") {
   if (!Array.isArray(symbols) || symbols.length === 0) {
     symbols = getPollingSymbols();
+  }
+
+  const tokenStatus = await getUpstoxTokenStatus(userId);
+  if (!tokenStatus.exists || !tokenStatus.hasAccessToken) {
+    console.warn(`[Upstox Poller] Skipping quote polling for ${userId}: no Upstox token available`);
+    return [];
   }
 
   const results = [];

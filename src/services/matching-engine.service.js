@@ -230,8 +230,10 @@ export async function matchOrder(incomingOrder) {
     matches.push({
       makerOrderId: parseInt(makerOrderId),
       makerUserId: parseInt(makerUserId),
+      makerSide: oppositeSide,
       takerOrderId: incomingOrderId,
       takerUserId: incomingUserId,
+      takerSide: incomingSide,
       symbol,
       quantity: fillQuantity,
       price: fillPrice,
@@ -283,7 +285,7 @@ export async function executeMatches(matches, symbol) {
         [
           match.takerOrderId,
           symbol,
-          'BUY', // Assuming taker side
+          match.takerSide,
           match.quantity,
           match.price,
           0, // Commission will be calculated later
@@ -300,7 +302,7 @@ export async function executeMatches(matches, symbol) {
         [
           match.makerOrderId,
           symbol,
-          'SELL', // Opposite side
+          match.makerSide,
           match.quantity,
           match.price,
           0,

@@ -49,11 +49,11 @@ export async function placeOrder(userId, symbol, side, orderType, quantity, pric
     
     // Check user balance
     const userResult = await sql(`SELECT balance FROM users WHERE id = $1`, [userId]);
-    if (userResult.length === 0) {
+    if ((userResult.rows || []).length === 0) {
       throw new Error('User not found');
     }
     
-    const userBalance = userResult[0].balance;
+    const userBalance = parseFloat(userResult.rows[0].balance || 0);
     
     // For market orders, get current price
     let executionPrice = price;
@@ -66,7 +66,7 @@ export async function placeOrder(userId, symbol, side, orderType, quantity, pric
     const requiredMargin = calculateRequiredMargin(quantity, executionPrice, leverage);
     
     // Validate balance for leverage trading
-    if (tradingMode === 'FUTURES' && leverage > 1) {
+    if (tradingMode === 'FUTURES') {
       if (userBalance < requiredMargin) {
         throw new Error(`Insufficient balance. Required: ${requiredMargin}, Available: ${userBalance}`);
       }
@@ -89,7 +89,7 @@ export async function placeOrder(userId, symbol, side, orderType, quantity, pric
       ]
     );
     
-    const orderId = orderResult[0].id;
+    const orderId = orderResult.rows?.[0]?.id;
     
     // For market orders, execute immediately
     if (orderType === 'MARKET') {
@@ -140,11 +140,12 @@ async function executeMarketOrder(orderId, userId, symbol, side, quantity, execu
     // For spot: settle immediately
     if (tradingMode === 'SPOT') {
       // Update user balance
-      const userBalance = await sql(`SELECT balance FROM users WHERE id = $1`, [userId]);
+      const userBalanceRes = await sql(`SELECT balance FROM users WHERE id = $1`, [userId]);
+      if ((userBalanceRes.rows || []).length === 0) throw new Error('User not found');
       const costOrProceeds = quantity * executionPrice;
       const newBalance = side === 'BUY' 
-        ? userBalance[0].balance - costOrProceeds
-        : userBalance[0].balance + costOrProceeds;
+        ? parseFloat(userBalanceRes.rows[0].balance || 0) - costOrProceeds
+        : parseFloat(userBalanceRes.rows[0].balance || 0) + costOrProceeds;
       
       await sql(`UPDATE users SET balance = $1 WHERE id = $2`, [newBalance, userId]);
       
@@ -191,11 +192,12 @@ async function executeMarketOrder(orderId, userId, symbol, side, quantity, execu
         ]
       );
       
-      const positionId = positionResult[0].id;
+      const positionId = positionResult.rows?.[0]?.id;
       
       // Reserve margin from user balance
-      const userBalance = await sql(`SELECT balance FROM users WHERE id = $1`, [userId]);
-      const newBalance = userBalance[0].balance - requiredMargin;
+      const userBalanceRes = await sql(`SELECT balance FROM users WHERE id = $1`, [userId]);
+      if ((userBalanceRes.rows || []).length === 0) throw new Error('User not found');
+      const newBalance = parseFloat(userBalanceRes.rows[0].balance || 0) - requiredMargin;
       
       await sql(`UPDATE users SET balance = $1 WHERE id = $2`, [newBalance, userId]);
       
@@ -364,7 +366,7 @@ export async function closePosition(userId, positionId, closingPrice = null) {
       ]
     );
     
-    const closingOrderId = closingOrderResult[0].id;
+    const closingOrderId = closingOrderResult.rows?.[0]?.id;
     
     // Calculate P&L
     let pnl = 0;
@@ -389,7 +391,7 @@ export async function closePosition(userId, positionId, closingPrice = null) {
       [positionId]
     );
     
-    const entryOrderId = entryOrderResult[0].id;
+    const entryOrderId = entryOrderResult.rows?.[0]?.id;
     
     const durationSeconds = Math.floor((Date.now() - new Date(position.entry_time).getTime()) / 1000);
     
@@ -409,8 +411,8 @@ export async function closePosition(userId, positionId, closingPrice = null) {
     );
     
     // Return margin to user
-    const userBalance = await sql(`SELECT balance FROM users WHERE id = $1`, [userId]);
-    const newBalance = userBalance[0].balance + position.margin_used + pnl;
+    const userBalanceRes = await sql(`SELECT balance FROM users WHERE id = $1`, [userId]);
+    const newBalance = parseFloat(userBalanceRes.rows?.[0]?.balance || 0) + position.margin_used + pnl;
     
     await sql(`UPDATE users SET balance = $1 WHERE id = $2`, [newBalance, userId]);
     

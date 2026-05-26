@@ -26,7 +26,7 @@ import {
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
-const placeBuyOrderSchema = z.object({
+export const placeBuyOrderSchema = z.object({
   symbol: z.string().min(3).max(20).toUpperCase(),
   quantity: z.number().positive("Quantity must be positive"),
   price: z.number().positive("Price must be positive").optional(),
@@ -35,7 +35,7 @@ const placeBuyOrderSchema = z.object({
   orderType: z.enum(['MARKET', 'LIMIT']).default('MARKET')
 });
 
-const placeSellOrderSchema = z.object({
+export const placeSellOrderSchema = z.object({
   symbol: z.string().min(3).max(20).toUpperCase(),
   quantity: z.number().positive("Quantity must be positive"),
   price: z.number().positive("Price must be positive").optional(),
@@ -44,7 +44,7 @@ const placeSellOrderSchema = z.object({
   orderType: z.enum(['MARKET', 'LIMIT']).default('MARKET')
 });
 
-const closePositionSchema = z.object({
+export const closePositionSchema = z.object({
   positionId: z.number().positive("Position ID must be positive"),
   closingPrice: z.number().positive("Price must be positive").optional()
 });
@@ -60,7 +60,7 @@ const closePositionSchema = z.object({
  * Place a BUY order
  */
 export async function placeBuyOrder(req, res) {
-  const { symbol, quantity, price, leverage, tradingMode, orderType } = req.body;
+  const { symbol, quantity, price, leverage, tradingMode, orderType } = req.validatedBody || req.body;
   const userId = req.user.id;
   
   try {
@@ -95,7 +95,7 @@ export async function placeBuyOrder(req, res) {
  * Place a SELL order
  */
 export async function placeSellOrder(req, res) {
-  const { symbol, quantity, price, leverage, tradingMode, orderType } = req.body;
+  const { symbol, quantity, price, leverage, tradingMode, orderType } = req.validatedBody || req.body;
   const userId = req.user.id;
   
   try {
@@ -148,8 +148,8 @@ export async function getPositions(req, res) {
     
     return res.json({
       success: true,
-      data: positions,
-      count: positions.length
+      data: positions.rows,
+      count: positions.rows.length
     });
     
   } catch (error) {
@@ -175,14 +175,14 @@ export async function getPositionDetails(req, res) {
       [positionId, userId]
     );
     
-    if (positions.length === 0) {
+    if ((positions.rows || []).length === 0) {
       return res.status(404).json({
         success: false,
         message: 'Position not found'
       });
     }
     
-    const position = positions[0];
+    const position = positions.rows[0];
     
     // Get current price and update P&L
     const priceData = await getCryptoPrice(position.symbol);
@@ -215,7 +215,7 @@ export async function getPositionDetails(req, res) {
 export async function closePositionEndpoint(req, res) {
   const positionId = parseInt(req.params.positionId);
   const userId = req.user.id;
-  const { closingPrice } = req.body;
+  const { closingPrice } = req.validatedBody || req.body;
   
   try {
     const result = await closePosition(userId, positionId, closingPrice);
@@ -264,8 +264,8 @@ export async function getOrders(req, res) {
     
     return res.json({
       success: true,
-      data: orders,
-      count: orders.length
+      data: orders.rows,
+      count: orders.rows.length
     });
     
   } catch (error) {
@@ -322,7 +322,7 @@ export async function getCryptoPerformance(req, res) {
       [userId]
     );
     
-    if (performance.length === 0) {
+    if ((performance.rows || []).length === 0) {
       return res.json({
         success: true,
         data: {
@@ -336,7 +336,7 @@ export async function getCryptoPerformance(req, res) {
     
     return res.json({
       success: true,
-      data: performance[0]
+      data: performance.rows[0]
     });
     
   } catch (error) {
@@ -367,8 +367,8 @@ export async function getTrades(req, res) {
     
     return res.json({
       success: true,
-      data: trades,
-      count: trades.length
+      data: trades.rows,
+      count: trades.rows.length
     });
     
   } catch (error) {

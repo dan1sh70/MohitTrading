@@ -1,8 +1,20 @@
 import { env } from "../../config/env.js";
 import { exchangeAuthCode, getUpstoxTokenStatus } from "../../services/upstox-token-manager.js";
 
+function assertUpstoxConfig() {
+  if (!env.upstoxApiKey || !env.upstoxApiSecret) {
+    throw new Error("Upstox API is not configured. Set UPSTOX_API_KEY and UPSTOX_API_SECRET in .env.");
+  }
+}
+
 // Redirect user to Upstox authorization dialog
 export function upstoxLogin(req, res) {
+  try {
+    assertUpstoxConfig();
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+
   const params = new URLSearchParams({
     client_id: env.upstoxApiKey,
     redirect_uri: env.upstoxRedirectUri,
@@ -52,6 +64,8 @@ function renderErrorPage(message) {
 // Callback to receive authorization code and exchange for token
 export async function upstoxCallback(req, res) {
   try {
+    assertUpstoxConfig();
+
     const { code, error } = req.query;
 
     if (error) {

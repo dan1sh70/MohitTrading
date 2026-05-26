@@ -46,7 +46,8 @@ export async function login(req, res) {
 }
 
 export async function register(req, res) {
-  const { fullName, email, password, role } = req.validatedBody;
+  const { fullName, email, password } = req.validatedBody;
+  const role = "trader"; // Always register as a trader
 
   const existingUser = await sql(
     `SELECT id FROM users WHERE email = $1`,
