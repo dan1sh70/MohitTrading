@@ -1,0 +1,1322 @@
+{
+  "info": {
+    "_postman_id": "3c7d1d7a-8d55-4a2f-9d7c-6d4d8f2a7c11",
+    "name": "Paper Trading API",
+    "description": "Postman collection for the Paper Trading backend. Import this collection, set the variables, and use the sample requests to exercise the API.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8808"
+    },
+    {
+      "key": "auth_token",
+      "value": ""
+    },
+    {
+      "key": "crypto_symbol",
+      "value": "BTC"
+    },
+    {
+      "key": "crypto_order_symbol",
+      "value": "BTCUSDT"
+    },
+    {
+      "key": "stock_symbol",
+      "value": "AAPL"
+    },
+    {
+      "key": "indian_symbol",
+      "value": "RELIANCE"
+    },
+    {
+      "key": "position_id",
+      "value": "1"
+    },
+    {
+      "key": "order_id",
+      "value": "1"
+    },
+    {
+      "key": "market_type",
+      "value": "NSE"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health and Utilities",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/health"
+          }
+        },
+        {
+          "name": "Proxy Image",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/proxy-image?url=https%3A%2F%2Fexample.com%2Fimage.jpg"
+          }
+        },
+        {
+          "name": "Aggregate Candles",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"symbol\": \"BTCUSDT\",\n  \"fromResolution\": \"1m\",\n  \"toResolution\": \"5m\",\n  \"fromTs\": 1717000000,\n  \"toTs\": 1717003600,\n  \"candles\": [\n    [1717000000, 65000, 65100, 64950, 65080, 12]\n  ]\n}"
+            },
+            "url": "{{base_url}}/api/candles/aggregate"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": "{{base_url}}/api/auth/register"
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": "{{base_url}}/api/auth/login"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  if (json && json.token) {",
+                  "    pm.collectionVariables.set('auth_token', json.token);",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john@example.com\"\n}"
+            },
+            "url": "{{base_url}}/api/auth/forgot-password"
+          }
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"reset-token\",\n  \"newPassword\": \"NewPassword123!\"\n}"
+            },
+            "url": "{{base_url}}/api/auth/reset-password"
+          }
+        },
+        {
+          "name": "Verify Reset Token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/auth/verify-reset-token/reset-token"
+          }
+        },
+        {
+          "name": "Reset Account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/reset-account"
+          }
+        },
+        {
+          "name": "Upstox Login",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/auth/upstox/login"
+          }
+        },
+        {
+          "name": "Upstox Callback",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/auth/upstox/callback?code=sample-code"
+          }
+        },
+        {
+          "name": "Upstox Connected",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/auth/upstox/connected"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Crypto Market Data",
+      "item": [
+        {
+          "name": "Crypto Prices",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/crypto/prices"
+          }
+        },
+        {
+          "name": "Crypto Price By Symbol",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/crypto/prices/{{crypto_symbol}}"
+          }
+        },
+        {
+          "name": "Crypto Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/crypto/stats/{{crypto_symbol}}"
+          }
+        },
+        {
+          "name": "Crypto Historical",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/crypto/{{crypto_symbol}}/historical?timeframe=1d&days=30"
+          }
+        },
+        {
+          "name": "Crypto Chart",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/crypto/{{crypto_symbol}}/chart?timeframe=1d&limit=100"
+          }
+        },
+        {
+          "name": "Crypto Indicators",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/crypto/{{crypto_symbol}}/indicators"
+          }
+        },
+        {
+          "name": "Crypto Top 3",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/crypto/top-3/famous"
+          }
+        },
+        {
+          "name": "Crypto Trending Top 10",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/crypto/trending/top-10"
+          }
+        },
+        {
+          "name": "Crypto Trending All",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/crypto/trending/all"
+          }
+        },
+        {
+          "name": "Crypto Top 10 Ranked",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/crypto/top-10/ranked"
+          }
+        },
+        {
+          "name": "Crypto All Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/crypto/all/stats"
+          }
+        },
+        {
+          "name": "Crypto Lot Size",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/crypto/lot-size/{{crypto_order_symbol}}"
+          }
+        },
+        {
+          "name": "Crypto Lot Sizes All",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/crypto/lot-sizes/all"
+          }
+        },
+        {
+          "name": "Crypto Lot Size Validate",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/crypto/lot-sizes/validate?symbol={{crypto_order_symbol}}&quantity=1"
+          }
+        },
+        {
+          "name": "Crypto Lot Size Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/crypto/lot-sizes/stats"
+          }
+        },
+        {
+          "name": "Crypto Stream All",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/crypto/stream/prices"
+          }
+        },
+        {
+          "name": "Crypto Stream Symbol",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/crypto/stream/prices/{{crypto_symbol}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Crypto Trading",
+      "item": [
+        {
+          "name": "Buy Crypto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"symbol\": \"BTC\",\n  \"quantity\": 0.01,\n  \"price\": 65000\n}"
+            },
+            "url": "{{base_url}}/api/crypto/buy"
+          }
+        },
+        {
+          "name": "Sell Crypto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"symbol\": \"BTC\",\n  \"quantity\": 0.01,\n  \"price\": 65500\n}"
+            },
+            "url": "{{base_url}}/api/crypto/sell"
+          }
+        },
+        {
+          "name": "Crypto Portfolio",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/crypto/portfolio"
+          }
+        },
+        {
+          "name": "Crypto Closed Positions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/crypto/closed-positions"
+          }
+        },
+        {
+          "name": "Crypto Trades",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/crypto/trades"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Crypto Orders",
+      "item": [
+        {
+          "name": "Place Buy Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"symbol\": \"BTCUSDT\",\n  \"quantity\": 1,\n  \"price\": 65000,\n  \"leverage\": 2,\n  \"tradingMode\": \"SPOT\",\n  \"orderType\": \"LIMIT\"\n}"
+            },
+            "url": "{{base_url}}/api/crypto/orders/buy"
+          }
+        },
+        {
+          "name": "Place Sell Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"symbol\": \"BTCUSDT\",\n  \"quantity\": 1,\n  \"price\": 65500,\n  \"leverage\": 2,\n  \"tradingMode\": \"SPOT\",\n  \"orderType\": \"LIMIT\"\n}"
+            },
+            "url": "{{base_url}}/api/crypto/orders/sell"
+          }
+        },
+        {
+          "name": "Get Orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/crypto/orders"
+          }
+        },
+        {
+          "name": "Cancel Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/crypto/orders/{{order_id}}/cancel"
+          }
+        },
+        {
+          "name": "Get Positions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/crypto/positions"
+          }
+        },
+        {
+          "name": "Get Position Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/crypto/positions/{{position_id}}"
+          }
+        },
+        {
+          "name": "Close Position",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"positionId\": 1,\n  \"closingPrice\": 65250\n}"
+            },
+            "url": "{{base_url}}/api/crypto/positions/{{position_id}}/close"
+          }
+        },
+        {
+          "name": "Liquidation Check",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/crypto/positions/{{position_id}}/liquidation-check"
+          }
+        },
+        {
+          "name": "Performance",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/crypto/performance"
+          }
+        },
+        {
+          "name": "Account Balance",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/crypto/account/balance"
+          }
+        },
+        {
+          "name": "Orderbook",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/crypto/orderbook/{{crypto_order_symbol}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Stocks, Forex, and Commodities",
+      "item": [
+        {
+          "name": "US Stocks List",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/stocks/us"
+          }
+        },
+        {
+          "name": "US Stock Price",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/stocks/us/{{stock_symbol}}"
+          }
+        },
+        {
+          "name": "US Stock Daily",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/stocks/us/{{stock_symbol}}/daily"
+          }
+        },
+        {
+          "name": "US Stock SMA",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/stocks/us/{{stock_symbol}}/sma"
+          }
+        },
+        {
+          "name": "US Stock RSI",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/stocks/us/{{stock_symbol}}/rsi"
+          }
+        },
+        {
+          "name": "Forex Pairs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/forex/pairs"
+          }
+        },
+        {
+          "name": "Forex Tested Pairs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/forex/pairs/tested"
+          }
+        },
+        {
+          "name": "Forex Upcoming Pairs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/forex/pairs/upcoming"
+          }
+        },
+        {
+          "name": "Forex Rate",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/forex/rate/USD/INR"
+          }
+        },
+        {
+          "name": "Forex Chart",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/forex/chart/USD/INR"
+          }
+        },
+        {
+          "name": "Commodities",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/commodities"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Indian Stocks",
+      "item": [
+        {
+          "name": "Indian Stocks",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/stocks/in"
+          }
+        },
+        {
+          "name": "Top Indian Stocks",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/stocks/in/top"
+          }
+        },
+        {
+          "name": "Indian Stocks Batch",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/stocks/in/batch?symbols=RELIANCE,TCS,INFY"
+          }
+        },
+        {
+          "name": "Indian Stock Intraday",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/stocks/in/{{indian_symbol}}/intraday"
+          }
+        },
+        {
+          "name": "Indian Stock Daily",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/stocks/in/{{indian_symbol}}/daily"
+          }
+        },
+        {
+          "name": "Indian Stock Detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/stocks/in/{{indian_symbol}}"
+          }
+        },
+        {
+          "name": "Indian Lot Size",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/stocks/in/lot-size/{{indian_symbol}}"
+          }
+        },
+        {
+          "name": "Indian Lot Sizes All",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/stocks/in/lot-sizes/all"
+          }
+        },
+        {
+          "name": "Indian Lot Sizes Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/stocks/in/lot-sizes/stats"
+          }
+        },
+        {
+          "name": "Indian Lot Size Validate",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/stocks/in/lot-sizes/validate?symbol={{indian_symbol}}&quantity=10"
+          }
+        },
+        {
+          "name": "Indian Instruments Equity",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/stocks/in/instruments/equity"
+          }
+        },
+        {
+          "name": "Indian Instruments Futures",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/stocks/in/instruments/futures"
+          }
+        },
+        {
+          "name": "Indian Instruments Options",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/stocks/in/instruments/options"
+          }
+        },
+        {
+          "name": "Buy Indian Stock",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"symbol\": \"RELIANCE\",\n  \"quantity\": 10,\n  \"entryPrice\": 2850,\n  \"orderType\": \"MARKET\",\n  \"timeFrame\": \"Intraday\",\n  \"marginUsed\": 5000,\n  \"charges\": 12\n}"
+            },
+            "url": "{{base_url}}/api/stocks/in/trade/buy"
+          }
+        },
+        {
+          "name": "Sell Indian Stock",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"symbol\": \"RELIANCE\",\n  \"quantity\": 10,\n  \"entryPrice\": 2860,\n  \"orderType\": \"MARKET\",\n  \"timeFrame\": \"Intraday\",\n  \"marginUsed\": 5000,\n  \"charges\": 12\n}"
+            },
+            "url": "{{base_url}}/api/stocks/in/trade/sell"
+          }
+        },
+        {
+          "name": "Indian Trade Orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/stocks/in/trade/orders"
+          }
+        },
+        {
+          "name": "Process Pending Indian Orders",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/stocks/in/trade/orders/process"
+          }
+        },
+        {
+          "name": "Update Indian Stock",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/stocks/in/trade/update"
+          }
+        },
+        {
+          "name": "Indian Positions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/stocks/in/positions"
+          }
+        },
+        {
+          "name": "Indian Position Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/stocks/in/positions/{{position_id}}"
+          }
+        },
+        {
+          "name": "Exit Indian Position",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"exitPrice\": 2890\n}"
+            },
+            "url": "{{base_url}}/api/stocks/in/positions/{{position_id}}/exit"
+          }
+        },
+        {
+          "name": "Indian Performance",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/stocks/in/performance"
+          }
+        }
+      ]
+    },
+    {
+      "name": "News, TradingView, and Options",
+      "item": [
+        {
+          "name": "Latest News",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/news/latest"
+          }
+        },
+        {
+          "name": "Search News",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/news/search?q=bitcoin"
+          }
+        },
+        {
+          "name": "News By Symbols",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/news/symbols?symbols=BTC,ETH"
+          }
+        },
+        {
+          "name": "Trending News",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/news/trending"
+          }
+        },
+        {
+          "name": "News By Date Range",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/news/date-range?from=2026-05-01&to=2026-05-26"
+          }
+        },
+        {
+          "name": "Crypto News",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/news/crypto"
+          }
+        },
+        {
+          "name": "Stock News",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/news/stocks"
+          }
+        },
+        {
+          "name": "Advanced News",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/news/advanced"
+          }
+        },
+        {
+          "name": "TradingView Search",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/tv/search?query=BTC"
+          }
+        },
+        {
+          "name": "TradingView Resolve",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/tv/resolve?symbol=BTCUSDT"
+          }
+        },
+        {
+          "name": "TradingView History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/tv/history?symbol=BTCUSDT&resolution=1D"
+          }
+        },
+        {
+          "name": "Options Chain",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/options/chain?symbol=BTCUSDT"
+          }
+        },
+        {
+          "name": "Options Analytics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/options/analytics?symbol=BTCUSDT"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin and Market Controls",
+      "item": [
+        {
+          "name": "Admin Stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/stats"
+          }
+        },
+        {
+          "name": "Admin Audit Logs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/audit-logs"
+          }
+        },
+        {
+          "name": "Admin Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/users"
+          }
+        },
+        {
+          "name": "Create Admin User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Admin User\",\n  \"email\": \"admin@example.com\",\n  \"role\": \"admin\",\n  \"balance\": 250000,\n  \"password\": \"Admin123!\"\n}"
+            },
+            "url": "{{base_url}}/api/admin/users"
+          }
+        },
+        {
+          "name": "Admin Positions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/positions"
+          }
+        },
+        {
+          "name": "Admin Trades",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/trades"
+          }
+        },
+        {
+          "name": "Create Admin Trade",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": 1,\n  \"symbol\": \"BTC\",\n  \"side\": \"BUY\",\n  \"quantity\": 1,\n  \"price\": 65000\n}"
+            },
+            "url": "{{base_url}}/api/admin/trades"
+          }
+        },
+        {
+          "name": "Close Admin Trade",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pnl\": 1250.5\n}"
+            },
+            "url": "{{base_url}}/api/admin/trades/1/close"
+          }
+        },
+        {
+          "name": "Market Hours",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/market-hours"
+          }
+        },
+        {
+          "name": "Market Hours By Type",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/market-hours/{{market_type}}"
+          }
+        },
+        {
+          "name": "Market Holidays",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/market-holidays"
+          }
+        },
+        {
+          "name": "Create Market Holiday",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/market-holidays"
+          }
+        },
+        {
+          "name": "Bulk Create Market Holidays",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/market-holidays/bulk-create"
+          }
+        },
+        {
+          "name": "Upstox Token Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/upstox/token-status"
+          }
+        },
+        {
+          "name": "Public Market Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/market-hours/status/{{market_type}}"
+          }
+        },
+        {
+          "name": "Public Holiday Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/market-holidays/check/{{market_type}}"
+          }
+        },
+        {
+          "name": "Public Holidays By Type",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/market-holidays/{{market_type}}"
+          }
+        },
+        {
+          "name": "Upstox Token Status Public",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/upstox/token-status"
+          }
+        },
+        {
+          "name": "Debug Upstox Instruments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/debug/upstox/instruments"
+          }
+        }
+      ]
+    }
+  ]
+}
