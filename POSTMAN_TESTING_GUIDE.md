@@ -42,8 +42,8 @@ Create separate environments for local/development/production with different `ba
 
 ### Health Check
 
-**Method:** GET  
-**URL:** `{{base_url}}/health`  
+**Method:** GET
+**URL:** `{{base_url}}/health`
 **Auth:** None
 
 **Expected Response (200):**
@@ -403,7 +403,7 @@ if (pm.response.code === 200) {
 
 ## Indian Stocks Endpoints (Upstox Powered)
 
-**Data Source:** Upstox API (OAuth 2.0)  
+**Data Source:** Upstox API (OAuth 2.0)
 **Authentication:** Upstox credentials configured in `.env`  
 **Rate Limit:** 30 req/minute
 
@@ -411,8 +411,8 @@ if (pm.response.code === 200) {
 
 ### Get All Indian Stocks
 
-**Method:** GET  
-**URL:** `{{base_url}}/api/stocks/in`  
+**Method:** GET
+**URL:** `{{base_url}}/api/stocks/in`
 **Auth:** None
 
 **Expected Response (200):**

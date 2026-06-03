@@ -7,8 +7,10 @@ import {
   getLotSizeFromUpstox,
   getAllLotSizesFromUpstox,
   validateLotMultipleFromUpstox,
-  calculateQuantityFromUpstox
-  , getUpstoxTokenStatus, fetchUpstoxInstruments
+  calculateQuantityFromUpstox,
+  getUpstoxTokenStatus, 
+  fetchUpstoxInstruments,
+  getRealisticIndianStockPrice
 } from "../../services/upstox.service.js";
 
 /**
@@ -57,9 +59,7 @@ export async function getIndianStocks(req, res) {
   try {
     // Ensure Upstox token exists before attempting to fetch many prices
     const status = await getUpstoxTokenStatus("default");
-    if (!status.exists || !status.hasAccessToken) {
-      return res.status(401).json({ message: "Upstox not authorized. Complete OAuth: GET /api/auth/upstox/login" });
-    }
+    const useMock = !status.exists || !status.hasAccessToken;
 
     const stocks = getSupportedIndianStocks();
     const marketOpen = isIndianMarketOpen();
@@ -68,7 +68,7 @@ export async function getIndianStocks(req, res) {
     const stocksWithPrices = await Promise.allSettled(
       stocks.map(async (stock) => {
         try {
-          const priceData = await getIndianStockPrice(stock.symbol);
+          const priceData = useMock ? getRealisticIndianStockPrice(stock.symbol) : await getIndianStockPrice(stock.symbol);
           return {
             symbol: stock.symbol,
             name: stock.name,
@@ -110,8 +110,8 @@ export async function getIndianStocks(req, res) {
       count: validStocks.length,
       timestamp: Date.now(),
       marketOpen: marketOpen,
-      source: "Live Demo",
-      message: marketOpen ? "Live market data with 2-second updates" : "Market closed"
+      source: useMock ? "Mock Data" : "Live Demo",
+      message: marketOpen ? (useMock ? "Realistic mock data (Upstox unauthorized)" : "Live market data with 2-second updates") : "Market closed"
     });
   } catch (error) {
     console.error("Error fetching Indian stocks:", error.message);
@@ -125,9 +125,7 @@ export async function getIndianStocks(req, res) {
 export async function getIndianStocksBatch(req, res) {
   try {
     const status = await getUpstoxTokenStatus("default");
-    if (!status.exists || !status.hasAccessToken) {
-      return res.status(401).json({ message: "Upstox not authorized. Complete OAuth: GET /api/auth/upstox/login" });
-    }
+    const useMock = !status.exists || !status.hasAccessToken;
 
     const stocks = getSupportedIndianStocks();
     const limit = parseInt(req.query.limit) || 10; // Default to 10 stocks
@@ -137,7 +135,7 @@ export async function getIndianStocksBatch(req, res) {
     const stocksWithPrices = await Promise.allSettled(
       limitedStocks.map(async (stock) => {
         try {
-          const priceData = await getIndianStockPrice(stock.symbol);
+          const priceData = useMock ? getRealisticIndianStockPrice(stock.symbol) : await getIndianStockPrice(stock.symbol);
           return {
             ...stock,
             ...priceData
@@ -158,7 +156,7 @@ export async function getIndianStocksBatch(req, res) {
       data: results,
       count: results.length,
       timestamp: Date.now(),
-      source: "Upstox"
+      source: useMock ? "Mock" : "Upstox"
     });
   } catch (error) {
     console.error("Error fetching batch Indian stocks:", error.message);
@@ -238,11 +236,32 @@ export async function getTopIndian(req, res) {
 
     try {
       const status = await getUpstoxTokenStatus("default");
-      if (!status.exists || !status.hasAccessToken) {
-        return res.status(401).json({ message: "Upstox not authorized. Complete OAuth: GET /api/auth/upstox/login" });
+      const useMock = !status.exists || !status.hasAccessToken;
+
+      let data;
+      if (useMock) {
+        const stocks = getSupportedIndianStocks();
+        const results = [];
+        for (const stock of stocks) {
+          results.push(getRealisticIndianStockPrice(stock.symbol));
+        }
+        if (sortBy === "volume") {
+          results.sort((a, b) => (b.volume || 0) - (a.volume || 0));
+        } else if (sortBy === "changePercent") {
+          results.sort((a, b) => (b.changePercent || 0) - (a.changePercent || 0));
+        } else if (sortBy === "price") {
+          results.sort((a, b) => (b.price || 0) - (a.price || 0));
+        }
+        data = {
+          data: results.slice(0, 15),
+          count: results.slice(0, 15).length,
+          timestamp: Date.now(),
+          source: "Mock (Realistic)"
+        };
+      } else {
+        data = await getTopIndianStocks(sortBy);
       }
 
-      const data = await getTopIndianStocks(sortBy);
       const marketOpen = isIndianMarketOpen();
       
       // Add market status flags to response

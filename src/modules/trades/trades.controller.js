@@ -180,7 +180,8 @@ export async function closeTrade(req, res) {
  */
 export async function resetAccount(req, res) {
   const userId = req.user.id;
-  const DEFAULT_BALANCE = 1000000; // Default balance for new accounts (10 Lakhs)
+  // Convert 10 Lakhs INR (~$12,048) to a typical USD balance. We use $12,000 for standard paper trading equivalent
+  const DEFAULT_BALANCE = 12000; 
 
   try {
     // Get current user info for audit log
