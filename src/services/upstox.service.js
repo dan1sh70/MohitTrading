@@ -424,7 +424,7 @@ export async function getIndianStockPrice(symbol) {
  * Get realistic Indian stock price (demo mode)
  * Uses base prices with time-based variation for consistent testing
  */
-function getRealisticIndianStockPrice(symbol) {
+export function getRealisticIndianStockPrice(symbol) {
   const stockInfo = SUPPORTED_INDIAN_STOCKS[symbol];
   if (!stockInfo) {
     throw new Error(`Indian stock symbol ${symbol} not supported`);

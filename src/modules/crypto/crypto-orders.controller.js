@@ -146,10 +146,52 @@ export async function getPositions(req, res) {
       [userId]
     );
     
+    // Dynamically fetch current prices for each active position
+    const positionsWithPrices = await Promise.all(
+      positions.rows.map(async (position) => {
+        try {
+          const priceData = await getCryptoPrice(position.symbol);
+          const currentPrice = parseFloat(priceData.price);
+          
+          // Calculate unrealised PnL dynamically
+          const quantity = parseFloat(position.quantity);
+          const entryPrice = parseFloat(position.entry_price);
+          const side = position.side || 'BUY';
+          const margin = parseFloat(position.margin) || (quantity * entryPrice);
+          
+          let unrealisedPnL = 0;
+          if (side === 'BUY') {
+            unrealisedPnL = (currentPrice - entryPrice) * quantity;
+          } else {
+            unrealisedPnL = (entryPrice - currentPrice) * quantity;
+          }
+          
+          const unrealisedPnlPercent = margin > 0 ? (unrealisedPnL / margin) * 100 : 0;
+          
+          return {
+            ...position,
+            current_price: currentPrice,
+            currentPrice: currentPrice,
+            unrealised_pnl: unrealisedPnL,
+            unrealised_pnl_percent: unrealisedPnlPercent
+          };
+        } catch (error) {
+          console.error(`Error fetching price for ${position.symbol}: ${error.message}`);
+          return {
+            ...position,
+            current_price: position.entry_price,
+            currentPrice: position.entry_price,
+            unrealised_pnl: 0,
+            unrealised_pnl_percent: 0
+          };
+        }
+      })
+    );
+    
     return res.json({
       success: true,
-      data: positions.rows,
-      count: positions.rows.length
+      data: positionsWithPrices,
+      count: positionsWithPrices.length
     });
     
   } catch (error) {
@@ -449,27 +491,46 @@ export async function getAccountBalance(req, res) {
   try {
     const user = await sql(`SELECT balance FROM users WHERE id = $1`, [userId]);
     
-    if (user.length === 0) {
+    if ((user.rows || []).length === 0) {
       return res.status(404).json({
         success: false,
         message: 'User not found'
       });
     }
     
-    // Calculate total equity (balance + unrealised P&L from active positions)
+    const balance = parseFloat(user.rows[0].balance || 0);
+    
+    // Fetch active positions and calculate unrealised PnL dynamically from live prices
     const positions = await sql(
-      `SELECT SUM(unrealised_pnl) as total_unrealised_pnl FROM crypto_positions 
+      `SELECT symbol, side, entry_price, quantity, margin_used FROM crypto_positions 
        WHERE user_id = $1 AND status = 'ACTIVE'`,
       [userId]
     );
     
-    const totalUnrealisedPnL = positions[0]?.total_unrealised_pnl || 0;
-    const totalEquity = user[0].balance + totalUnrealisedPnL;
+    let totalUnrealisedPnL = 0;
+    for (const pos of (positions.rows || [])) {
+      try {
+        const priceData = await getCryptoPrice(pos.symbol);
+        const currentPrice = parseFloat(priceData.price);
+        const entryPrice = parseFloat(pos.entry_price);
+        const quantity = parseFloat(pos.quantity);
+        
+        if (pos.side === 'LONG') {
+          totalUnrealisedPnL += (currentPrice - entryPrice) * quantity;
+        } else {
+          totalUnrealisedPnL += (entryPrice - currentPrice) * quantity;
+        }
+      } catch (e) {
+        // Skip positions where price fetch fails
+      }
+    }
+    
+    const totalEquity = balance + totalUnrealisedPnL;
     
     return res.json({
       success: true,
       data: {
-        availableBalance: user[0].balance,
+        availableBalance: balance,
         unrealisedPnL: totalUnrealisedPnL,
         totalEquity
       }

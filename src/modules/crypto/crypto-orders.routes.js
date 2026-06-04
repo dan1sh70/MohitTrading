@@ -5,21 +5,31 @@
 import express from 'express';
 import { requireAuth } from '../../middleware/auth.js';
 import { validateBody } from '../../middleware/validate.js';
-import { placeBuyOrderSchema, placeSellOrderSchema, closePositionSchema } from './crypto-orders.controller.js';
 import {
-  placeBuyOrder,
-  placeSellOrder,
-  getPositions,
-  getPositionDetails,
-  closePositionEndpoint,
-  getOrders,
-  cancelOrderEndpoint,
-  getCryptoPerformance,
-  getTrades,
-  checkPositionLiquidation,
-  getAccountBalance,
-  getOrderbook
-} from './crypto-orders.controller.js';
+  cancelStopLoss,
+  cancelTakeProfit,
+  disableHedgeMode,
+  enableHedgeMode,
+  getAggregatedPosition,
+  getCurrentFundingRate,
+  getFundingPaymentHistory,
+  getHedgeModeStatus,
+  getMakerTakerFees,
+  getMarginUtilization,
+  getMarkPrice,
+  getMarkPriceHistory,
+  getTriggerHistory,
+  predictFundingPayment,
+  reduceOnlySchema,
+  setStopLoss,
+  setStopLossSchema,
+  setTakeProfit,
+  setTakeProfitSchema,
+  switchMarginMode,
+  switchMarginModeSchema,
+  updateReduceOnlyFlag
+} from './crypto-futures.controller.js';
+import { cancelOrderEndpoint, checkPositionLiquidation, closePositionEndpoint, closePositionSchema, getAccountBalance, getCryptoPerformance, getOrderbook, getOrders, getPositionDetails, getPositions, getTrades, placeBuyOrder, placeBuyOrderSchema, placeSellOrder, placeSellOrderSchema } from './crypto-orders.controller.js';
 
 const router = express.Router();
 
@@ -130,5 +140,29 @@ router.get('/account/balance', getAccountBalance);
  * Get orderbook for a symbol
  */
 router.get('/orderbook/:symbol', getOrderbook);
+
+// ───────────────────────────────────────────────────────────────────────────
+// ADVANCED FUTURES ENDPOINTS
+// ───────────────────────────────────────────────────────────────────────────
+
+router.get('/mark-price/:symbol', getMarkPrice);
+router.get('/mark-price/:symbol/history', getMarkPriceHistory);
+router.get('/current-funding-rate/:symbol', getCurrentFundingRate);
+router.get('/funding/rates/:symbol', getCurrentFundingRate);
+router.get('/funding/payments', getFundingPaymentHistory);
+router.get('/funding/predict/:positionId', predictFundingPayment);
+router.post('/positions/:positionId/take-profit', validateBody(setTakeProfitSchema), setTakeProfit);
+router.post('/positions/:positionId/stop-loss', validateBody(setStopLossSchema), setStopLoss);
+router.delete('/positions/:positionId/take-profit', cancelTakeProfit);
+router.delete('/positions/:positionId/stop-loss', cancelStopLoss);
+router.get('/triggers/history', getTriggerHistory);
+router.post('/positions/:positionId/margin-mode', validateBody(switchMarginModeSchema), switchMarginMode);
+router.get('/margin-utilization', getMarginUtilization);
+router.post('/hedge-mode/enable', enableHedgeMode);
+router.post('/hedge-mode/disable', disableHedgeMode);
+router.get('/hedge-mode/status', getHedgeModeStatus);
+router.post('/positions/:positionId/reduce-only', validateBody(reduceOnlySchema), updateReduceOnlyFlag);
+router.get('/fees/config/:symbol', getMakerTakerFees);
+router.get('/positions/aggregated/:symbol', getAggregatedPosition);
 
 export default router;

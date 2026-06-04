@@ -137,7 +137,7 @@ export async function placeOrder(userId, symbol, side, orderType, quantity, pric
  */
 async function executeMarketOrder(orderId, userId, symbol, side, quantity, executionPrice, leverage, tradingMode) {
   try {
-    // For spot: settle immediately
+    // For spot: settle immediately AND create a position record so it shows in portfolio
     if (tradingMode === 'SPOT') {
       // Update user balance
       const userBalanceRes = await sql(`SELECT balance FROM users WHERE id = $1`, [userId]);
@@ -148,6 +148,21 @@ async function executeMarketOrder(orderId, userId, symbol, side, quantity, execu
         : parseFloat(userBalanceRes.rows[0].balance || 0) + costOrProceeds;
       
       await sql(`UPDATE users SET balance = $1 WHERE id = $2`, [newBalance, userId]);
+      
+      // Create a position record so it appears in the Portfolio
+      const positionResult = await sql(
+        `INSERT INTO crypto_positions 
+         (user_id, symbol, side, entry_price, quantity, leverage, margin_used, 
+          liquidation_price, entry_time, status, trading_mode)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), 'ACTIVE', $9)
+         RETURNING id`,
+        [
+          userId, symbol, side === 'BUY' ? 'LONG' : 'SHORT', executionPrice, quantity,
+          1, costOrProceeds, 0, tradingMode
+        ]
+      );
+      
+      const positionId = positionResult.rows?.[0]?.id;
       
       // Record order fill
       await sql(
@@ -160,16 +175,20 @@ async function executeMarketOrder(orderId, userId, symbol, side, quantity, execu
       // Update order status
       await sql(
         `UPDATE crypto_orders 
-         SET status = 'FILLED', filled_quantity = $1, remaining_quantity = 0, filled_at = NOW()
-         WHERE id = $2`,
-        [quantity, orderId]
+         SET status = 'FILLED', position_id = $1, filled_quantity = $2, remaining_quantity = 0, filled_at = NOW()
+         WHERE id = $3`,
+        [positionId, quantity, orderId]
       );
       
       return {
         orderId,
+        positionId,
         status: 'FILLED',
+        side: side === 'BUY' ? 'LONG' : 'SHORT',
         executionPrice,
         quantity,
+        leverage: 1,
+        marginUsed: costOrProceeds,
         newBalance
       };
     }
