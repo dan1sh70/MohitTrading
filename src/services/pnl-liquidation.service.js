@@ -11,6 +11,7 @@
 import { sql } from "../db/mysql.js";
 import { cacheSet, cacheGet } from "../db/redis.js";
 import { getMarkPrice } from "./mark-price.service.js";
+import { calculateTradefinityMetrics } from "./tradefinity-performance.service.js";
 
 const LIQUIDATION_THRESHOLD = 0.05; // 5% margin ratio = liquidation
 const MARGIN_WARNING_THRESHOLD = 0.15; // 15% margin ratio = warning
@@ -251,10 +252,32 @@ export async function checkLiquidation(positionId) {
       position.margin_used
     );
     
-    const shouldLiquidate = marginRatio < LIQUIDATION_THRESHOLD;
+    // Tradefinity v2.1 Advanced Liquidation Levels
+    let liquidationLevel = null;
+    let liquidationAction = "NONE";
+    const shouldLiquidate = marginRatio <= 50; // Full liquidation at 50%
+    
+    if (marginRatio <= 50) {
+      liquidationLevel = 50;
+      liquidationAction = "FULL_LIQUIDATION";
+    } else if (marginRatio <= 60) {
+      liquidationLevel = 60;
+      liquidationAction = "PARTIAL_LIQUIDATION";
+    } else if (marginRatio <= 80) {
+      liquidationLevel = 80;
+      liquidationAction = "AUTO_REDUCE";
+    } else if (marginRatio <= 100) {
+      liquidationLevel = 100;
+      liquidationAction = "RESTRICT_NEW_TRADES";
+    } else if (marginRatio <= 120) {
+      liquidationLevel = 120;
+      liquidationAction = "WARNING";
+    }
     
     return {
       shouldLiquidate,
+      liquidationLevel,
+      liquidationAction,
       marginRatio,
       unrealisedPnL,
       markPrice,
@@ -461,9 +484,16 @@ export async function chargeFundingCost(userId, positionId, fundingCost) {
  */
 export async function updateCryptoPerformance(userId) {
   try {
-    // Get all closed trades
+    // Get all closed trades, mapping to Tradefinity expected schema
     const trades = await sql(
-      `SELECT net_pnl, pnl_percent, duration_seconds, leverage
+      `SELECT 
+        symbol, 
+        net_pnl as pnl, 
+        fees_paid as charges, 
+        margin_used, 
+        entry_time, 
+        exit_time,
+        duration_seconds
        FROM crypto_trades WHERE user_id = $1 AND exit_time IS NOT NULL
        ORDER BY exit_time DESC`,
       [userId]
@@ -480,49 +510,27 @@ export async function updateCryptoPerformance(userId) {
       return;
     }
     
-    // Calculate metrics
+    // Fetch user balance
+    const userBalanceResult = await sql(
+      `SELECT balance FROM users WHERE id = $1`, [userId]
+    );
+    const accountEquity = userBalanceResult.length > 0 ? parseFloat(userBalanceResult[0].balance) : 10000;
+
+    // Use TRADEFINITY PERFORMANCE ENGINE v2.1
+    const metrics = calculateTradefinityMetrics(trades, accountEquity, 0, 0);
+    
+    // Average trade duration is specific to crypto DB schema currently
     const totalTrades = trades.length;
-    const winningTrades = trades.filter(t => t.net_pnl > 0).length;
-    const losingTrades = trades.filter(t => t.net_pnl < 0).length;
-    
-    const totalPnL = trades.reduce((sum, t) => sum + t.net_pnl, 0);
-    const totalProfit = trades.filter(t => t.net_pnl > 0).reduce((sum, t) => sum + t.net_pnl, 0);
-    const totalLoss = Math.abs(trades.filter(t => t.net_pnl < 0).reduce((sum, t) => sum + t.net_pnl, 0));
-    
-    const winRate = totalTrades > 0 ? (winningTrades / totalTrades) * 100 : 0;
-    const avgProfit = winningTrades > 0 ? totalProfit / winningTrades : 0;
-    const avgLoss = losingTrades > 0 ? totalLoss / losingTrades : 0;
-    const profitFactor = totalLoss > 0 ? totalProfit / totalLoss : (totalProfit > 0 ? 999 : 0);
-    
-    // Consistency score (0-100): based on win rate and profit factor
-    const consistencyScore = Math.min(100, Math.round((winRate / 2) + (Math.min(profitFactor, 5) * 10)));
-    
-    // Calculate grade
-    let overallGrade = 'D';
-    let overallScore = Math.round(consistencyScore);
-    
-    if (profitFactor > 3 && winRate > 60) {
-      overallGrade = 'A+';
-      overallScore = 95;
-    } else if (profitFactor > 2.5 && winRate > 55) {
-      overallGrade = 'A';
-      overallScore = 90;
-    } else if (profitFactor > 2 && winRate > 50) {
-      overallGrade = 'B';
-      overallScore = 80;
-    } else if (profitFactor > 1.5 && winRate > 45) {
-      overallGrade = 'C';
-      overallScore = 70;
-    }
-    
-    const avgTradeDuration = trades.reduce((sum, t) => sum + t.duration_seconds, 0) / totalTrades;
+    const avgTradeDuration = trades.reduce((sum, t) => sum + (t.duration_seconds || 0), 0) / totalTrades;
     
     // Update or insert
     await sql(
       `INSERT INTO crypto_performance 
        (user_id, total_trades, total_realised_pnl, winning_trades, losing_trades, 
-        win_rate, avg_profit, avg_loss, profit_factor, consistency_score, overall_grade, overall_score, avg_trade_duration)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+        win_rate, avg_profit, avg_loss, profit_factor, consistency_score, 
+        risk_meter, portfolio_health, win_loss_ratio,
+        overall_grade, overall_score, avg_trade_duration)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
        ON DUPLICATE KEY UPDATE
        total_trades = $2,
        total_realised_pnl = $3,
@@ -533,13 +541,29 @@ export async function updateCryptoPerformance(userId) {
        avg_loss = $8,
        profit_factor = $9,
        consistency_score = $10,
-       overall_grade = $11,
-       overall_score = $12,
-       avg_trade_duration = $13`,
+       risk_meter = $11,
+       portfolio_health = $12,
+       win_loss_ratio = $13,
+       overall_grade = $14,
+       overall_score = $15,
+       avg_trade_duration = $16`,
       [
-        userId, totalTrades, totalPnL, winningTrades, losingTrades,
-        winRate, avgProfit, avgLoss, profitFactor, consistencyScore,
-        overallGrade, overallScore, avgTradeDuration
+        userId, 
+        metrics.totalTrades, 
+        metrics.realisedPnl, 
+        metrics.winningTrades, 
+        metrics.losingTrades,
+        metrics.winRate, 
+        metrics.avgProfit, 
+        metrics.avgLoss, 
+        metrics.profitFactor, 
+        metrics.consistencyScore,
+        metrics.riskMeter,
+        metrics.portfolioHealth,
+        metrics.winLossRatio,
+        metrics.overallGrade, 
+        metrics.overallScore, 
+        avgTradeDuration
       ]
     );
     

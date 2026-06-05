@@ -359,26 +359,44 @@ export async function getCryptoPerformance(req, res) {
   const userId = req.user.id;
   
   try {
-    const performance = await sql(
-      `SELECT * FROM crypto_performance WHERE user_id = $1`,
-      [userId]
-    );
+    const performance = await sql(`SELECT * FROM crypto_performance WHERE user_id = $1`, [userId]);
     
-    if ((performance.rows || []).length === 0) {
-      return res.json({
-        success: true,
-        data: {
-          totalTrades: 0,
-          totalRealizedPnL: 0,
-          winRate: 0,
-          overallGrade: 'D'
-        }
-      });
-    }
+    // Generate dynamic full 21-field Report Card
+    const trades = await sql(`SELECT symbol, net_pnl as pnl, fees_paid as charges, margin_used, entry_time, exit_time, duration_seconds FROM crypto_trades WHERE user_id = $1 AND exit_time IS NOT NULL ORDER BY exit_time DESC`, [userId]);
+    const userBalanceResult = await sql(`SELECT balance FROM users WHERE id = $1`, [userId]);
+    const accountEquity = userBalanceResult.length > 0 ? parseFloat(userBalanceResult[0].balance) : 10000;
+    
+    // Import the engine if not imported at top
+    const { calculateTradefinityMetrics } = await import('../../services/tradefinity-performance.service.js');
+    const metrics = calculateTradefinityMetrics(trades.rows || trades, accountEquity, 0, 0);
+    
+    // Calculate Percentile & Ranking
+    const rankResult = await sql(`SELECT COUNT(*) as total_users FROM crypto_performance WHERE total_trades > 0`);
+    const belowResult = await sql(`SELECT COUNT(*) as users_below FROM crypto_performance WHERE overall_score < $1 AND total_trades > 0`, [metrics.overallScore]);
+    
+    const totalUsers = parseInt((rankResult.rows || rankResult)[0]?.total_users || 1);
+    const usersBelow = parseInt((belowResult.rows || belowResult)[0]?.users_below || 0);
+    const percentile_rank = totalUsers > 0 ? parseFloat(((usersBelow / totalUsers) * 100).toFixed(2)) : 0;
+    const higherResult = await sql(`SELECT COUNT(*) as users_above FROM crypto_performance WHERE overall_score > $1 AND total_trades > 0`, [metrics.overallScore]);
+    const global_rank = parseInt((higherResult.rows || higherResult)[0]?.users_above || 0) + 1;
+    
+    // Calculate Improvement
+    const storedScore = (performance.rows || performance)[0]?.overall_score || 0;
+    const previousScore = (performance.rows || performance)[0]?.previous_score || storedScore;
+    const improvement = metrics.overallScore - previousScore;
+    
+    const baseData = (performance.rows || performance)[0] || {};
+    const reportCard = {
+      ...baseData,
+      ...metrics, // Overwrites DB fields with full dynamic engine output
+      percentile_rank,
+      global_rank,
+      improvement
+    };
     
     return res.json({
       success: true,
-      data: performance.rows[0]
+      data: reportCard
     });
     
   } catch (error) {

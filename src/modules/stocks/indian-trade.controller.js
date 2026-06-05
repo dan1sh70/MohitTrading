@@ -47,6 +47,9 @@ import {
   getIndianStockLimitOrders,
   processPendingIndianStockLimitOrders
 } from "../../services/indian-order.service.js";
+import { calculateTradefinityMetrics } from "../../services/tradefinity-performance.service.js";
+
+const USD_INR_RATE = 83.5;
 
 // ═══════════════════════════════════════════════════════════════════════════
 // PLACE BUY ORDER
@@ -90,9 +93,10 @@ export async function buyIndianStock(req, res) {
     }
 
     const currentBalance = parseFloat(userResult.rows[0].balance);
-    const totalCost = marginUsed + charges;
+    const totalCostINR = marginUsed + charges;
+    const totalCost = totalCostINR / USD_INR_RATE;
     
-    console.log(`[IndianTrade] Balance check - Current: ${currentBalance}, Required: ${totalCost}`);
+    console.log(`[IndianTrade] Balance check - Current: ${currentBalance}, Required (USD): ${totalCost} for INR: ${totalCostINR}`);
 
     if (orderType === 'LIMIT') {
       if (!entryPrice) {
@@ -294,9 +298,10 @@ export async function sellIndianStock(req, res) {
     }
 
     const sellProceeds = quantity * entryPrice;
-    const netProceeds = sellProceeds - charges; // Only deduct charges, not margin
+    const netProceedsINR = sellProceeds - charges; // Only deduct charges, not margin
+    const netProceeds = netProceedsINR / USD_INR_RATE;
     
-    console.log(`[IndianTrade] Sell calculation - Proceeds: ${sellProceeds}, Charges: ${charges}, Net: ${netProceeds}`);
+    console.log(`[IndianTrade] Sell calculation - Proceeds: ${sellProceeds}, Charges: ${charges}, Net INR: ${netProceedsINR}, Net USD: ${netProceeds}`);
 
     // Add sell proceeds to user balance (selling gives money, doesn't cost money)
     console.log(`[IndianTrade] Adding ${netProceeds} to user ${userId} balance`);
@@ -539,8 +544,9 @@ export async function exitPosition(req, res) {
       ['EXITED', exitPrice, pnl, pnlPercent, positionId]
     );
 
-    // Update user balance - return margin + pnl
-    const balanceAdjustment = position.margin_used + pnl;
+    // Update user balance - return margin + pnl (converted to USD)
+    const balanceAdjustmentINR = position.margin_used + pnl;
+    const balanceAdjustment = balanceAdjustmentINR / USD_INR_RATE;
     await sql(
       `UPDATE users SET balance = balance + $1 WHERE id = $2`,
       [balanceAdjustment, userId]
@@ -600,28 +606,48 @@ export async function getPerformanceMetrics(req, res) {
   }
 
   try {
-    // Check if performance record exists
+    // Check if performance record exists to get basic saved stats
     let result = await sql(
       `SELECT * FROM indian_stock_performance WHERE user_id = $1`,
       [userId]
     );
 
     if (result.rowCount === 0) {
-      // Initialize performance record
-      await sql(
-        `
-          INSERT INTO indian_stock_performance (user_id)
-          VALUES ($1)
-        `,
-        [userId]
-      );
-      result = await sql(
-        `SELECT * FROM indian_stock_performance WHERE user_id = $1`,
-        [userId]
-      );
+      await sql(`INSERT INTO indian_stock_performance (user_id) VALUES ($1)`, [userId]);
+      result = await sql(`SELECT * FROM indian_stock_performance WHERE user_id = $1`, [userId]);
     }
 
-    return res.json(result.rows[0]);
+    // Generate dynamic full 21-field Report Card
+    const positionsResult = await sql(`SELECT * FROM indian_stock_positions WHERE user_id = $1 AND status = 'EXITED'`, [userId]);
+    const userResult = await sql(`SELECT balance FROM users WHERE id = $1`, [userId]);
+    const accountEquity = userResult.rowCount > 0 ? parseFloat(userResult.rows[0].balance) * USD_INR_RATE : 1000000;
+    
+    const metrics = calculateTradefinityMetrics(positionsResult.rows, accountEquity, 0, 0);
+    
+    // Calculate Percentile & Ranking
+    const rankResult = await sql(`SELECT COUNT(*) as total_users FROM indian_stock_performance WHERE total_trades > 0`);
+    const belowResult = await sql(`SELECT COUNT(*) as users_below FROM indian_stock_performance WHERE overall_score < $1 AND total_trades > 0`, [metrics.overallScore]);
+    
+    const totalUsers = parseInt(rankResult.rows[0]?.total_users || 1);
+    const usersBelow = parseInt(belowResult.rows[0]?.users_below || 0);
+    const percentile_rank = totalUsers > 0 ? parseFloat(((usersBelow / totalUsers) * 100).toFixed(2)) : 0;
+    const higherResult = await sql(`SELECT COUNT(*) as users_above FROM indian_stock_performance WHERE overall_score > $1 AND total_trades > 0`, [metrics.overallScore]);
+    const global_rank = parseInt(higherResult.rows[0]?.users_above || 0) + 1;
+    
+    // Calculate Improvement (if previous score exists in db, otherwise 0)
+    const storedScore = result.rows[0]?.overall_score || 0;
+    const previousScore = result.rows[0]?.previous_score || storedScore; // Assuming previous_score might be added later
+    const improvement = metrics.overallScore - previousScore;
+    
+    const reportCard = {
+      ...result.rows[0],
+      ...metrics, // Overwrites DB fields with full 21-field dynamic engine output
+      percentile_rank,
+      global_rank,
+      improvement
+    };
+
+    return res.json(reportCard);
   } catch (error) {
     console.error("Error fetching performance metrics:", error.message);
     return res.status(500).json({ message: "Failed to fetch performance metrics", error: error.message });
@@ -634,7 +660,12 @@ export async function getPerformanceMetrics(req, res) {
 
 async function updatePerformanceMetrics(userId) {
   try {
-    // Get all exited positions for this user
+    // Get all trades and exited positions for this user
+    const tradesResult = await sql(
+      `SELECT * FROM trades WHERE user_id = $1 AND trading_type = 'indian_stock'`,
+      [userId]
+    );
+    
     const positionsResult = await sql(
       `SELECT * FROM indian_stock_positions WHERE user_id = $1 AND status = 'EXITED'`,
       [userId]
@@ -649,7 +680,9 @@ async function updatePerformanceMetrics(userId) {
           UPDATE indian_stock_performance
           SET total_trades = 0, winning_trades = 0, losing_trades = 0,
               total_profit_loss = 0, realised_pnl = 0, win_rate = 0,
-              profit_factor = 0
+              profit_factor = 0, consistency_score = 0, risk_meter = 0,
+              portfolio_health = 0, capital_evaluation_score = 0,
+              overall_score = 0, overall_grade = 'D'
           WHERE user_id = $1
         `,
         [userId]
@@ -657,46 +690,12 @@ async function updatePerformanceMetrics(userId) {
       return;
     }
 
-    // Calculate metrics
-    let totalProfit = 0;
-    let totalLoss = 0;
-    let winningTrades = 0;
-    let losingTrades = 0;
+    // Get user's account equity (current balance) to calculate accurate metrics
+    const userResult = await sql(`SELECT balance FROM users WHERE id = $1`, [userId]);
+    const accountEquity = userResult.rowCount > 0 ? parseFloat(userResult.rows[0].balance) * USD_INR_RATE : 1000000;
 
-    positions.forEach(pos => {
-      if (pos.pnl > 0) {
-        totalProfit += pos.pnl;
-        winningTrades++;
-      } else if (pos.pnl < 0) {
-        totalLoss += Math.abs(pos.pnl);
-        losingTrades++;
-      }
-    });
-
-    const totalTrades = positions.length;
-    const totalPnL = totalProfit - totalLoss;
-    const winRate = totalTrades > 0 ? (winningTrades / totalTrades) * 100 : 0;
-    const avgProfit = winningTrades > 0 ? totalProfit / winningTrades : 0;
-    const avgLoss = losingTrades > 0 ? totalLoss / losingTrades : 0;
-    const profitFactor = totalLoss > 0 ? totalProfit / totalLoss : totalProfit > 0 ? 999 : 0;
-
-    // Calculate consistency score (0-100)
-    const consistencyScore = calculateConsistencyScore(positions);
-
-    // Calculate risk meter (0-100)
-    const riskMeter = calculateRiskMeter(avgLoss, avgProfit);
-
-    // Calculate portfolio health (0-100)
-    const portfolioHealth = calculatePortfolioHealth(winRate, profitFactor, consistencyScore);
-
-    // Calculate overall score and grade
-    const { overallScore, grade } = calculateOverallGrade(
-      consistencyScore,
-      riskMeter,
-      portfolioHealth,
-      winRate,
-      profitFactor
-    );
+    // Use TRADEFINITY PERFORMANCE ENGINE v2.1 to calculate all 6+ metrics
+    const metrics = calculateTradefinityMetrics(positions, accountEquity, 0, 0);
 
     // Update performance record
     await sql(
@@ -716,26 +715,28 @@ async function updatePerformanceMetrics(userId) {
           risk_meter = $11,
           portfolio_health = $12,
           win_loss_ratio = $13,
-          overall_score = $14,
-          overall_grade = $15
-        WHERE user_id = $16
+          capital_evaluation_score = $14,
+          overall_grade = $15,
+          overall_score = $16
+        WHERE user_id = $17
       `,
       [
-        totalPnL,
-        totalPnL,
-        totalTrades,
-        winningTrades,
-        losingTrades,
-        winRate,
-        avgProfit,
-        avgLoss,
-        profitFactor,
-        consistencyScore,
-        riskMeter,
-        portfolioHealth,
-        avgProfit / (avgLoss || 1),
-        overallScore,
-        grade,
+        metrics.totalProfitLoss,
+        metrics.realisedPnl,
+        metrics.totalTrades,
+        metrics.winningTrades,
+        metrics.losingTrades,
+        metrics.winRate,
+        metrics.avgProfit,
+        metrics.avgLoss,
+        metrics.profitFactor,
+        metrics.consistencyScore,
+        metrics.riskMeter,
+        metrics.portfolioHealth,
+        metrics.winLossRatio,
+        metrics.capitalEvaluationScore,
+        metrics.overallGrade,
+        metrics.overallScore,
         userId
       ]
     );
@@ -771,57 +772,6 @@ export async function processPendingIndianOrders(req, res) {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// HELPER FUNCTIONS FOR SCORE CALCULATION
-// ═══════════════════════════════════════════════════════════════════════════
-
-function calculateConsistencyScore(positions) {
-  if (positions.length === 0) return 0;
-
-  const pnls = positions.map(p => p.pnl);
-  const mean = pnls.reduce((a, b) => a + b) / pnls.length;
-  const variance = pnls.reduce((sum, pnl) => sum + Math.pow(pnl - mean, 2), 0) / pnls.length;
-  const stdDev = Math.sqrt(variance);
-  
-  // Lower standard deviation = higher consistency
-  // Normalize to 0-100 scale
-  const consistencyScore = Math.max(0, 100 - Math.min(stdDev / (mean || 1) * 20, 100));
-  return Math.round(consistencyScore);
-}
-
-function calculateRiskMeter(avgLoss, avgProfit) {
-  if (avgProfit === 0 && avgLoss === 0) return 50;
-  
-  const riskRatio = avgLoss / (avgProfit || 1);
-  // Higher risk ratio = higher risk meter
-  const riskMeter = Math.min(100, riskRatio * 30);
-  return Math.round(100 - Math.min(riskMeter, 100));
-}
-
-function calculatePortfolioHealth(winRate, profitFactor, consistencyScore) {
-  // Combined metric of win rate, profit factor, and consistency
-  const healthScore = (winRate / 100) * 30 + Math.min(profitFactor / 5, 1) * 40 + (consistencyScore / 100) * 30;
-  return Math.round(Math.min(healthScore * 100, 100));
-}
-
-function calculateOverallGrade(consistencyScore, riskMeter, portfolioHealth, winRate, profitFactor) {
-  // Weighted calculation for overall score
-  const overallScore = Math.round(
-    (consistencyScore * 0.3) + 
-    (riskMeter * 0.25) + 
-    (portfolioHealth * 0.25) + 
-    ((winRate / 100) * 100 * 0.2)
-  );
-
-  let grade = 'D';
-  if (overallScore >= 90) grade = 'A';
-  else if (overallScore >= 75) grade = 'B';
-  else if (overallScore >= 60) grade = 'C';
-  else if (overallScore >= 45) grade = 'D';
-
-  return { overallScore, grade };
-}
-
 // UPDATE INDIAN STOCK TRADE (stub - full implementation pending)
 export async function updateIndianStock(req, res) {
   return res.status(501).json({
@@ -829,3 +779,4 @@ export async function updateIndianStock(req, res) {
     message: "Update trade endpoint not yet implemented. Use exit position instead."
   });
 }
+

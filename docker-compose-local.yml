@@ -1,0 +1,82 @@
+version: "3.8"
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: paper-trading-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: r1Wk6teTIRAsFp89tBNkkl30M3FosEEkn7cXyTPFtz74Jeqn5IfRMmhiq2gLoGQK
+      MYSQL_DATABASE: default
+      MYSQL_USER: mysql
+      MYSQL_PASSWORD: r1Wk6teTIRAsFp89tBNkkl30M3FosEEkn7cXyTPFtz74Jeqn5IfRMmhiq2gLoGQK
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./src/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: paper-trading-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass redis_password_123
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "redis_password_123", "ping"]
+      timeout: 3s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: paper-trading-backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 8808
+
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: mysql
+      DB_PASSWORD: r1Wk6teTIRAsFp89tBNkkl30M3FosEEkn7cXyTPFtz74Jeqn5IfRMmhiq2gLoGQK
+      DB_NAME: default
+
+      REDIS_URL: redis://:redis_password_123@redis:6379
+
+      JWT_SECRET: production_jwt_secret_key_32_chars_minimum_required_for_security
+      JWT_EXPIRES_IN: 1d
+
+      CLIENT_ORIGIN: https://apipaper.digontom.cloud
+
+      ADMIN_EMAIL: admin@papertrading.local
+      ADMIN_PASSWORD: Admin123!
+      TRADER_PASSWORD: Trader123!
+
+      ENABLE_CRYPTO_POLLING: true
+
+      ALPHA_VANTAGE_API_KEY: demo
+      # DhanHQ integration removed; Upstox is now the source for Indian stocks
+      MARKETAUX_API_KEY: 7OSYVZ7vixIYPBAjNH5r8hYuskViy6SHwgbLpi3S
+
+    ports:
+      - "8808:8808"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8808/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+volumes:
+  mysql_data:
+  redis_data:
