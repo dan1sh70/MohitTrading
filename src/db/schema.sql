@@ -161,6 +161,162 @@ CREATE TABLE IF NOT EXISTS indian_stock_performance (
     UNIQUE KEY unique_user (user_id)
 );
 
+-- ===== US STOCK TABLES =====
+CREATE TABLE IF NOT EXISTS us_stock_positions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    symbol VARCHAR(20) NOT NULL,
+    quantity DECIMAL(18, 8) NOT NULL,
+    entry_price DECIMAL(14, 2) NOT NULL,
+    current_price DECIMAL(14, 2) NOT NULL DEFAULT 0,
+    pnl DECIMAL(14, 2) NOT NULL DEFAULT 0,
+    pnl_percent DECIMAL(6, 2) NOT NULL DEFAULT 0,
+    trade_type ENUM('BUY', 'SELL') NOT NULL,
+    time_frame VARCHAR(20) NOT NULL DEFAULT 'INTRADAY',
+    entry_time DATETIME NOT NULL,
+    exit_time DATETIME NULL,
+    status ENUM('ACTIVE', 'EXITED') NOT NULL DEFAULT 'ACTIVE',
+    exit_price DECIMAL(14, 2) NULL,
+    margin_used DECIMAL(14, 2) NOT NULL DEFAULT 0,
+    charges DECIMAL(14, 2) NOT NULL DEFAULT 0,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_usp_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    INDEX idx_usp_user_id (user_id),
+    INDEX idx_usp_symbol (symbol),
+    INDEX idx_usp_status (status)
+);
+
+CREATE TABLE IF NOT EXISTS us_stock_performance (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    total_profit_loss DECIMAL(14, 2) NOT NULL DEFAULT 0,
+    realised_pnl DECIMAL(14, 2) NOT NULL DEFAULT 0,
+    unrealised_pnl DECIMAL(14, 2) NOT NULL DEFAULT 0,
+    total_trades INT NOT NULL DEFAULT 0,
+    winning_trades INT NOT NULL DEFAULT 0,
+    losing_trades INT NOT NULL DEFAULT 0,
+    win_rate DECIMAL(5, 2) NOT NULL DEFAULT 0,
+    avg_profit DECIMAL(14, 2) NOT NULL DEFAULT 0,
+    avg_loss DECIMAL(14, 2) NOT NULL DEFAULT 0,
+    profit_factor DECIMAL(8, 2) NOT NULL DEFAULT 0,
+    consistency_score INT NOT NULL DEFAULT 0,
+    risk_meter INT NOT NULL DEFAULT 0,
+    portfolio_health INT NOT NULL DEFAULT 0,
+    win_loss_ratio DECIMAL(8, 2) NOT NULL DEFAULT 0,
+    capital_evaluation_score INT NOT NULL DEFAULT 0,
+    overall_grade VARCHAR(5) NOT NULL DEFAULT 'D',
+    overall_score INT NOT NULL DEFAULT 0,
+    rank_percentile DECIMAL(5, 2) NOT NULL DEFAULT 0,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_usp_perf_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    UNIQUE KEY unique_user (user_id)
+);
+
+-- ===== FOREX TABLES =====
+CREATE TABLE IF NOT EXISTS forex_positions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    symbol VARCHAR(20) NOT NULL,
+    quantity DECIMAL(18, 8) NOT NULL,
+    entry_price DECIMAL(18, 5) NOT NULL,
+    current_price DECIMAL(18, 5) NOT NULL DEFAULT 0,
+    pnl DECIMAL(14, 2) NOT NULL DEFAULT 0,
+    pnl_percent DECIMAL(6, 2) NOT NULL DEFAULT 0,
+    trade_type ENUM('BUY', 'SELL') NOT NULL,
+    time_frame VARCHAR(20) NOT NULL DEFAULT 'INTRADAY',
+    entry_time DATETIME NOT NULL,
+    exit_time DATETIME NULL,
+    status ENUM('ACTIVE', 'EXITED') NOT NULL DEFAULT 'ACTIVE',
+    exit_price DECIMAL(18, 5) NULL,
+    margin_used DECIMAL(14, 2) NOT NULL DEFAULT 0,
+    charges DECIMAL(14, 2) NOT NULL DEFAULT 0,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_fxp_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    INDEX idx_fxp_user_id (user_id),
+    INDEX idx_fxp_symbol (symbol),
+    INDEX idx_fxp_status (status)
+);
+
+CREATE TABLE IF NOT EXISTS forex_performance (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    total_profit_loss DECIMAL(14, 2) NOT NULL DEFAULT 0,
+    realised_pnl DECIMAL(14, 2) NOT NULL DEFAULT 0,
+    unrealised_pnl DECIMAL(14, 2) NOT NULL DEFAULT 0,
+    total_trades INT NOT NULL DEFAULT 0,
+    winning_trades INT NOT NULL DEFAULT 0,
+    losing_trades INT NOT NULL DEFAULT 0,
+    win_rate DECIMAL(5, 2) NOT NULL DEFAULT 0,
+    avg_profit DECIMAL(14, 2) NOT NULL DEFAULT 0,
+    avg_loss DECIMAL(14, 2) NOT NULL DEFAULT 0,
+    profit_factor DECIMAL(8, 2) NOT NULL DEFAULT 0,
+    consistency_score INT NOT NULL DEFAULT 0,
+    risk_meter INT NOT NULL DEFAULT 0,
+    portfolio_health INT NOT NULL DEFAULT 0,
+    win_loss_ratio DECIMAL(8, 2) NOT NULL DEFAULT 0,
+    capital_evaluation_score INT NOT NULL DEFAULT 0,
+    overall_grade VARCHAR(5) NOT NULL DEFAULT 'D',
+    overall_score INT NOT NULL DEFAULT 0,
+    rank_percentile DECIMAL(5, 2) NOT NULL DEFAULT 0,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_fxp_perf_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    UNIQUE KEY unique_user (user_id)
+);
+
+-- ===== COMMODITY TABLES =====
+CREATE TABLE IF NOT EXISTS commodity_positions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    symbol VARCHAR(20) NOT NULL,
+    quantity DECIMAL(18, 8) NOT NULL,
+    entry_price DECIMAL(14, 2) NOT NULL,
+    current_price DECIMAL(14, 2) NOT NULL DEFAULT 0,
+    pnl DECIMAL(14, 2) NOT NULL DEFAULT 0,
+    pnl_percent DECIMAL(6, 2) NOT NULL DEFAULT 0,
+    trade_type ENUM('BUY', 'SELL') NOT NULL,
+    time_frame VARCHAR(20) NOT NULL DEFAULT 'INTRADAY',
+    entry_time DATETIME NOT NULL,
+    exit_time DATETIME NULL,
+    status ENUM('ACTIVE', 'EXITED') NOT NULL DEFAULT 'ACTIVE',
+    exit_price DECIMAL(14, 2) NULL,
+    margin_used DECIMAL(14, 2) NOT NULL DEFAULT 0,
+    charges DECIMAL(14, 2) NOT NULL DEFAULT 0,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_cmp_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    INDEX idx_cmp_user_id (user_id),
+    INDEX idx_cmp_symbol (symbol),
+    INDEX idx_cmp_status (status)
+);
+
+CREATE TABLE IF NOT EXISTS commodity_performance (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    total_profit_loss DECIMAL(14, 2) NOT NULL DEFAULT 0,
+    realised_pnl DECIMAL(14, 2) NOT NULL DEFAULT 0,
+    unrealised_pnl DECIMAL(14, 2) NOT NULL DEFAULT 0,
+    total_trades INT NOT NULL DEFAULT 0,
+    winning_trades INT NOT NULL DEFAULT 0,
+    losing_trades INT NOT NULL DEFAULT 0,
+    win_rate DECIMAL(5, 2) NOT NULL DEFAULT 0,
+    avg_profit DECIMAL(14, 2) NOT NULL DEFAULT 0,
+    avg_loss DECIMAL(14, 2) NOT NULL DEFAULT 0,
+    profit_factor DECIMAL(8, 2) NOT NULL DEFAULT 0,
+    consistency_score INT NOT NULL DEFAULT 0,
+    risk_meter INT NOT NULL DEFAULT 0,
+    portfolio_health INT NOT NULL DEFAULT 0,
+    win_loss_ratio DECIMAL(8, 2) NOT NULL DEFAULT 0,
+    capital_evaluation_score INT NOT NULL DEFAULT 0,
+    overall_grade VARCHAR(5) NOT NULL DEFAULT 'D',
+    overall_score INT NOT NULL DEFAULT 0,
+    rank_percentile DECIMAL(5, 2) NOT NULL DEFAULT 0,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_cmp_perf_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    UNIQUE KEY unique_user (user_id)
+);
+
 -- ===== AUDIT LOGS TABLE =====
 CREATE TABLE IF NOT EXISTS audit_logs (
     id INT AUTO_INCREMENT PRIMARY KEY,

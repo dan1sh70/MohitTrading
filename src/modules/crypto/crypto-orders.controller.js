@@ -599,6 +599,214 @@ export async function getOrderbook(req, res) {
   }
 }
 
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ * PORTFOLIO ANALYTICS ENDPOINTS
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+
+/**
+ * Internal helper: runs the Tradefinity engine for the authenticated user
+ */
+async function _runTradefinityForUser(userId) {
+  const trades = await sql(
+    `SELECT symbol, net_pnl as pnl, fees_paid as charges, margin_used, entry_time, exit_time, duration_seconds, leverage, status
+     FROM crypto_trades WHERE user_id = $1 AND exit_time IS NOT NULL
+     ORDER BY exit_time DESC`,
+    [userId]
+  );
+  const userBalanceResult = await sql(`SELECT balance FROM users WHERE id = $1`, [userId]);
+  const accountEquity = (userBalanceResult.rows || userBalanceResult).length > 0
+    ? parseFloat((userBalanceResult.rows || userBalanceResult)[0].balance)
+    : 10000;
+
+  const { calculateTradefinityMetrics } = await import('../../services/tradefinity-performance.service.js');
+  const metrics = calculateTradefinityMetrics(trades.rows || trades, accountEquity, 0, 0);
+  return { metrics, accountEquity };
+}
+
+/**
+ * GET /api/crypto/portfolio-health
+ * Returns focused portfolio health metrics
+ */
+export async function getPortfolioHealth(req, res) {
+  try {
+    const { metrics, accountEquity } = await _runTradefinityForUser(req.user.id);
+
+    // Fetch active positions for live exposure breakdown
+    const positions = await sql(
+      `SELECT symbol, side, margin_used, entry_price, quantity
+       FROM crypto_positions WHERE user_id = $1 AND status = 'ACTIVE'`,
+      [req.user.id]
+    );
+
+    const activePositions = (positions.rows || positions);
+    const totalMarginLocked = activePositions.reduce((sum, p) => sum + parseFloat(p.margin_used || 0), 0);
+    const assetBreakdown = {};
+    activePositions.forEach(p => {
+      const sym = p.symbol || 'UNKNOWN';
+      if (!assetBreakdown[sym]) assetBreakdown[sym] = { marginUsed: 0, count: 0 };
+      assetBreakdown[sym].marginUsed += parseFloat(p.margin_used || 0);
+      assetBreakdown[sym].count += 1;
+    });
+
+    return res.json({
+      success: true,
+      data: {
+        portfolioHealthScore: metrics.portfolioHealth,
+        roiPercent: metrics.roiPct,
+        maxDrawdownPercent: metrics.maxDrawdown,
+        totalTrades: metrics.totalTrades,
+        effectivePnl: metrics.effectivePnl,
+        tradingCosts: metrics.tradingCosts,
+        bestAsset: metrics.bestAsset,
+        worstAsset: metrics.worstAsset,
+        diversificationCount: Object.keys(assetBreakdown).length,
+        activePositionsCount: activePositions.length,
+        totalMarginLocked,
+        accountEquity,
+        assetBreakdown
+      }
+    });
+  } catch (error) {
+    console.error(`Portfolio health error: ${error.message}`);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+}
+
+/**
+ * GET /api/crypto/risk-meter
+ * Returns focused risk assessment metrics
+ */
+export async function getRiskMeter(req, res) {
+  try {
+    const { metrics, accountEquity } = await _runTradefinityForUser(req.user.id);
+
+    // Fetch active positions for live margin ratio
+    const positions = await sql(
+      `SELECT margin_used, margin_ratio, liquidation_price, leverage, symbol, side
+       FROM crypto_positions WHERE user_id = $1 AND status = 'ACTIVE'`,
+      [req.user.id]
+    );
+
+    const activePositions = (positions.rows || positions);
+    const totalMarginUsed = activePositions.reduce((sum, p) => sum + parseFloat(p.margin_used || 0), 0);
+    const currentMarginUtilization = accountEquity > 0 ? (totalMarginUsed / accountEquity) * 100 : 0;
+
+    // Positions near liquidation
+    const atRiskPositions = activePositions.filter(p => {
+      const ratio = parseFloat(p.margin_ratio || 100);
+      return ratio < 30;
+    });
+
+    return res.json({
+      success: true,
+      data: {
+        riskScore: metrics.riskMeter,
+        maxDrawdownPercent: metrics.maxDrawdown,
+        profitFactor: metrics.profitFactor,
+        winRate: metrics.winRate,
+        winLossRatio: metrics.winLossRatio,
+        behaviorScore: metrics.behaviorScore,
+        behaviorFlags: metrics.behaviorFlags,
+        marginStress: metrics.marginStress,
+        liquidationHistory: metrics.liquidationHistory,
+        currentMarginUtilization: parseFloat(currentMarginUtilization.toFixed(2)),
+        totalMarginUsed,
+        activePositionsCount: activePositions.length,
+        atRiskPositionsCount: atRiskPositions.length,
+        atRiskPositions: atRiskPositions.map(p => ({
+          symbol: p.symbol,
+          side: p.side,
+          leverage: parseFloat(p.leverage),
+          marginRatio: parseFloat(p.margin_ratio || 0),
+          liquidationPrice: parseFloat(p.liquidation_price || 0)
+        }))
+      }
+    });
+  } catch (error) {
+    console.error(`Risk meter error: ${error.message}`);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+}
+
+/**
+ * GET /api/crypto/report-card
+ * Returns the full Tradefinity v2.1 report card (all 21+ fields)
+ */
+export async function getReportCard(req, res) {
+  try {
+    const { metrics } = await _runTradefinityForUser(req.user.id);
+
+    // Percentile and ranking
+    const rankResult = await sql(`SELECT COUNT(*) as total_users FROM crypto_performance WHERE total_trades > 0`);
+    const belowResult = await sql(`SELECT COUNT(*) as users_below FROM crypto_performance WHERE overall_score < $1 AND total_trades > 0`, [metrics.overallScore]);
+
+    const totalUsers = parseInt((rankResult.rows || rankResult)[0]?.total_users || 1);
+    const usersBelow = parseInt((belowResult.rows || belowResult)[0]?.users_below || 0);
+    const percentileRank = totalUsers > 0 ? parseFloat(((usersBelow / totalUsers) * 100).toFixed(2)) : 0;
+
+    const higherResult = await sql(`SELECT COUNT(*) as users_above FROM crypto_performance WHERE overall_score > $1 AND total_trades > 0`, [metrics.overallScore]);
+    const globalRank = parseInt((higherResult.rows || higherResult)[0]?.users_above || 0) + 1;
+
+    return res.json({
+      success: true,
+      data: {
+        // Scores
+        overallScore: metrics.overallScore,
+        overallGrade: metrics.overallGrade,
+        consistencyScore: metrics.consistencyScore,
+        riskMeter: metrics.riskMeter,
+        portfolioHealth: metrics.portfolioHealth,
+        capitalEvaluationScore: metrics.capitalEvaluationScore,
+
+        // Behavior
+        behaviorScore: metrics.behaviorScore,
+        behaviorFlags: metrics.behaviorFlags,
+        tradingStyle: metrics.tradingStyle,
+
+        // Win/Loss Analytics
+        totalTrades: metrics.totalTrades,
+        winningTrades: metrics.winningTrades,
+        losingTrades: metrics.losingTrades,
+        winRate: metrics.winRate,
+        avgProfit: metrics.avgProfit,
+        avgLoss: metrics.avgLoss,
+        profitFactor: metrics.profitFactor,
+        winLossRatio: metrics.winLossRatio,
+
+        // P&L
+        grossPnl: metrics.grossPnl,
+        effectivePnl: metrics.effectivePnl,
+        tradingCosts: metrics.tradingCosts,
+        roiPercent: metrics.roiPct,
+        maxDrawdownPercent: metrics.maxDrawdown,
+
+        // Risk
+        marginStress: metrics.marginStress,
+        liquidationHistory: metrics.liquidationHistory,
+
+        // Asset & Regime
+        bestAsset: metrics.bestAsset,
+        worstAsset: metrics.worstAsset,
+        bestRegime: metrics.bestRegime,
+        worstRegime: metrics.worstRegime,
+
+        // Duration
+        avgHoldingDurationSeconds: metrics.avgHoldingDuration,
+
+        // Ranking
+        percentileRank,
+        globalRank,
+        totalUsersRanked: totalUsers
+      }
+    });
+  } catch (error) {
+    console.error(`Report card error: ${error.message}`);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+}
+
 export default {
   placeBuyOrder,
   placeSellOrder,
@@ -611,5 +819,9 @@ export default {
   getTrades,
   checkPositionLiquidation,
   getAccountBalance,
-  getOrderbook
+  getOrderbook,
+  getPortfolioHealth,
+  getRiskMeter,
+  getReportCard
 };
+

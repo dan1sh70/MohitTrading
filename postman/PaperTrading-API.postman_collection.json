@@ -440,6 +440,98 @@
             ],
             "url": "{{base_url}}/api/crypto/trades"
           }
+        },
+        {
+          "name": "Analytics",
+          "item": [
+            {
+              "name": "Get Portfolio Health",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/crypto/portfolio-health",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "crypto",
+                    "portfolio-health"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{auth_token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Risk Meter",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/crypto/risk-meter",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "crypto",
+                    "risk-meter"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{auth_token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Report Card",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/crypto/report-card",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "crypto",
+                    "report-card"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{auth_token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
         }
       ]
     },
@@ -1315,6 +1407,345 @@
             "header": [],
             "url": "{{base_url}}/api/debug/upstox/instruments"
           }
+        }
+      ]
+    },
+    {
+      "name": "US Stocks",
+      "item": [
+        {
+          "name": "Buy US Stocks",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/stocks/us/trade/buy",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "stocks",
+                "us",
+                "trade",
+                "buy"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"symbol\": \"AAPL\",\n  \"quantity\": 10,\n  \"entryPrice\": 150.5,\n  \"timeFrame\": \"INTRADAY\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sell US Stocks",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/stocks/us/trade/sell",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "stocks",
+                "us",
+                "trade",
+                "sell"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"symbol\": \"AAPL\",\n  \"quantity\": 10,\n  \"entryPrice\": 155,\n  \"timeFrame\": \"INTRADAY\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get US Stocks Performance",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/stocks/us/performance",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "stocks",
+                "us",
+                "performance"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Forex",
+      "item": [
+        {
+          "name": "Buy Forex",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/forex/trade/buy",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "forex",
+                "trade",
+                "buy"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"symbol\": \"AAPL\",\n  \"quantity\": 10,\n  \"entryPrice\": 150.5,\n  \"timeFrame\": \"INTRADAY\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sell Forex",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/forex/trade/sell",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "forex",
+                "trade",
+                "sell"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"symbol\": \"AAPL\",\n  \"quantity\": 10,\n  \"entryPrice\": 155,\n  \"timeFrame\": \"INTRADAY\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Forex Performance",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/forex/performance",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "forex",
+                "performance"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Commodities",
+      "item": [
+        {
+          "name": "Buy Commodities",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/commodities/trade/buy",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "commodities",
+                "trade",
+                "buy"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"symbol\": \"AAPL\",\n  \"quantity\": 10,\n  \"entryPrice\": 150.5,\n  \"timeFrame\": \"INTRADAY\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sell Commodities",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/commodities/trade/sell",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "commodities",
+                "trade",
+                "sell"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"symbol\": \"AAPL\",\n  \"quantity\": 10,\n  \"entryPrice\": 155,\n  \"timeFrame\": \"INTRADAY\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Commodities Performance",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/commodities/performance",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "commodities",
+                "performance"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
         }
       ]
     }

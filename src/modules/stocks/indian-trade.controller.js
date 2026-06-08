@@ -57,333 +57,328 @@ const USD_INR_RATE = 83.5;
 
 export async function buyIndianStock(req, res) {
   console.log(`[IndianTrade] Buy request received - Path: ${req.path}, User: ${req.user?.id}`);
-  console.log(`[IndianTrade] Request body:`, JSON.stringify(req.validatedBody));
   
   const { symbol, quantity, entryPrice: bodyEntryPrice, timeFrame, marginUsed, charges, orderType } = req.validatedBody;
   const userId = req.user?.id;
 
   if (!userId) {
-    console.log(`[IndianTrade] 401 - No userId in request`);
     return res.status(401).json({ message: "User not authenticated" });
   }
   
-  console.log(`[IndianTrade] Processing buy - User: ${userId}, Symbol: ${symbol}, Qty: ${quantity}, TimeFrame: ${timeFrame}`);
-
   try {
-    // If market order, fetch live price and override entryPrice
     let entryPrice = bodyEntryPrice;
     if (orderType === 'MARKET') {
       try {
         const priceData = await getIndianStockPrice(symbol.toUpperCase());
         entryPrice = parseFloat(priceData.price || priceData.currentPrice || entryPrice);
-        console.log(`[IndianTrade] MARKET order - using live price ${entryPrice} for ${symbol}`);
       } catch (err) {
-        console.warn(`[IndianTrade] Failed to fetch live price for MARKET order, falling back to provided entryPrice: ${err.message}`);
+        console.warn(`[IndianTrade] Failed to fetch live price for MARKET order: ${err.message}`);
       }
     }
 
-    // Get current user balance
-    console.log(`[IndianTrade] Fetching user balance for user ${userId}`);
     const userResult = await sql(`SELECT balance FROM users WHERE id = $1`, [userId]);
-    console.log(`[IndianTrade] User lookup result - rowCount: ${userResult.rowCount}`);
-
-    if (userResult.rowCount === 0) {
-      console.log(`[IndianTrade] 404 - User ${userId} not found in database`);
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    const currentBalance = parseFloat(userResult.rows[0].balance);
-    const totalCostINR = marginUsed + charges;
-    const totalCost = totalCostINR / USD_INR_RATE;
-    
-    console.log(`[IndianTrade] Balance check - Current: ${currentBalance}, Required (USD): ${totalCost} for INR: ${totalCostINR}`);
+    if (userResult.rowCount === 0) return res.status(404).json({ message: "User not found" });
+    const currentBalance = parseFloat((userResult.rows || userResult)[0].balance);
 
     if (orderType === 'LIMIT') {
-      if (!entryPrice) {
-        return res.status(400).json({ message: 'Price is required for LIMIT orders' });
+      if (!entryPrice) return res.status(400).json({ message: 'Price is required for LIMIT orders' });
+      const orderId = await createIndianStockLimitOrder({
+        userId, symbol, quantity, price: entryPrice, side: 'BUY', timeFrame, marginUsed, charges
+      });
+      return res.status(201).json({ message: 'Limit order placed (pending)', orderId, status: 'PENDING' });
+    }
+
+    // --- NEW LOGIC: FIND AND CLOSE EXISTING SELL (SHORT) POSITIONS FIRST ---
+    const activeShortsResult = await sql(
+      `SELECT * FROM indian_stock_positions WHERE user_id = $1 AND symbol = $2 AND status = 'ACTIVE' AND trade_type = 'SELL' ORDER BY entry_time ASC`,
+      [userId, symbol.toUpperCase()]
+    );
+    
+    let activeShorts = activeShortsResult.rows || activeShortsResult;
+    let remainingToBuy = quantity;
+    let totalPnl = 0;
+    let marginReleasedINR = 0;
+    const closedPositionIds = [];
+
+    // 1. Process closing of existing short positions
+    for (const position of activeShorts) {
+      if (remainingToBuy <= 0) break;
+
+      const pQuantity = position.quantity;
+      const closeQty = Math.min(pQuantity, remainingToBuy);
+      // For short, profit is when entry > exit
+      const pnl = (position.entry_price - entryPrice) * closeQty;
+      const pnlPercent = ((position.entry_price - entryPrice) / position.entry_price) * 100;
+      
+      const marginRatio = closeQty / pQuantity;
+      const marginToRelease = position.margin_used * marginRatio;
+
+      totalPnl += pnl;
+      marginReleasedINR += marginToRelease;
+      remainingToBuy -= closeQty;
+
+      if (closeQty === pQuantity) {
+        // Full close
+        await sql(
+          `UPDATE indian_stock_positions SET status = 'EXITED', exit_price = $1, exit_time = NOW(), pnl = $2, pnl_percent = $3 WHERE id = $4`,
+          [entryPrice, pnl, pnlPercent, position.id]
+        );
+        closedPositionIds.push(position.id);
+      } else {
+        // Partial close
+        const newMargin = position.margin_used - marginToRelease;
+        const newQty = pQuantity - closeQty;
+        
+        // Update original position
+        await sql(
+          `UPDATE indian_stock_positions SET quantity = $1, margin_used = $2 WHERE id = $3`,
+          [newQty, newMargin, position.id]
+        );
+        
+        // Create an EXITED record
+        const exitedRecord = await sql(
+          `INSERT INTO indian_stock_positions 
+           (user_id, symbol, quantity, entry_price, current_price, trade_type, time_frame, entry_time, exit_time, status, exit_price, margin_used, charges, pnl, pnl_percent)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), 'EXITED', $9, $10, $11, $12, $13)`,
+          [userId, position.symbol, closeQty, position.entry_price, entryPrice, 'SELL', position.time_frame, position.entry_time, entryPrice, marginToRelease, position.charges * marginRatio, pnl, pnlPercent]
+        );
+        closedPositionIds.push(exitedRecord.insertId || exitedRecord[0]?.insertId);
+      }
+    }
+
+    // 2. Add short proceeds / margin back to balance
+    let balanceAdjustmentINR = marginReleasedINR + totalPnl - charges;
+    let balanceAdjustmentUSD = balanceAdjustmentINR / USD_INR_RATE;
+
+    if (closedPositionIds.length > 0) {
+      console.log(`[IndianTrade] Closed short positions. Adjusting balance by ${balanceAdjustmentUSD} USD`);
+      await sql(`UPDATE users SET balance = balance + $1 WHERE id = $2`, [balanceAdjustmentUSD, userId]);
+      
+      // Also update performance engine!
+      await updatePerformanceMetrics(userId);
+    }
+
+    // 3. Open a LONG position for any remaining quantity
+    let newPositionId = null;
+    if (remainingToBuy > 0) {
+      const longMarginUsed = (remainingToBuy / quantity) * marginUsed;
+      const longCharges = (remainingToBuy / quantity) * charges;
+      const totalLongCostUSD = (longMarginUsed + longCharges) / USD_INR_RATE;
+
+      // Check balance for the new position
+      if ((currentBalance + (closedPositionIds.length > 0 ? balanceAdjustmentUSD : 0)) < totalLongCostUSD) {
+        return res.status(400).json({ message: "Insufficient balance to open new long position." });
       }
 
-      const orderId = await createIndianStockLimitOrder({
-        userId,
-        symbol,
-        quantity,
-        price: entryPrice,
-        side: 'BUY',
-        timeFrame,
-        marginUsed,
-        charges
-      });
+      // Deduct from balance
+      await sql(`UPDATE users SET balance = balance - $1 WHERE id = $2`, [totalLongCostUSD, userId]);
+      balanceAdjustmentUSD -= totalLongCostUSD;
 
-      return res.status(201).json({
-        message: 'Limit order placed (pending)',
-        orderId,
-        status: 'PENDING'
-      });
+      const result = await sql(
+        `INSERT INTO indian_stock_positions 
+         (user_id, symbol, quantity, entry_price, current_price, trade_type, time_frame, entry_time, status, margin_used, charges)
+         VALUES ($1, $2, $3, $4, $5, 'BUY', $6, NOW(), 'ACTIVE', $7, $8)`,
+        [userId, symbol.toUpperCase(), remainingToBuy, entryPrice, entryPrice, timeFrame, longMarginUsed, longCharges]
+      );
+      newPositionId = result.insertId || result[0]?.insertId;
     }
 
-    // Check if user has sufficient balance for immediate execution
-    if (currentBalance < totalCost) {
-      console.log(`[IndianTrade] 400 - Insufficient balance`);
-      return res.status(400).json({ 
-        message: "Insufficient balance",
-        required: totalCost,
-        available: currentBalance 
-      });
-    }
-
-    // Deduct from user balance
-    console.log(`[IndianTrade] Deducting ${totalCost} from user ${userId} balance`);
+    // 4. Create single generic trade record for the action
     await sql(
-      `UPDATE users SET balance = balance - $1 WHERE id = $2`,
-      [totalCost, userId]
+      `INSERT INTO trades (user_id, trading_type, symbol, side, quantity, price, status) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [userId, 'indian_stock', symbol.toUpperCase(), 'BUY', quantity, entryPrice, 'CLOSED']
     );
-    console.log(`[IndianTrade] Balance updated successfully`);
-
-    // Create position record
-    console.log(`[IndianTrade] Creating position record with: symbol=${symbol}, quantity=${quantity}, entryPrice=${entryPrice}, timeFrame=${timeFrame}, orderType=${orderType}`);
-    const result = await sql(
-      `
-        INSERT INTO indian_stock_positions 
-        (user_id, symbol, quantity, entry_price, current_price, trade_type, time_frame, 
-         entry_time, status, margin_used, charges)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), $8, $9, $10)
-      `,
-      [
-        userId,
-        symbol.toUpperCase(),
-        quantity,
-        entryPrice,
-        entryPrice, // Initial current_price = entry_price
-        'BUY',
-        timeFrame,
-        'ACTIVE',
-        marginUsed,
-        charges
-      ]
-    );
-
-    const positionId = result.insertId || result[0]?.insertId;
-    console.log(`[IndianTrade] Position created with ID: ${positionId}, Insert result:`, JSON.stringify(result));
-
-    // Also create a trade record for history
-    console.log(`[IndianTrade] Creating trade record`);
-    await sql(
-      `
-        INSERT INTO trades 
-        (user_id, trading_type, symbol, side, quantity, price, status)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
-      `,
-      [userId, 'indian_stock', symbol.toUpperCase(), 'BUY', quantity, entryPrice, 'OPEN']
-    );
-    console.log(`[IndianTrade] Trade record created`);
 
     // Write audit log
-    console.log(`[IndianTrade] Writing audit log`);
     await writeAuditLog({
       actorUserId: userId,
       action: 'INDIAN_STOCK_BUY',
       targetType: 'position',
-      targetId: String(positionId),
-      details: { symbol, quantity, entryPrice, timeFrame, marginUsed, charges }
+      targetId: newPositionId ? String(newPositionId) : 'CLOSED_MULTIPLE',
+      details: { symbol, quantity, entryPrice, timeFrame, marginUsed, charges, closedPositionIds, longPositionId: newPositionId }
     });
-    console.log(`[IndianTrade] Audit log written`);
 
-    console.log(`[IndianTrade] Buy order completed successfully for user ${userId}`);
     return res.status(201).json({
-      message: "Buy order placed successfully",
-      positionId: positionId,
+      message: "Buy order processed successfully",
+      closedPositions: closedPositionIds,
+      newLongPosition: newPositionId,
       symbol,
       quantity,
       entryPrice,
-      timeFrame,
-      marginUsed,
-      charges,
-      totalCost,
-      remainingBalance: currentBalance - totalCost
+      totalPnl,
+      netProceedsUSD: balanceAdjustmentUSD,
+      remainingBalance: currentBalance + balanceAdjustmentUSD
     });
   } catch (error) {
-    console.error(`[IndianTrade] ERROR - Full stack:`, error);
-    console.error(`[IndianTrade] Error message: ${error.message}`);
-    console.error(`[IndianTrade] Error code: ${error.code}`);
-    console.error(`[IndianTrade] Error SQL: ${error.sql}`);
-    return res.status(500).json({ 
-      message: "Failed to place buy order", 
-      error: error.message,
-      code: error.code
-    });
+    console.error(`[IndianTrade] ERROR processing buy:`, error);
+    return res.status(500).json({ message: "Failed to process buy order", error: error.message });
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// PLACE SELL ORDER
-// ═══════════════════════════════════════════════════════════════════════════
-
 export async function sellIndianStock(req, res) {
   console.log(`[IndianTrade] Sell request received - Path: ${req.path}, User: ${req.user?.id}`);
-  console.log(`[IndianTrade] Request body:`, JSON.stringify(req.validatedBody));
   
   const { symbol, quantity, entryPrice: bodyEntryPrice, timeFrame, marginUsed, charges, orderType } = req.validatedBody;
   const userId = req.user?.id;
 
   if (!userId) {
-    console.log(`[IndianTrade] 401 - No userId in request`);
     return res.status(401).json({ message: "User not authenticated" });
   }
 
-  console.log(`[IndianTrade] Processing sell - User: ${userId}, Symbol: ${symbol}, Qty: ${quantity}, TimeFrame: ${timeFrame}`);
-
   try {
-    // If market order, fetch live price and override entryPrice
     let entryPrice = bodyEntryPrice;
     if (orderType === 'MARKET') {
       try {
         const priceData = await getIndianStockPrice(symbol.toUpperCase());
         entryPrice = parseFloat(priceData.price || priceData.currentPrice || entryPrice);
-        console.log(`[IndianTrade] MARKET sell order - using live price ${entryPrice} for ${symbol}`);
       } catch (err) {
-        console.warn(`[IndianTrade] Failed to fetch live price for MARKET sell order, falling back to provided entryPrice: ${err.message}`);
+        console.warn(`[IndianTrade] Failed to fetch live price for MARKET sell order: ${err.message}`);
       }
     }
 
-    // Get current user balance
-    console.log(`[IndianTrade] Fetching user balance for user ${userId}`);
     const userResult = await sql(`SELECT balance FROM users WHERE id = $1`, [userId]);
-    console.log(`[IndianTrade] User lookup result - rowCount: ${userResult.rowCount}`);
-
-    if (userResult.rowCount === 0) {
-      console.log(`[IndianTrade] 404 - User ${userId} not found in database`);
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    const currentBalance = parseFloat(userResult.rows[0].balance);
+    if (userResult.rowCount === 0) return res.status(404).json({ message: "User not found" });
+    const currentBalance = parseFloat((userResult.rows || userResult)[0].balance);
 
     const normalizedTimeFrame = (timeFrame || '').toString().trim().toLowerCase();
     const isIntraday = normalizedTimeFrame === 'intraday';
 
-    if (!isIntraday) {
-      const holdingsResult = await sql(
-        `SELECT COALESCE(SUM(quantity), 0) AS total_quantity FROM indian_stock_positions WHERE user_id = $1 AND symbol = $2 AND status = 'ACTIVE' AND trade_type = 'BUY'`,
-        [userId, symbol.toUpperCase()]
-      );
-
-      const availableQuantity = parseFloat(holdingsResult.rows[0]?.total_quantity || 0);
-      console.log(`[IndianTrade] Delivery sell check for ${symbol}: available holdings ${availableQuantity}, requested ${quantity}`);
-
-      if (availableQuantity < quantity) {
-        return res.status(400).json({ message: 'Delivery sell is not allowed without an existing long holding for this symbol' });
-      }
-    }
-
     if (orderType === 'LIMIT') {
-      if (!entryPrice) {
-        return res.status(400).json({ message: 'Price is required for LIMIT orders' });
-      }
-
+      if (!entryPrice) return res.status(400).json({ message: 'Price is required for LIMIT orders' });
       const orderId = await createIndianStockLimitOrder({
-        userId,
-        symbol,
-        quantity,
-        price: entryPrice,
-        side: 'SELL',
-        timeFrame,
-        marginUsed,
-        charges
+        userId, symbol, quantity, price: entryPrice, side: 'SELL', timeFrame, marginUsed, charges
       });
-
-      return res.status(201).json({
-        message: 'Limit sell order placed (pending)',
-        orderId,
-        status: 'PENDING'
-      });
+      return res.status(201).json({ message: 'Limit sell order placed (pending)', orderId, status: 'PENDING' });
     }
 
-    const sellProceeds = quantity * entryPrice;
-    const netProceedsINR = sellProceeds - charges; // Only deduct charges, not margin
-    const netProceeds = netProceedsINR / USD_INR_RATE;
+    // --- NEW LOGIC: FIND AND CLOSE EXISTING BUY POSITIONS FIRST ---
+    const activeBuysResult = await sql(
+      `SELECT * FROM indian_stock_positions WHERE user_id = $1 AND symbol = $2 AND status = 'ACTIVE' AND trade_type = 'BUY' ORDER BY entry_time ASC`,
+      [userId, symbol.toUpperCase()]
+    );
     
-    console.log(`[IndianTrade] Sell calculation - Proceeds: ${sellProceeds}, Charges: ${charges}, Net INR: ${netProceedsINR}, Net USD: ${netProceeds}`);
+    let activeBuys = activeBuysResult.rows || activeBuysResult;
+    let remainingToSell = quantity;
+    let totalPnl = 0;
+    let marginReleasedINR = 0;
+    const closedPositionIds = [];
 
-    // Add sell proceeds to user balance (selling gives money, doesn't cost money)
-    console.log(`[IndianTrade] Adding ${netProceeds} to user ${userId} balance`);
+    // If delivery mode and trying to sell more than they own, reject immediately
+    if (!isIntraday) {
+      const totalOwned = activeBuys.reduce((sum, p) => sum + p.quantity, 0);
+      if (totalOwned < quantity) {
+        return res.status(400).json({ message: `Delivery sell failed. You only own ${totalOwned} shares of ${symbol}.` });
+      }
+    }
+
+    // 1. Process closing of existing long positions
+    for (const position of activeBuys) {
+      if (remainingToSell <= 0) break;
+
+      const pQuantity = position.quantity;
+      const closeQty = Math.min(pQuantity, remainingToSell);
+      const pnl = (entryPrice - position.entry_price) * closeQty;
+      const pnlPercent = ((entryPrice - position.entry_price) / position.entry_price) * 100;
+      
+      const marginRatio = closeQty / pQuantity;
+      const marginToRelease = position.margin_used * marginRatio;
+
+      totalPnl += pnl;
+      marginReleasedINR += marginToRelease;
+      remainingToSell -= closeQty;
+
+      if (closeQty === pQuantity) {
+        // Full close
+        await sql(
+          `UPDATE indian_stock_positions SET status = 'EXITED', exit_price = $1, exit_time = NOW(), pnl = $2, pnl_percent = $3 WHERE id = $4`,
+          [entryPrice, pnl, pnlPercent, position.id]
+        );
+        closedPositionIds.push(position.id);
+      } else {
+        // Partial close
+        const newMargin = position.margin_used - marginToRelease;
+        const newQty = pQuantity - closeQty;
+        
+        // Update original position to hold the remaining qty
+        await sql(
+          `UPDATE indian_stock_positions SET quantity = $1, margin_used = $2 WHERE id = $3`,
+          [newQty, newMargin, position.id]
+        );
+        
+        // Create an EXITED record for the closed portion to track history/performance
+        const exitedRecord = await sql(
+          `INSERT INTO indian_stock_positions 
+           (user_id, symbol, quantity, entry_price, current_price, trade_type, time_frame, entry_time, exit_time, status, exit_price, margin_used, charges, pnl, pnl_percent)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), 'EXITED', $9, $10, $11, $12, $13)`,
+          [userId, position.symbol, closeQty, position.entry_price, entryPrice, 'BUY', position.time_frame, position.entry_time, entryPrice, marginToRelease, position.charges * marginRatio, pnl, pnlPercent]
+        );
+        closedPositionIds.push(exitedRecord.insertId || exitedRecord[0]?.insertId);
+      }
+    }
+
+    // 2. Add sell proceeds / margin back to balance
+    // The user gets their initial margin back PLUS the profit (or minus the loss)
+    // Less the charges for this new sell transaction
+    let balanceAdjustmentINR = marginReleasedINR + totalPnl - charges;
+    let balanceAdjustmentUSD = balanceAdjustmentINR / USD_INR_RATE;
+
+    if (closedPositionIds.length > 0) {
+      console.log(`[IndianTrade] Closed positions. Adjusting balance by ${balanceAdjustmentUSD} USD`);
+      await sql(`UPDATE users SET balance = balance + $1 WHERE id = $2`, [balanceAdjustmentUSD, userId]);
+      
+      // Also update performance engine!
+      await updatePerformanceMetrics(userId);
+    }
+
+    // 3. Open a SHORT position for any remaining quantity (only if intraday)
+    let newPositionId = null;
+    if (remainingToSell > 0) {
+      const shortMarginUsed = (remainingToSell / quantity) * marginUsed;
+      const shortCharges = (remainingToSell / quantity) * charges;
+      const totalShortCostUSD = (shortMarginUsed + shortCharges) / USD_INR_RATE;
+
+      // Deduct from balance
+      await sql(`UPDATE users SET balance = balance - $1 WHERE id = $2`, [totalShortCostUSD, userId]);
+      balanceAdjustmentUSD -= totalShortCostUSD; // Update total tracked change
+
+      const result = await sql(
+        `INSERT INTO indian_stock_positions 
+         (user_id, symbol, quantity, entry_price, current_price, trade_type, time_frame, entry_time, status, margin_used, charges)
+         VALUES ($1, $2, $3, $4, $5, 'SELL', $6, NOW(), 'ACTIVE', $7, $8)`,
+        [userId, symbol.toUpperCase(), remainingToSell, entryPrice, entryPrice, timeFrame, shortMarginUsed, shortCharges]
+      );
+      newPositionId = result.insertId || result[0]?.insertId;
+    }
+
+    // 4. Create single generic trade record for the action
     await sql(
-      `UPDATE users SET balance = balance + $1 WHERE id = $2`,
-      [netProceeds, userId]
+      `INSERT INTO trades (user_id, trading_type, symbol, side, quantity, price, status) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [userId, 'indian_stock', symbol.toUpperCase(), 'SELL', quantity, entryPrice, 'CLOSED']
     );
-    console.log(`[IndianTrade] Balance updated successfully`);
-
-    // Create position record for SHORT (SELL)
-    console.log(`[IndianTrade] Creating sell position record with: symbol=${symbol}, quantity=${quantity}, entryPrice=${entryPrice}, timeFrame=${timeFrame}`);
-    const result = await sql(
-      `
-        INSERT INTO indian_stock_positions 
-        (user_id, symbol, quantity, entry_price, current_price, trade_type, time_frame, 
-         entry_time, status, margin_used, charges)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), $8, $9, $10)
-      `,
-      [
-        userId,
-        symbol.toUpperCase(),
-        quantity,
-        entryPrice,
-        entryPrice, // Initial current_price = entry_price
-        'SELL',
-        timeFrame,
-        'ACTIVE',
-        marginUsed,
-        charges
-      ]
-    );
-
-    const positionId = result.insertId || result[0]?.insertId;
-    console.log(`[IndianTrade] Sell position created with ID: ${positionId}, Insert result:`, JSON.stringify(result));
-
-    // Also create a trade record for history
-    console.log(`[IndianTrade] Creating trade record for sell`);
-    await sql(
-      `
-        INSERT INTO trades 
-        (user_id, trading_type, symbol, side, quantity, price, status)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
-      `,
-      [userId, 'indian_stock', symbol.toUpperCase(), 'SELL', quantity, entryPrice, 'OPEN']
-    );
-    console.log(`[IndianTrade] Trade record created`);
 
     // Write audit log
-    console.log(`[IndianTrade] Writing audit log`);
     await writeAuditLog({
       actorUserId: userId,
       action: 'INDIAN_STOCK_SELL',
       targetType: 'position',
-      targetId: String(positionId),
-      details: { symbol, quantity, entryPrice, timeFrame, marginUsed, charges }
+      targetId: newPositionId ? String(newPositionId) : 'CLOSED_MULTIPLE',
+      details: { symbol, quantity, entryPrice, timeFrame, marginUsed, charges, closedPositionIds, shortPositionId: newPositionId }
     });
-    console.log(`[IndianTrade] Audit log written`);
 
-    console.log(`[IndianTrade] Sell order completed successfully for user ${userId}`);
     return res.status(201).json({
-      message: "Sell order placed successfully",
-      positionId: positionId,
+      message: "Sell order processed successfully",
+      closedPositions: closedPositionIds,
+      newShortPosition: newPositionId,
       symbol,
       quantity,
       entryPrice,
-      timeFrame,
-      marginUsed,
-      charges,
-      sellProceeds,
-      netProceeds,
-      remainingBalance: currentBalance + netProceeds
+      totalPnl,
+      netProceedsUSD: balanceAdjustmentUSD,
+      remainingBalance: currentBalance + balanceAdjustmentUSD
     });
   } catch (error) {
-    console.error(`[IndianTrade] ERROR - Full stack:`, error);
-    console.error(`[IndianTrade] Error message: ${error.message}`);
-    console.error(`[IndianTrade] Error code: ${error.code}`);
-    console.error(`[IndianTrade] Error SQL: ${error.sql}`);
-    return res.status(500).json({ 
-      message: "Failed to place sell order", 
-      error: error.message,
-      code: error.code
-    });
+    console.error(`[IndianTrade] ERROR processing sell:`, error);
+    return res.status(500).json({ message: "Failed to process sell order", error: error.message });
   }
 }
 

@@ -29,7 +29,7 @@ import {
   switchMarginModeSchema,
   updateReduceOnlyFlag
 } from './crypto-futures.controller.js';
-import { cancelOrderEndpoint, checkPositionLiquidation, closePositionEndpoint, closePositionSchema, getAccountBalance, getCryptoPerformance, getOrderbook, getOrders, getPositionDetails, getPositions, getTrades, placeBuyOrder, placeBuyOrderSchema, placeSellOrder, placeSellOrderSchema } from './crypto-orders.controller.js';
+import { cancelOrderEndpoint, checkPositionLiquidation, closePositionEndpoint, closePositionSchema, getAccountBalance, getCryptoPerformance, getOrderbook, getOrders, getPortfolioHealth, getPositionDetails, getPositions, getReportCard, getRiskMeter, getTrades, placeBuyOrder, placeBuyOrderSchema, placeSellOrder, placeSellOrderSchema } from './crypto-orders.controller.js';
 
 const router = express.Router();
 
@@ -113,6 +113,24 @@ router.get('/positions/:positionId/liquidation-check', checkPositionLiquidation)
  * Get user's performance metrics
  */
 router.get('/performance', getCryptoPerformance);
+
+/**
+ * GET /api/crypto/portfolio-health
+ * Get user's focused portfolio health metrics
+ */
+router.get('/portfolio-health', getPortfolioHealth);
+
+/**
+ * GET /api/crypto/risk-meter
+ * Get user's focused risk assessment metrics
+ */
+router.get('/risk-meter', getRiskMeter);
+
+/**
+ * GET /api/crypto/report-card
+ * Get user's full Tradefinity v2.1 report card
+ */
+router.get('/report-card', getReportCard);
 
 /**
  * GET /api/crypto/trades

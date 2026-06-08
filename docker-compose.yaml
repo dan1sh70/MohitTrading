@@ -13,6 +13,8 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
       - ./src/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./src/db/crypto-schema.sql:/docker-entrypoint-initdb.d/02-crypto-schema.sql
+      - ./src/db/crypto-futures-migration.sql:/docker-entrypoint-initdb.d/03-crypto-futures-migration.sql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       timeout: 20s

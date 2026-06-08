@@ -130,6 +130,15 @@ import {
   exitPositionSchema
 } from "../modules/stocks/indian-trade.schema.js";
 import {
+  buyUsStock, sellUsStock, getUsPerformanceMetrics
+} from "../modules/stocks/us-trade.controller.js";
+import {
+  buyForex, sellForex, getForexPerformanceMetrics
+} from "../modules/forex/forex-trade.controller.js";
+import {
+  buyCommodity, sellCommodity, getCommodityPerformanceMetrics
+} from "../modules/commodities/commodity-trade.controller.js";
+import {
   getLatestNewsHandler,
   searchNewsHandler,
   getNewsBySymbolsHandler,
@@ -356,6 +365,21 @@ apiRouter.get("/stocks/in/:symbol", getIndianStock);
 
 // Commodities - No rate limiter for development
 apiRouter.get("/commodities", getCommodities);
+
+// ========== NEW: US STOCKS TRADING ENDPOINTS ==========
+apiRouter.post("/stocks/us/trade/buy", requireAuth, validateBody(buyIndianStockSchema), buyUsStock);
+apiRouter.post("/stocks/us/trade/sell", requireAuth, validateBody(sellIndianStockSchema), sellUsStock);
+apiRouter.get("/stocks/us/performance", requireAuth, getUsPerformanceMetrics);
+
+// ========== NEW: FOREX TRADING ENDPOINTS ==========
+apiRouter.post("/forex/trade/buy", requireAuth, validateBody(buyIndianStockSchema), buyForex);
+apiRouter.post("/forex/trade/sell", requireAuth, validateBody(sellIndianStockSchema), sellForex);
+apiRouter.get("/forex/performance", requireAuth, getForexPerformanceMetrics);
+
+// ========== NEW: COMMODITIES TRADING ENDPOINTS ==========
+apiRouter.post("/commodities/trade/buy", requireAuth, validateBody(buyIndianStockSchema), buyCommodity);
+apiRouter.post("/commodities/trade/sell", requireAuth, validateBody(sellIndianStockSchema), sellCommodity);
+apiRouter.get("/commodities/performance", requireAuth, getCommodityPerformanceMetrics);
 
 // ========== NEWS ENDPOINTS (MarketAux) ==========
 
