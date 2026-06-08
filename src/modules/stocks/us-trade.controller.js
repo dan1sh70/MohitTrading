@@ -333,8 +333,8 @@ export async function updateUsPerformanceMetrics(userId) {
        overall_grade = VALUES(overall_grade),
        overall_score = VALUES(overall_score)`,
       [
-        userId, metrics.totalPnL, metrics.realizedPnL, metrics.totalTrades, metrics.winningTrades,
-        metrics.losingTrades, metrics.winRate, metrics.averageProfit, metrics.averageLoss,
+        userId, metrics.totalProfitLoss, metrics.realisedPnl, metrics.totalTrades, metrics.winningTrades,
+        metrics.losingTrades, metrics.winRate, metrics.avgProfit, metrics.avgLoss,
         metrics.profitFactor, metrics.consistencyScore, metrics.riskMeter, metrics.portfolioHealth,
         metrics.winLossRatio, metrics.capitalEvaluationScore, metrics.overallGrade, metrics.overallScore
       ]
