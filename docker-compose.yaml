@@ -24,13 +24,15 @@ services:
     image: redis:7-alpine
     container_name: paper-trading-redis-prod
     restart: unless-stopped
-    command: redis-server --appendonly yes --requirepass redis_password_123
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "redis_password_123"]
     volumes:
       - redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "redis_password_123", "ping"]
-      timeout: 3s
+      interval: 10s
+      timeout: 5s
       retries: 5
+      start_period: 10s
 
   backend:
     build:
@@ -47,8 +49,8 @@ services:
       NODE_ENV: production
       PORT: 8808
 
-      DB_HOST: 72.62.192.34
-      DB_PORT: 8965
+      DB_HOST: mysql
+      DB_PORT: 3306
       DB_USER: mysql
       DB_PASSWORD: r1Wk6teTIRAsFp89tBNkkl30M3FosEEkn7cXyTPFtz74Jeqn5IfRMmhiq2gLoGQK
       DB_NAME: default
