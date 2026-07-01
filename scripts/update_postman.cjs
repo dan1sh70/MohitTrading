@@ -98,6 +98,15 @@ try {
   addMarketFolder("Forex", "forex");
   addMarketFolder("Commodities", "commodities");
 
+  // 3. Add Logout API to Auth folder
+  const authFolder = collection.item.find(i => i.name === 'Auth');
+  if (authFolder) {
+    const existingAuthEndpoints = authFolder.item.map(i => i.name);
+    if (!existingAuthEndpoints.includes("Logout")) {
+      authFolder.item.push(createItem("Logout", "POST", "api/auth/logout", true));
+    }
+  }
+
   fs.writeFileSync(collectionPath, JSON.stringify(collection, null, 2), 'utf8');
   console.log('Successfully updated Postman collection!');
 

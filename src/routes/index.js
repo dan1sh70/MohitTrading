@@ -13,7 +13,8 @@ import {
   register, 
   forgotPassword, 
   resetPassword, 
-  verifyResetToken 
+  verifyResetToken,
+  logout
 } from "../modules/auth/auth.controller.js";
 import { upstoxLogin, upstoxCallback, upstoxConnected } from "../modules/auth/upstox.controller.js";
 import {
@@ -201,6 +202,7 @@ apiRouter.get("/health", async (_req, res) => {
 
 apiRouter.post("/auth/login", loginLimiter, validateBody(loginSchema), login);
 apiRouter.post("/auth/register", loginLimiter, validateBody(registerSchema), register);
+apiRouter.post("/auth/logout", requireAuth, logout);
 apiRouter.post("/auth/forgot-password", loginLimiter, validateBody(forgotPasswordSchema), forgotPassword);
 apiRouter.post("/auth/reset-password", loginLimiter, validateBody(resetPasswordSchema), resetPassword);
 apiRouter.get("/auth/verify-reset-token/:token", verifyResetToken);

@@ -45,6 +45,26 @@ export async function login(req, res) {
   });
 }
 
+export async function logout(req, res) {
+  // Since we use stateless JWTs without a Redis blacklist, we just return success.
+  // The client is responsible for deleting the token from local storage/cookies.
+  
+  if (req.user) {
+    await writeAuditLog({
+      actorUserId: req.user.id,
+      action: "USER_LOGOUT",
+      targetType: "user",
+      targetId: String(req.user.id),
+      details: { email: req.user.email }
+    });
+  }
+
+  return res.json({
+    success: true,
+    message: "Logged out successfully"
+  });
+}
+
 export async function register(req, res) {
   const { fullName, email, password } = req.validatedBody;
   const role = "trader"; // Always register as a trader

@@ -409,6 +409,62 @@ export async function getCryptoPerformance(req, res) {
 }
 
 /**
+ * POST /api/crypto/performance/calculate
+ * Run the Tradefinity engine directly on an arbitrary set of positions/trades
+ * Body:
+ * {
+ *   positions: [...],
+ *   accountEquity?: number,
+ *   manualBehaviorPenalty?: number,
+ *   inactiveMonths?: number
+ * }
+ */
+export async function calculateCryptoPerformance(req, res) {
+  try {
+    const {
+      positions = [],
+      accountEquity: accountEquityInput,
+      manualBehaviorPenalty = 0,
+      inactiveMonths = 0
+    } = req.validatedBody || req.body || {};
+
+    if (!Array.isArray(positions)) {
+      return res.status(400).json({
+        success: false,
+        message: "positions must be an array"
+      });
+    }
+
+    const userBalanceResult = await sql(`SELECT balance FROM users WHERE id = $1`, [req.user.id]);
+    const defaultEquity = userBalanceResult.rows?.length ? parseFloat(userBalanceResult.rows[0].balance) : 10000;
+    const accountEquity = Number.isFinite(Number(accountEquityInput)) ? Number(accountEquityInput) : defaultEquity;
+
+    const { calculateTradefinityMetrics } = await import('../../services/tradefinity-performance.service.js');
+    const metrics = calculateTradefinityMetrics(
+      positions,
+      accountEquity,
+      Number(manualBehaviorPenalty) || 0,
+      Number(inactiveMonths) || 0
+    );
+
+    return res.json({
+      success: true,
+      data: {
+        accountEquity,
+        positionsCount: positions.length,
+        metrics
+      }
+    });
+  } catch (error) {
+    console.error(`Calculate performance error: ${error.message}`);
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+}
+
+/**
  * GET /api/crypto/trades
  * Get closed trades
  */
@@ -816,6 +872,7 @@ export default {
   getOrders,
   cancelOrderEndpoint,
   getCryptoPerformance,
+  calculateCryptoPerformance,
   getTrades,
   checkPositionLiquidation,
   getAccountBalance,

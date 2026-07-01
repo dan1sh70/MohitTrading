@@ -29,7 +29,7 @@ import {
   switchMarginModeSchema,
   updateReduceOnlyFlag
 } from './crypto-futures.controller.js';
-import { cancelOrderEndpoint, checkPositionLiquidation, closePositionEndpoint, closePositionSchema, getAccountBalance, getCryptoPerformance, getOrderbook, getOrders, getPortfolioHealth, getPositionDetails, getPositions, getReportCard, getRiskMeter, getTrades, placeBuyOrder, placeBuyOrderSchema, placeSellOrder, placeSellOrderSchema } from './crypto-orders.controller.js';
+import { calculateCryptoPerformance, cancelOrderEndpoint, checkPositionLiquidation, closePositionEndpoint, closePositionSchema, getAccountBalance, getCryptoPerformance, getOrderbook, getOrders, getPortfolioHealth, getPositionDetails, getPositions, getReportCard, getRiskMeter, getTrades, placeBuyOrder, placeBuyOrderSchema, placeSellOrder, placeSellOrderSchema } from './crypto-orders.controller.js';
 
 const router = express.Router();
 
@@ -113,6 +113,12 @@ router.get('/positions/:positionId/liquidation-check', checkPositionLiquidation)
  * Get user's performance metrics
  */
 router.get('/performance', getCryptoPerformance);
+
+/**
+ * POST /api/crypto/performance/calculate
+ * Run the Tradefinity engine on a provided positions array
+ */
+router.post('/performance/calculate', calculateCryptoPerformance);
 
 /**
  * GET /api/crypto/portfolio-health
