@@ -270,6 +270,80 @@ async function executeMarketOrder(orderId, userId, symbol, side, quantity, execu
  */
 
 /**
+ * Settle a single matched execution (adjusts balances and creates position records)
+ */
+async function settleMatchExecution(userId, symbol, side, quantity, price, leverage, tradingMode, orderId) {
+  const executionPrice = parseFloat(price);
+  
+  try {
+    if (tradingMode === 'SPOT') {
+      const userBalanceRes = await sql(`SELECT balance FROM users WHERE id = $1`, [userId]);
+      if ((userBalanceRes.rows || []).length === 0) throw new Error('User not found');
+      const costOrProceeds = quantity * executionPrice;
+      const newBalance = side === 'BUY' 
+        ? parseFloat(userBalanceRes.rows[0].balance || 0) - costOrProceeds
+        : parseFloat(userBalanceRes.rows[0].balance || 0) + costOrProceeds;
+      
+      await sql(`UPDATE users SET balance = $1 WHERE id = $2`, [newBalance, userId]);
+      
+      const positionResult = await sql(
+        `INSERT INTO crypto_positions 
+         (user_id, symbol, side, entry_price, quantity, leverage, margin_used, 
+          liquidation_price, entry_time, status, trading_mode)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), 'ACTIVE', $9)
+         RETURNING id`,
+        [
+          userId, symbol, side === 'BUY' ? 'LONG' : 'SHORT', executionPrice, quantity,
+          1, costOrProceeds, 0, tradingMode
+        ]
+      );
+      
+      const positionId = positionResult.rows?.[0]?.id;
+      
+      await sql(
+        `UPDATE crypto_orders SET position_id = $1 WHERE id = $2`,
+        [positionId, orderId]
+      );
+      
+      return positionId;
+    } else if (tradingMode === 'FUTURES') {
+      const requiredMargin = calculateRequiredMargin(quantity, executionPrice, leverage);
+      const liquidationPrice = calculateLiquidationPrice(executionPrice, leverage, side === 'BUY' ? 'LONG' : 'SHORT');
+      
+      const positionResult = await sql(
+        `INSERT INTO crypto_positions 
+         (user_id, symbol, side, entry_price, quantity, leverage, margin_used, 
+          liquidation_price, entry_time, status, trading_mode)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), 'ACTIVE', $9)
+         RETURNING id`,
+        [
+          userId, symbol, side === 'BUY' ? 'LONG' : 'SHORT', executionPrice, quantity,
+          leverage, requiredMargin, liquidationPrice, tradingMode
+        ]
+      );
+      
+      const positionId = positionResult.rows?.[0]?.id;
+      
+      const userBalanceRes = await sql(`SELECT balance FROM users WHERE id = $1`, [userId]);
+      if ((userBalanceRes.rows || []).length === 0) throw new Error('User not found');
+      const newBalance = parseFloat(userBalanceRes.rows[0].balance || 0) - requiredMargin;
+      
+      await sql(`UPDATE users SET balance = $1 WHERE id = $2`, [newBalance, userId]);
+      
+      await sql(
+        `UPDATE crypto_orders SET position_id = $1 WHERE id = $2`,
+        [positionId, orderId]
+      );
+      
+      return positionId;
+    }
+  } catch (error) {
+    console.error(`Error in settleMatchExecution: ${error.message}`);
+    throw error;
+  }
+}
+
+/**
  * Attempt to match limit order against existing orders
  */
 async function attemptOrderMatching(incomingOrder, leverage, tradingMode) {
@@ -287,10 +361,59 @@ async function attemptOrderMatching(incomingOrder, leverage, tradingMode) {
     // Execute matches
     const executions = await executeMatches(matches, incomingOrder.symbol);
     
-    // Store match history
+    // Store match history and settle executions (balances & positions)
     for (const match of executions) {
       if (match.executed) {
         await storeMatchHistory(incomingOrder.symbol, match);
+        
+        // Settle for taker (incoming order)
+        await settleMatchExecution(
+          match.takerUserId,
+          incomingOrder.symbol,
+          match.takerSide,
+          match.quantity,
+          match.price,
+          leverage,
+          tradingMode,
+          match.takerOrderId
+        );
+        
+        // Retrieve maker order details to settle for maker
+        const makerOrderRes = await sql(
+          `SELECT leverage, trading_mode, remaining_quantity, filled_quantity FROM crypto_orders WHERE id = $1`,
+          [match.makerOrderId]
+        );
+        
+        if (makerOrderRes.rows && makerOrderRes.rows.length > 0) {
+          const makerOrder = makerOrderRes.rows[0];
+          const makerLeverage = parseFloat(makerOrder.leverage) || 1;
+          const makerTradingMode = makerOrder.trading_mode || 'SPOT';
+          
+          await settleMatchExecution(
+            match.makerUserId,
+            incomingOrder.symbol,
+            match.makerSide,
+            match.quantity,
+            match.price,
+            makerLeverage,
+            makerTradingMode,
+            match.makerOrderId
+          );
+          
+          // Update maker order status and quantities in DB
+          const currentRemaining = parseFloat(makerOrder.remaining_quantity);
+          const currentFilled = parseFloat(makerOrder.filled_quantity);
+          const newRemaining = Math.max(0, currentRemaining - match.quantity);
+          const newFilled = currentFilled + match.quantity;
+          const newStatus = newRemaining === 0 ? 'FILLED' : 'PARTIALLY_FILLED';
+          
+          await sql(
+            `UPDATE crypto_orders 
+             SET status = $1, remaining_quantity = $2, filled_quantity = $3, filled_at = ${newRemaining === 0 ? 'NOW()' : 'NULL'}
+             WHERE id = $4`,
+            [newStatus, newRemaining, newFilled, match.makerOrderId]
+          );
+        }
       }
     }
     

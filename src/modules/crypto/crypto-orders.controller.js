@@ -160,7 +160,7 @@ export async function getPositions(req, res) {
           const margin = parseFloat(position.margin) || (quantity * entryPrice);
           
           let unrealisedPnL = 0;
-          if (side === 'BUY') {
+          if (side === 'BUY' || side === 'LONG') {
             unrealisedPnL = (currentPrice - entryPrice) * quantity;
           } else {
             unrealisedPnL = (entryPrice - currentPrice) * quantity;
