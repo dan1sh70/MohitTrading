@@ -52,7 +52,8 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{base_url}}/api/health"
+            "url": "{{base_url}}/api/health",
+            "description": "### API REFERENCE\n\n**Description:** ** Verify API is running\n**Rate Limit:** ** None\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"status\": \"ok\",\n  \"service\": \"paper-trading-backend\"\n}\n\n**Use Case:** Verify API is running\n\n**cURL Example:**\n```\n"
           }
         },
         {
@@ -99,7 +100,8 @@
               "mode": "raw",
               "raw": "{\n  \"fullName\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"Password123!\"\n}"
             },
-            "url": "{{base_url}}/api/auth/register"
+            "url": "{{base_url}}/api/auth/register",
+            "description": "### API REFERENCE\n\n**Description:** Register user\n**Rate Limit:** ** 10 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
           }
         },
         {
@@ -116,7 +118,8 @@
               "mode": "raw",
               "raw": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"Password123!\"\n}"
             },
-            "url": "{{base_url}}/api/auth/login"
+            "url": "{{base_url}}/api/auth/login",
+            "description": "### API REFERENCE\n\n**Description:** Get JWT token\n**Rate Limit:** ** 10 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiZW1haWwiOiJ0cmFkZXIxQHBhcGVydHJhZGluZy5sb2NhbCIsInJvbGUiOiJ0cmFkZXIiLCJpYXQiOjE3NzYxODY5NjUsImV4cCI6MTc3NjI3MzM2NX0.0PCuFvFhI0emxowN1kCp7NsWS512u9pkvG3anr-vJ-s\",\n  \"user\": {\n    \"id\": 2,\n    \"name\": \"Aarav Patel\",\n    \"email\": \"trader1@papertrading.local\",\n    \"role\": \"trader\"\n  }\n}\n\n**Error Response (401):**\n\n{\n  \"message\": \"Invalid email or password\"\n}\n\n**Token Usage:**\n\nHeader: Authorization: Bearer <token>\nExpiry: 24 hours\n\n**cURL Example:**\n```\n"
           },
           "event": [
             {
@@ -149,7 +152,8 @@
               "mode": "raw",
               "raw": "{\n  \"email\": \"john@example.com\"\n}"
             },
-            "url": "{{base_url}}/api/auth/forgot-password"
+            "url": "{{base_url}}/api/auth/forgot-password",
+            "description": "### API REFERENCE\n\n**Description:** Request password reset\n**Rate Limit:** ** 5 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"success\": true,\n  \"message\": \"Password reset link has been sent to your email address.\"\n}\n\n**Development Mode Response (includes token for testing):**\n\n{\n  \"success\": true,\n  \"message\": \"Password reset link has been sent to your email address.\",\n  \"resetToken\": \"a1b2c3d4e5f6...\",\n  \"note\": \"This token is only exposed in development mode. In production, it would be sent via email.\"\n}\n\n**Error Response (400) - Invalid Email:**\n\n{\n  \"success\": false,\n  \"message\": \"Please provide a valid email address\"\n}\n\n**cURL Example:**\n```\n"
           }
         },
         {
@@ -166,7 +170,8 @@
               "mode": "raw",
               "raw": "{\n  \"token\": \"reset-token\",\n  \"newPassword\": \"NewPassword123!\"\n}"
             },
-            "url": "{{base_url}}/api/auth/reset-password"
+            "url": "{{base_url}}/api/auth/reset-password",
+            "description": "### API REFERENCE\n\n**Description:** Reset password\n**Rate Limit:** ** 5 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"success\": true,\n  \"message\": \"Password has been reset successfully. You can now log in with your new password.\"\n}\n\n**Error Response (400) - Invalid/Expired Token:**\n\n{\n  \"success\": false,\n  \"message\": \"Invalid or expired reset token.\"\n}\n\n**Error Response (400) - Already Used Token:**\n\n{\n  \"success\": false,\n  \"message\": \"This reset token has already been used. Please request a new one.\"\n}\n\n**Error Response (400) - Weak Password:**\n\n{\n  \"success\": false,\n  \"message\": \"Password must contain at least one uppercase letter\"\n}\n\n**cURL Example:**\n```\n"
           }
         },
         {
@@ -174,7 +179,8 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{base_url}}/api/auth/verify-reset-token/reset-token"
+            "url": "{{base_url}}/api/auth/verify-reset-token/reset-token",
+            "description": "### API REFERENCE\n\n**Description:** Verify reset token\n**Rate Limit:** ** 10 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"success\": true,\n  \"valid\": true,\n  \"email\": \"trader1@papertrading.local\",\n  \"message\": \"Token is valid.\"\n}\n\n**Error Response (400) - Invalid Token:**\n\n{\n  \"success\": false,\n  \"valid\": false,\n  \"message\": \"Invalid reset token.\"\n}\n\n**Error Response (400) - Expired Token:**\n\n{\n  \"success\": false,\n  \"valid\": false,\n  \"message\": \"Reset token has expired.\"\n}\n\n**Error Response (400) - Used Token:**\n\n{\n  \"success\": false,\n  \"valid\": false,\n  \"message\": \"This reset token has already been used.\"\n}\n\n**cURL Example:**\n```\n"
           }
         },
         {
@@ -213,6 +219,34 @@
             "header": [],
             "url": "{{base_url}}/api/auth/upstox/connected"
           }
+        },
+        {
+          "name": "Verify Reset Token - Check Token Validity",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/verify-reset-token/:token",
+            "description": "### API REFERENCE\n\n**Description:** Verify reset token\n**Rate Limit:** ** 10 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"success\": true,\n  \"valid\": true,\n  \"email\": \"trader1@papertrading.local\",\n  \"message\": \"Token is valid.\"\n}\n\n**Error Response (400) - Invalid Token:**\n\n{\n  \"success\": false,\n  \"valid\": false,\n  \"message\": \"Invalid reset token.\"\n}\n\n**Error Response (400) - Expired Token:**\n\n{\n  \"success\": false,\n  \"valid\": false,\n  \"message\": \"Reset token has expired.\"\n}\n\n**Error Response (400) - Used Token:**\n\n{\n  \"success\": false,\n  \"valid\": false,\n  \"message\": \"This reset token has already been used.\"\n}\n\n**cURL Example:**\n```\n"
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/logout",
+            "description": "### API REFERENCE\n\n**Description:** Logout the current user session and invalidate the JWT token.\n**Rate Limit:** N/A\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"success\": true,\n  \"message\": \"Logged out successfully\"\n}\n```\n"
+          }
         }
       ]
     },
@@ -224,7 +258,8 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{base_url}}/api/crypto/prices"
+            "url": "{{base_url}}/api/crypto/prices",
+            "description": "### API REFERENCE\n\n**Description:** All crypto prices\n**Rate Limit:** ** 30 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"data\": [\n    {\n      \"symbol\": \"BTCUSDT\",\n      \"price\": 74834.75,\n      \"timestamp\": 1776186993270\n    },\n    {\n      \"symbol\": \"ETHUSDT\",\n      \"price\": 2338.75,\n      \"timestamp\": 1776187020891\n    },\n    {\n      \"symbol\": \"BNBUSDT\",\n      \"price\": 619.77,\n      \"timestamp\": 1776187020893\n    },\n    {\n      \"symbol\": \"SOLUSDT\",\n      \"price\": 85.23,\n      \"timestamp\": 1776187020893\n    },\n    {\n      \"symbol\": \"XRPUSDT\",\n      \"price\": 1.3707,\n      \"timestamp\": 1776187020896\n    },\n    {\n      \"symbol\": \"TRXUSDT\",\n      \"price\": 0.3221,\n      \"timestamp\": 1776187020903\n    },\n    {\n      \"symbol\": \"ADAUSDT\",\n      \"price\": 0.2449,\n      \"timestamp\": 1776187020900\n    }\n  ],\n  \"count\": 7,\n  \"timestamp\": 1776187034126\n}\n\n**cURL Example:**\n```\n"
           }
         },
         {
@@ -232,7 +267,8 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{base_url}}/api/crypto/prices/{{crypto_symbol}}"
+            "url": "{{base_url}}/api/crypto/prices/{{crypto_symbol}}",
+            "description": "### API REFERENCE\n\n**Description:** Single price\n**Rate Limit:** ** 30 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"symbol\": \"BTCUSDT\",\n  \"price\": 74834.75,\n  \"timestamp\": 1776186993270\n}\n\n**Error Response (400):**\n\n{\n  \"message\": \"Symbol XXXUSDT not supported. Supported symbols: BTCUSDT, ETHUSDT, BNBUSDT, SOLUSDT, XRPUSDT, TRXUSDT, ADAUSDT\"\n}\n\n**cURL Example:**\n```\n"
           }
         },
         {
@@ -240,7 +276,8 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{base_url}}/api/crypto/stats/{{crypto_symbol}}"
+            "url": "{{base_url}}/api/crypto/stats/{{crypto_symbol}}",
+            "description": "### API REFERENCE\n\n**Description:** 24h statistics\n**Rate Limit:** ** 30 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"symbol\": \"BTCUSDT\",\n  \"price\": 74834.75,\n  \"priceChange\": 1256.32,\n  \"priceChangePercent\": 1.7,\n  \"highPrice\": 75000.0,\n  \"lowPrice\": 73500.0,\n  \"volume\": 25000.45,\n  \"quoteAssetVolume\": 1250000000.0,\n  \"timestamp\": 1776187034126\n}\n\n**cURL Example:**\n```\n"
           }
         },
         {
@@ -248,7 +285,8 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{base_url}}/api/crypto/{{crypto_symbol}}/historical?timeframe=1d&days=30"
+            "url": "{{base_url}}/api/crypto/{{crypto_symbol}}/historical?timeframe=1d&days=30",
+            "description": "### API REFERENCE\n\n**Description:** ** Get historical price data for analysis\n**Rate Limit:** ** 30 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"symbol\": \"BTCUSDT\",\n  \"timeframe\": \"1d\",\n  \"data\": [\n    {\n      \"timestamp\": 1776086400000,\n      \"open\": 74000.0,\n      \"high\": 75100.0,\n      \"low\": 73800.0,\n      \"close\": 74834.75,\n      \"volume\": 25000.45\n    },\n    {\n      \"timestamp\": 1776172800000,\n      \"open\": 74834.75,\n      \"high\": 75250.0,\n      \"low\": 74500.0,\n      \"close\": 74923.45,\n      \"volume\": 26000.5\n    }\n  ],\n  \"count\": 30,\n  \"lastUpdated\": 1776187034126\n}\n\n**Use Case:** Get historical price data for analysis\n\n**cURL Examples:**\n```\n"
           }
         },
         {
@@ -256,7 +294,8 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{base_url}}/api/crypto/{{crypto_symbol}}/chart?timeframe=1d&limit=100"
+            "url": "{{base_url}}/api/crypto/{{crypto_symbol}}/chart?timeframe=1d&limit=100",
+            "description": "### API REFERENCE\n\n**Description:** ** Display candlestick chart with TradingView\n**Rate Limit:** ** 30 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"symbol\": \"BTCUSDT\",\n  \"timeframe\": \"1d\",\n  \"data\": [\n    {\n      \"timestamp\": 1776086400000,\n      \"open\": 74000.0,\n      \"high\": 75100.0,\n      \"low\": 73800.0,\n      \"close\": 74834.75,\n      \"volume\": 25000.45,\n      \"quoteAssetVolume\": 1250000000.0\n    },\n    {\n      \"timestamp\": 1776172800000,\n      \"open\": 74834.75,\n      \"high\": 75250.0,\n      \"low\": 74500.0,\n      \"close\": 74923.45,\n      \"volume\": 26000.5,\n      \"quoteAssetVolume\": 1280000000.0\n    }\n  ],\n  \"count\": 100,\n  \"timestamp\": 1776187034126\n}\n\n**Timeframe Options:**\n\n- `1h`: Hourly candles\n- `1d`: Daily candles\n- `1w`: Weekly candles\n- `1m`: Monthly candles\n- `1y`: Yearly candles\n\n**Use Case:** Display candlestick chart with TradingView\n\n**cURL Examples:**\n```\n"
           }
         },
         {
@@ -264,7 +303,8 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{base_url}}/api/crypto/{{crypto_symbol}}/indicators"
+            "url": "{{base_url}}/api/crypto/{{crypto_symbol}}/indicators",
+            "description": "### API REFERENCE\n\n**Description:** ** Display AI Trade Insights in app\n**Rate Limit:** ** 30 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"symbol\": \"BTCUSDT\",\n  \"timeframe\": \"1d\",\n  \"sma20\": 74500.0,\n  \"rsi\": 65.32,\n  \"macd\": {\n    \"macdLine\": 245.67,\n    \"signalLine\": 234.56,\n    \"histogram\": 11.11\n  },\n  \"bollingerBands\": {\n    \"upper\": 75100.0,\n    \"middle\": 74500.0,\n    \"lower\": 73900.0\n  },\n  \"timestamp\": 1776187034126\n}\n\n**Indicators Explained:**\n\n- **SMA20**: 20-period Simple Moving Average\n  - Trend direction indicator\n- **RSI**: Relative Strength Index (0-100)\n  - <30: Oversold (Bullish signal)\n  - > 70: Overbought (Bearish signal)\n- **MACD**: Moving Average Convergence Divergence\n  - macdLine: 12-26 EMA difference\n  - signalLine: 9-period EMA of MACD\n  - histogram: MACD - Signal Line\n- **Bollinger Bands**: Volatility indicator\n  - upper: SMA20 + (2 × StdDev)\n  - middle: SMA20\n  - lower: SMA20 - (2 × StdDev)\n\n**Use Case:** Display AI Trade Insights in app\n\n**cURL Example:**\n```\n"
           }
         },
         {
@@ -272,7 +312,8 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{base_url}}/api/crypto/top-3/famous"
+            "url": "{{base_url}}/api/crypto/top-3/famous",
+            "description": "### API REFERENCE\n\n**Description:** ** Display BTC, ETH, BNB at top of Markets screen\n**Rate Limit:** ** 30 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"data\": [\n    {\n      \"symbol\": \"BTCUSDT\",\n      \"name\": \"Bitcoin\",\n      \"currentPrice\": 74834.75,\n      \"priceChange\": 1256.32,\n      \"priceChangePercent\": 1.7,\n      \"highPrice\": 75000.0,\n      \"lowPrice\": 73500.0,\n      \"volume\": 25000.45,\n      \"marketCap\": 1250000000.0,\n      \"isFamous\": true\n    },\n    {\n      \"symbol\": \"ETHUSDT\",\n      \"name\": \"Ethereum\",\n      \"currentPrice\": 2338.75,\n      \"priceChange\": 45.32,\n      \"priceChangePercent\": 1.98,\n      \"highPrice\": 2400.0,\n      \"lowPrice\": 2250.0,\n      \"volume\": 50000.32,\n      \"marketCap\": 280000000.0,\n      \"isFamous\": true\n    },\n    {\n      \"symbol\": \"BNBUSDT\",\n      \"name\": \"Binance Coin\",\n      \"currentPrice\": 619.77,\n      \"priceChange\": 8.45,\n      \"priceChangePercent\": 1.39,\n      \"highPrice\": 630.0,\n      \"lowPrice\": 610.0,\n      \"volume\": 12000.45,\n      \"marketCap\": 94000000.0,\n      \"isFamous\": true\n    }\n  ],\n  \"count\": 3,\n  \"timestamp\": 1776187034126\n}\n\n**Use Case:** Display BTC, ETH, BNB at top of Markets screen\n\n**cURL Example:**\n```\n"
           }
         },
         {
@@ -280,7 +321,8 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{base_url}}/api/crypto/trending/top-10"
+            "url": "{{base_url}}/api/crypto/trending/top-10",
+            "description": "### API REFERENCE\n\n**Description:** ** Show trending cryptos sorted by price change %\n**Rate Limit:** ** 30 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"data\": [\n    {\n      \"symbol\": \"ADAUSDT\",\n      \"name\": \"Cardano\",\n      \"currentPrice\": 0.2449,\n      \"priceChange\": 0.0045,\n      \"priceChangePercent\": 1.86,\n      \"volume24h\": 8000000.0,\n      \"marketCap\": 8500000.0,\n      \"isTrending\": true\n    },\n    {\n      \"symbol\": \"XRPUSDT\",\n      \"name\": \"XRP\",\n      \"currentPrice\": 1.3707,\n      \"priceChange\": 0.0234,\n      \"priceChangePercent\": 1.72,\n      \"volume24h\": 4500000.0,\n      \"marketCap\": 73000000.0,\n      \"isTrending\": true\n    }\n  ],\n  \"count\": 10,\n  \"timestamp\": 1776187034126\n}\n\n**Use Case:** Show trending cryptos sorted by price change %\n\n**cURL Example:**\n```\n"
           }
         },
         {
@@ -288,7 +330,8 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{base_url}}/api/crypto/trending/all"
+            "url": "{{base_url}}/api/crypto/trending/all",
+            "description": "### API REFERENCE\n\n**Description:** Trending (filtered)\n**Rate Limit:** ** 30 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n**cURL Example:**\n```\n"
           }
         },
         {
@@ -296,7 +339,8 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{base_url}}/api/crypto/top-10/ranked"
+            "url": "{{base_url}}/api/crypto/top-10/ranked",
+            "description": "### API REFERENCE\n\n**Description:** ** Display top 10 ranked cryptos on dashboard or market page\n**Rate Limit:** ** 30 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"data\": [\n    {\n      \"symbol\": \"BTCUSDT\",\n      \"price\": 74834.75,\n      \"priceChange\": 1256.32,\n      \"priceChangePercent\": 1.7,\n      \"highPrice\": 75000.0,\n      \"lowPrice\": 73500.0,\n      \"volume\": 25000.45,\n      \"quoteAssetVolume\": 1250000000.0,\n      \"timestamp\": 1776187034126\n    },\n    {\n      \"symbol\": \"ETHUSDT\",\n      \"price\": 2338.75,\n      \"priceChange\": 45.32,\n      \"priceChangePercent\": 1.98,\n      \"highPrice\": 2400.0,\n      \"lowPrice\": 2250.0,\n      \"volume\": 50000.32,\n      \"quoteAssetVolume\": 280000000.0,\n      \"timestamp\": 1776187034126\n    },\n    {\n      \"symbol\": \"BNBUSDT\",\n      \"price\": 619.77,\n      \"priceChange\": 8.45,\n      \"priceChangePercent\": 1.39,\n      \"highPrice\": 630.0,\n      \"lowPrice\": 610.0,\n      \"volume\": 12000.45,\n      \"quoteAssetVolume\": 94000000.0,\n      \"timestamp\": 1776187034126\n    },\n    {\n      \"symbol\": \"SOLUSDT\",\n      \"price\": 85.23,\n      \"priceChange\": 1.85,\n      \"priceChangePercent\": 2.22,\n      \"highPrice\": 87.0,\n      \"lowPrice\": 83.0,\n      \"volume\": 8000000.0,\n      \"quoteAssetVolume\": 680000000.0,\n      \"timestamp\": 1776187034126\n    },\n    {\n      \"symbol\": \"ADAUSDT\",\n      \"price\": 0.2449,\n      \"priceChange\": 0.0045,\n      \"priceChangePercent\": 1.86,\n      \"highPrice\": 0.25,\n      \"lowPrice\": 0.24,\n      \"volume\": 8000000.0,\n      \"quoteAssetVolume\": 1950800.0,\n      \"timestamp\": 1776187034126\n    },\n    {\n      \"symbol\": \"XRPUSDT\",\n      \"price\": 1.3707,\n      \"priceChange\": 0.0234,\n      \"priceChangePercent\": 1.72,\n      \"highPrice\": 1.4,\n      \"lowPrice\": 1.35,\n      \"volume\": 4500000.0,\n      \"quoteAssetVolume\": 6168150.0,\n      \"timestamp\": 1776187034126\n    },\n    {\n      \"symbol\": \"TRXUSDT\",\n      \"price\": 0.3221,\n      \"priceChange\": 0.0056,\n      \"priceChangePercent\": 1.77,\n      \"highPrice\": 0.33,\n      \"lowPrice\": 0.32,\n      \"volume\": 5000000.0,\n      \"quoteAssetVolume\": 1610500.0,\n      \"timestamp\": 1776187034126\n    },\n    {\n      \"symbol\": \"DOGEUSDT\",\n      \"price\": 0.4567,\n      \"priceChange\": 0.0089,\n      \"priceChangePercent\": 1.99,\n      \"highPrice\": 0.47,\n      \"lowPrice\": 0.45,\n      \"volume\": 3500000.0,\n      \"quoteAssetVolume\": 1598450.0,\n      \"timestamp\": 1776187034126\n    },\n    {\n      \"symbol\": \"LTCUSDT\",\n      \"price\": 112.45,\n      \"priceChange\": 2.12,\n      \"priceChangePercent\": 1.92,\n      \"highPrice\": 114.0,\n      \"lowPrice\": 110.0,\n      \"volume\": 2500000.0,\n      \"quoteAssetVolume\": 281125000.0,\n      \"timestamp\": 1776187034126\n    },\n    {\n      \"symbol\": \"MATICUSDT\",\n      \"price\": 0.8934,\n      \"priceChange\": 0.0157,\n      \"priceChangePercent\": 1.79,\n      \"highPrice\": 0.91,\n      \"lowPrice\": 0.88,\n      \"volume\": 6000000.0,\n      \"quoteAssetVolume\": 5360400.0,\n      \"timestamp\": 1776187034126\n    }\n  ],\n  \"count\": 10,\n  \"timestamp\": 1776187034126\n}\n\n**Features:**\n\n- ⚡ Fresh data every 2 seconds from background polling\n- 🎯 Automatically ranked by 24h price change %\n- 💾 Cached in Redis for instant response\n- 📊 Includes all 24h statistics\n\n**Use Case:** Display top 10 ranked cryptos on dashboard or market page\n\n**cURL Example:**\n```\n"
           }
         },
         {
@@ -304,7 +348,8 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{base_url}}/api/crypto/all/stats"
+            "url": "{{base_url}}/api/crypto/all/stats",
+            "description": "### API REFERENCE\n\n**Description:** ** Get bulk crypto data for tables, grids, or market overview\n**Rate Limit:** ** 30 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"data\": [\n    {\n      \"symbol\": \"BTCUSDT\",\n      \"price\": 74834.75,\n      \"priceChange\": 1256.32,\n      \"priceChangePercent\": 1.7,\n      \"highPrice\": 75000.0,\n      \"lowPrice\": 73500.0,\n      \"volume\": 25000.45,\n      \"quoteAssetVolume\": 1250000000.0,\n      \"timestamp\": 1776187034126\n    },\n    {\n      \"symbol\": \"ETHUSDT\",\n      \"price\": 2338.75,\n      \"priceChange\": 45.32,\n      \"priceChangePercent\": 1.98,\n      \"highPrice\": 2400.0,\n      \"lowPrice\": 2250.0,\n      \"volume\": 50000.32,\n      \"quoteAssetVolume\": 280000000.0,\n      \"timestamp\": 1776187034126\n    }\n  ],\n  \"count\": 10,\n  \"timestamp\": 1776187034126\n}\n\n**Features:**\n\n- ⚡ Fresh data every 2 seconds from background polling\n- 💾 Cached in Redis for instant response\n- 📊 All 10 supported cryptos with full statistics\n- 🔄 Automatically updated in the background\n\n**Use Case:** Get bulk crypto data for tables, grids, or market overview\n\n**cURL Example:**\n```\n"
           }
         },
         {
@@ -354,6 +399,33 @@
             "header": [],
             "url": "{{base_url}}/api/crypto/stream/prices/{{crypto_symbol}}"
           }
+        },
+        {
+          "name": "Calculate Crypto Performance",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/crypto/performance/calculate",
+            "description": "### API REFERENCE\n\n**Description:** Calculate Tradefinity score and detailed stats for a provided array of closed positions.\n**Rate Limit:** N/A\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Request Body:**\n```json\n{\n  \"positions\": [\n    {\n      \"symbol\": \"BTCUSDT\",\n      \"side\": \"BUY\",\n      \"quantity\": 0.5,\n      \"entryPrice\": 60000,\n      \"exitPrice\": 65000,\n      \"leverage\": 3,\n      \"status\": \"CLOSED\"\n    }\n  ]\n}\n```\n\n**Success Response Example:**\n```json\n{\n  \"success\": true,\n  \"metrics\": {\n    \"totalTrades\": 1,\n    \"winRate\": 100,\n    \"profitFactor\": 99.9,\n    \"tradefinityScore\": 85\n  }\n}\n```\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"positions\": [\n    {\n      \"symbol\": \"BTCUSDT\",\n      \"side\": \"BUY\",\n      \"quantity\": 0.5,\n      \"entryPrice\": 60000,\n      \"exitPrice\": 65000,\n      \"leverage\": 3,\n      \"status\": \"CLOSED\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
         }
       ]
     },
@@ -378,7 +450,8 @@
               "mode": "raw",
               "raw": "{\n  \"symbol\": \"BTC\",\n  \"quantity\": 0.01,\n  \"price\": 65000\n}"
             },
-            "url": "{{base_url}}/api/crypto/buy"
+            "url": "{{base_url}}/api/crypto/buy",
+            "description": "### API REFERENCE\n\n**Description:** Buy order (legacy)\n**Rate Limit:** ** 5 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"message\": \"Buy order created successfully\",\n  \"trade\": {\n    \"id\": 1,\n    \"user_id\": 2,\n    \"symbol\": \"BTCUSDT\",\n    \"side\": \"BUY\",\n    \"quantity\": 0.5,\n    \"price\": \"74834.75\",\n    \"status\": \"OPEN\",\n    \"created_at\": \"2026-04-14T11:46:27.000Z\"\n  }\n}\n\n**Error Response (400) - Insufficient Balance:**\n\n{\n  \"message\": \"Insufficient balance. Required: 37417.375, Available: 25000.00\"\n}\n\n**Error Response (400) - Invalid Symbol:**\n\n{\n  \"message\": \"Symbol XXXUSDT not supported\"\n}\n\n**Error Response (401) - Missing Token:**\n\n{\n  \"message\": \"Missing authorization token\"\n}\n\n**Validation:**\n\n- Sufficient balance required\n- Symbol must be supported\n- Quantity & price must be positive\n\n**cURL Example:**\n```\n"
           }
         },
         {
@@ -399,7 +472,8 @@
               "mode": "raw",
               "raw": "{\n  \"symbol\": \"BTC\",\n  \"quantity\": 0.01,\n  \"price\": 65500\n}"
             },
-            "url": "{{base_url}}/api/crypto/sell"
+            "url": "{{base_url}}/api/crypto/sell",
+            "description": "### API REFERENCE\n\n**Description:** Sell order (legacy)\n**Rate Limit:** ** 5 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"message\": \"Sell order created successfully\",\n  \"trade\": {\n    \"id\": 2,\n    \"user_id\": 2,\n    \"symbol\": \"BTCUSDT\",\n    \"side\": \"SELL\",\n    \"quantity\": 0.5,\n    \"price\": \"75000.00\",\n    \"status\": \"OPEN\",\n    \"created_at\": \"2026-04-14T11:46:43.000Z\"\n  }\n}\n\n**Error Response (400) - Insufficient Position:**\n\n{\n  \"message\": \"Insufficient position. Available: 0.5, Requested: 1\"\n}\n\n**Validation:**\n\n- User must have sufficient position\n- Position validation prevents overselling\n- Same symbol validation as buy\n\n**cURL Example:**\n```\n"
           }
         },
         {
@@ -412,7 +486,8 @@
                 "value": "Bearer {{auth_token}}"
               }
             ],
-            "url": "{{base_url}}/api/crypto/portfolio"
+            "url": "{{base_url}}/api/crypto/portfolio",
+            "description": "### API REFERENCE\n\n**Description:** ** Display portfolio summary with holdings\n**Rate Limit:** N/A\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"balance\": 125087.5,\n  \"positions\": [\n    {\n      \"symbol\": \"BTCUSDT\",\n      \"quantity\": \"0.5\",\n      \"avgPrice\": 74834.75,\n      \"currentPrice\": 74834.75,\n      \"value\": 37417.375,\n      \"pnl\": 0.0,\n      \"pnlPercent\": \"0.00\"\n    },\n    {\n      \"symbol\": \"ETHUSDT\",\n      \"quantity\": \"2\",\n      \"avgPrice\": 2338.75,\n      \"currentPrice\": 2338.75,\n      \"value\": 4677.5,\n      \"pnl\": 0.0,\n      \"pnlPercent\": \"0.00\"\n    }\n  ],\n  \"timestamp\": 1776187034126\n}\n\n**Fields:**\n\n- `balance`: Available cash balance\n- `quantity`: Amount of crypto held\n- `avgPrice`: Average purchase price\n- `currentPrice`: Real-time market price\n- `value`: Current position value (quantity × currentPrice)\n- `pnl`: Profit/Loss in USD\n- `pnlPercent`: Profit/Loss in percentage\n\n**Use Case:** Display portfolio summary with holdings\n\n**cURL Example:**\n```\n"
           }
         },
         {
@@ -438,7 +513,8 @@
                 "value": "Bearer {{auth_token}}"
               }
             ],
-            "url": "{{base_url}}/api/crypto/trades"
+            "url": "{{base_url}}/api/crypto/trades",
+            "description": "### API REFERENCE\n\n**Description:** ** Show transaction history with pagination\n**Rate Limit:** N/A\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"data\": [\n    {\n      \"id\": 2,\n      \"symbol\": \"BTCUSDT\",\n      \"side\": \"SELL\",\n      \"quantity\": 0.5,\n      \"price\": \"75000.00\",\n      \"status\": \"OPEN\",\n      \"pnl\": \"125.00\",\n      \"created_at\": \"2026-04-14T11:46:43.000Z\",\n      \"closed_at\": null\n    },\n    {\n      \"id\": 1,\n      \"symbol\": \"BTCUSDT\",\n      \"side\": \"BUY\",\n      \"quantity\": 0.5,\n      \"price\": \"74834.75\",\n      \"status\": \"OPEN\",\n      \"pnl\": \"0.00\",\n      \"created_at\": \"2026-04-14T11:46:27.000Z\",\n      \"closed_at\": null\n    }\n  ],\n  \"pagination\": {\n    \"page\": 1,\n    \"limit\": 20,\n    \"total\": 2,\n    \"totalPages\": 1\n  }\n}\n\n**Use Case:** Show transaction history with pagination\n\n**cURL Examples:**\n```\n"
           }
         },
         {
@@ -556,7 +632,8 @@
               "mode": "raw",
               "raw": "{\n  \"symbol\": \"BTCUSDT\",\n  \"quantity\": 1,\n  \"price\": 65000,\n  \"leverage\": 2,\n  \"tradingMode\": \"SPOT\",\n  \"orderType\": \"LIMIT\"\n}"
             },
-            "url": "{{base_url}}/api/crypto/orders/buy"
+            "url": "{{base_url}}/api/crypto/orders/buy",
+            "description": "### API REFERENCE\n\n**Description:** Place buy order (Market/Limit)\n**Rate Limit:** ** 5 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
           }
         },
         {
@@ -577,7 +654,8 @@
               "mode": "raw",
               "raw": "{\n  \"symbol\": \"BTCUSDT\",\n  \"quantity\": 1,\n  \"price\": 65500,\n  \"leverage\": 2,\n  \"tradingMode\": \"SPOT\",\n  \"orderType\": \"LIMIT\"\n}"
             },
-            "url": "{{base_url}}/api/crypto/orders/sell"
+            "url": "{{base_url}}/api/crypto/orders/sell",
+            "description": "### API REFERENCE\n\n**Description:** Place sell order (Market/Limit)\n**Rate Limit:** ** 5 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
           }
         },
         {
@@ -590,7 +668,8 @@
                 "value": "Bearer {{auth_token}}"
               }
             ],
-            "url": "{{base_url}}/api/crypto/orders"
+            "url": "{{base_url}}/api/crypto/orders",
+            "description": "### API REFERENCE\n\n**Description:** Get all orders with filter\n**Rate Limit:** ** -\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
           }
         },
         {
@@ -603,7 +682,8 @@
                 "value": "Bearer {{auth_token}}"
               }
             ],
-            "url": "{{base_url}}/api/crypto/orders/{{order_id}}/cancel"
+            "url": "{{base_url}}/api/crypto/orders/{{order_id}}/cancel",
+            "description": "### API REFERENCE\n\n**Description:** Cancel open order\n**Rate Limit:** ** 5 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
           }
         },
         {
@@ -616,7 +696,8 @@
                 "value": "Bearer {{auth_token}}"
               }
             ],
-            "url": "{{base_url}}/api/crypto/positions"
+            "url": "{{base_url}}/api/crypto/positions",
+            "description": "### API REFERENCE\n\n**Description:** Get all active positions\n**Rate Limit:** ** -\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
           }
         },
         {
@@ -629,7 +710,8 @@
                 "value": "Bearer {{auth_token}}"
               }
             ],
-            "url": "{{base_url}}/api/crypto/positions/{{position_id}}"
+            "url": "{{base_url}}/api/crypto/positions/{{position_id}}",
+            "description": "### API REFERENCE\n\n**Description:** Get position details\n**Rate Limit:** ** -\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
           }
         },
         {
@@ -650,7 +732,8 @@
               "mode": "raw",
               "raw": "{\n  \"positionId\": 1,\n  \"closingPrice\": 65250\n}"
             },
-            "url": "{{base_url}}/api/crypto/positions/{{position_id}}/close"
+            "url": "{{base_url}}/api/crypto/positions/{{position_id}}/close",
+            "description": "### API REFERENCE\n\n**Description:** Close position\n**Rate Limit:** ** 5 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
           }
         },
         {
@@ -663,7 +746,8 @@
                 "value": "Bearer {{auth_token}}"
               }
             ],
-            "url": "{{base_url}}/api/crypto/positions/{{position_id}}/liquidation-check"
+            "url": "{{base_url}}/api/crypto/positions/{{position_id}}/liquidation-check",
+            "description": "### API REFERENCE\n\n**Description:** Check & auto-liquidate\n**Rate Limit:** ** -\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
           }
         },
         {
@@ -676,7 +760,8 @@
                 "value": "Bearer {{auth_token}}"
               }
             ],
-            "url": "{{base_url}}/api/crypto/performance"
+            "url": "{{base_url}}/api/crypto/performance",
+            "description": "### API REFERENCE\n\n**Description:** Get performance metrics\n**Rate Limit:** ** -\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
           }
         },
         {
@@ -689,7 +774,8 @@
                 "value": "Bearer {{auth_token}}"
               }
             ],
-            "url": "{{base_url}}/api/crypto/account/balance"
+            "url": "{{base_url}}/api/crypto/account/balance",
+            "description": "### API REFERENCE\n\n**Description:** Get balance & equity\n**Rate Limit:** ** -\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
           }
         },
         {
@@ -702,7 +788,8 @@
                 "value": "Bearer {{auth_token}}"
               }
             ],
-            "url": "{{base_url}}/api/crypto/orderbook/{{crypto_order_symbol}}"
+            "url": "{{base_url}}/api/crypto/orderbook/{{crypto_order_symbol}}",
+            "description": "### API REFERENCE\n\n**Description:** Get live orderbook snapshot\n**Rate Limit:** ** 30 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
           }
         }
       ]
@@ -795,7 +882,8 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{base_url}}/api/commodities"
+            "url": "{{base_url}}/api/commodities",
+            "description": "### API REFERENCE\n\n**Description:** All commodities\n**Rate Limit:** ** 30 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"success\": true,\n  \"data\": [\n    {\n      \"symbol\": \"GOLD\",\n      \"name\": \"Gold\",\n      \"subtitle\": \"Commodity\",\n      \"price\": 1850.75,\n      \"change\": 12.3,\n      \"changePercent\": 0.67,\n      \"currencySymbol\": \"$\",\n      \"sparklineData\": [1830, 1840, 1850, 1860, 1855, 1850, 1850.75]\n    },\n    {\n      \"symbol\": \"SILVER\",\n      \"name\": \"Silver\",\n      \"subtitle\": \"Commodity\",\n      \"price\": 24.85,\n      \"change\": -0.45,\n      \"changePercent\": -1.78,\n      \"currencySymbol\": \"$\",\n      \"sparklineData\": [25.5, 25.2, 25.0, 24.8, 24.9, 24.8, 24.85]\n    },\n    {\n      \"symbol\": \"OIL\",\n      \"name\": \"Crude Oil\",\n      \"subtitle\": \"Commodity\",\n      \"price\": 78.92,\n      \"change\": 1.85,\n      \"changePercent\": 2.4,\n      \"currencySymbol\": \"$\",\n      \"sparklineData\": [76, 77, 78, 79, 78.5, 78, 78.92]\n    }\n  ],\n  \"count\": 5,\n  \"timestamp\": \"2026-05-07T12:00:00Z\"\n}\n\n**Supported Commodities:**\n\n- GOLD - Gold (XAU/USD)\n- SILVER - Silver (XAG/USD)\n- OIL - Crude Oil (WTI)\n- COPPER - Copper\n- NATGAS - Natural Gas\n\n**cURL Example:**\n```\n"
           }
         }
       ]
@@ -925,7 +1013,8 @@
               "mode": "raw",
               "raw": "{\n  \"symbol\": \"RELIANCE\",\n  \"quantity\": 10,\n  \"entryPrice\": 2850,\n  \"orderType\": \"MARKET\",\n  \"timeFrame\": \"Intraday\",\n  \"marginUsed\": 5000,\n  \"charges\": 12\n}"
             },
-            "url": "{{base_url}}/api/stocks/in/trade/buy"
+            "url": "{{base_url}}/api/stocks/in/trade/buy",
+            "description": "### API REFERENCE\n\n**Description:** Buy Indian stock\n**Rate Limit:** ** 5 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"success\": true,\n  \"message\": \"Buy order executed successfully\",\n  \"position\": {\n    \"id\": 1,\n    \"symbol\": \"INFY\",\n    \"side\": \"BUY\",\n    \"quantity\": 10,\n    \"entryPrice\": 1580.5,\n    \"currentPrice\": 1580.5,\n    \"status\": \"OPEN\",\n    \"unrealizedPnl\": 0,\n    \"createdAt\": \"2026-05-07T12:00:00Z\"\n  },\n  \"balance\": {\n    \"previous\": 150000,\n    \"current\": 134195,\n    \"deducted\": 15805\n  }\n}\n\n**Error Response (400) - Insufficient Balance:**\n\n{\n  \"success\": false,\n  \"message\": \"Insufficient balance. Required: 15805, Available: 5000\"\n}\n\n**cURL Example:**\n```\n"
           }
         },
         {
@@ -946,7 +1035,8 @@
               "mode": "raw",
               "raw": "{\n  \"symbol\": \"RELIANCE\",\n  \"quantity\": 10,\n  \"entryPrice\": 2860,\n  \"orderType\": \"MARKET\",\n  \"timeFrame\": \"Intraday\",\n  \"marginUsed\": 5000,\n  \"charges\": 12\n}"
             },
-            "url": "{{base_url}}/api/stocks/in/trade/sell"
+            "url": "{{base_url}}/api/stocks/in/trade/sell",
+            "description": "### API REFERENCE\n\n**Description:** Sell Indian stock\n**Rate Limit:** ** 5 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"success\": true,\n  \"message\": \"Sell order executed successfully\",\n  \"position\": {\n    \"id\": 2,\n    \"symbol\": \"INFY\",\n    \"side\": \"SELL\",\n    \"quantity\": 10,\n    \"entryPrice\": 1600.0,\n    \"status\": \"OPEN\",\n    \"createdAt\": \"2026-05-07T12:00:00Z\"\n  }\n}\n\n**cURL Example:**\n```\n"
           }
         },
         {
@@ -959,7 +1049,8 @@
                 "value": "Bearer {{auth_token}}"
               }
             ],
-            "url": "{{base_url}}/api/stocks/in/trade/orders"
+            "url": "{{base_url}}/api/stocks/in/trade/orders",
+            "description": "### API REFERENCE\n\n**Description:** ** Returns pending Indian stock `LIMIT` orders for the authenticated user.\n**Rate Limit:** ** -\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
           }
         },
         {
@@ -972,7 +1063,8 @@
                 "value": "Bearer {{auth_token}}"
               }
             ],
-            "url": "{{base_url}}/api/stocks/in/trade/orders/process"
+            "url": "{{base_url}}/api/stocks/in/trade/orders/process",
+            "description": "### API REFERENCE\n\n**Description:** ** Evaluates pending Indian stock `LIMIT` orders and fills any orders that meet market conditions.\n**Rate Limit:** ** 5 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
           }
         },
         {
@@ -985,7 +1077,8 @@
                 "value": "Bearer {{auth_token}}"
               }
             ],
-            "url": "{{base_url}}/api/stocks/in/trade/update"
+            "url": "{{base_url}}/api/stocks/in/trade/update",
+            "description": "### API REFERENCE\n\n**Description:** Update trade (not impl)\n**Rate Limit:** ** 5 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
           }
         },
         {
@@ -998,7 +1091,8 @@
                 "value": "Bearer {{auth_token}}"
               }
             ],
-            "url": "{{base_url}}/api/stocks/in/positions"
+            "url": "{{base_url}}/api/stocks/in/positions",
+            "description": "### API REFERENCE\n\n**Description:** List positions\n**Rate Limit:** N/A\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"success\": true,\n  \"data\": [\n    {\n      \"id\": 1,\n      \"symbol\": \"INFY\",\n      \"name\": \"Infosys Limited\",\n      \"side\": \"BUY\",\n      \"quantity\": 10,\n      \"entryPrice\": 1580.5,\n      \"currentPrice\": 1600.0,\n      \"status\": \"ACTIVE\",\n      \"unrealizedPnl\": 195.0,\n      \"unrealizedPnlPercent\": 1.23,\n      \"createdAt\": \"2026-05-07T12:00:00Z\"\n    }\n  ],\n  \"summary\": {\n    \"totalPositions\": 1,\n    \"activePositions\": 1,\n    \"totalUnrealizedPnl\": 195.0,\n    \"totalInvested\": 15805.0\n  }\n}\n\n**cURL Example:**\n```\n"
           }
         },
         {
@@ -1011,7 +1105,8 @@
                 "value": "Bearer {{auth_token}}"
               }
             ],
-            "url": "{{base_url}}/api/stocks/in/positions/{{position_id}}"
+            "url": "{{base_url}}/api/stocks/in/positions/{{position_id}}",
+            "description": "### API REFERENCE\n\n**Description:** Position details\n**Rate Limit:** N/A\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
           }
         },
         {
@@ -1032,7 +1127,8 @@
               "mode": "raw",
               "raw": "{\n  \"exitPrice\": 2890\n}"
             },
-            "url": "{{base_url}}/api/stocks/in/positions/{{position_id}}/exit"
+            "url": "{{base_url}}/api/stocks/in/positions/{{position_id}}/exit",
+            "description": "### API REFERENCE\n\n**Description:** Exit position\n**Rate Limit:** ** 5 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"success\": true,\n  \"message\": \"Position exited successfully\",\n  \"position\": {\n    \"id\": 1,\n    \"symbol\": \"INFY\",\n    \"status\": \"CLOSED\",\n    \"entryPrice\": 1580.5,\n    \"exitPrice\": 1600.0,\n    \"quantity\": 10,\n    \"realizedPnl\": 195.0,\n    \"realizedPnlPercent\": 1.23,\n    \"exitTime\": \"2026-05-07T14:30:00Z\"\n  },\n  \"balance\": {\n    \"previous\": 134195,\n    \"current\": 134390,\n    \"credited\": 195\n  }\n}\n\n**cURL Example:**\n```\n"
           }
         },
         {
@@ -1045,7 +1141,49 @@
                 "value": "Bearer {{auth_token}}"
               }
             ],
-            "url": "{{base_url}}/api/stocks/in/performance"
+            "url": "{{base_url}}/api/stocks/in/performance",
+            "description": "### API REFERENCE\n\n**Description:** Performance metrics\n**Rate Limit:** N/A\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"success\": true,\n  \"data\": {\n    \"consistencyScore\": 78.5,\n    \"riskMeter\": 82.0,\n    \"portfolioHealth\": 75.3,\n    \"winRate\": 68.5,\n    \"profitFactor\": 1.85,\n    \"capitalEvaluation\": 79.0,\n    \"overallScore\": 76.5,\n    \"grade\": \"B\",\n    \"totalTrades\": 47,\n    \"winningTrades\": 32,\n    \"losingTrades\": 15,\n    \"averageWin\": 450.5,\n    \"averageLoss\": 220.3,\n    \"largestWin\": 1250.0,\n    \"largestLoss\": 450.0,\n    \"totalProfit\": 14416.0,\n    \"totalLoss\": 3304.5,\n    \"netPnl\": 11111.5\n  }\n}\n\n**Scoring System:**\n\n- **Consistency Score (0-100):** Stability of performance over time\n- **Risk Meter (0-100):** Risk management quality\n- **Portfolio Health (0-100):** Overall account quality\n- **Win Rate (%):** Percentage of winning trades\n- **Profit Factor:** Gross Profit / Gross Loss ratio\n- **Capital Evaluation (0-100):** Capital efficiency\n\n**Grade Assignment:**\n\n- Score >= 90: A (Expert Trader)\n- Score >= 75: B (Good Trader)\n- Score >= 60: C (Average Trader)\n- Score >= 45: D (Below Average)\n- Score < 45: F (Poor Trader)\n\n**cURL Example:**\n```\n"
+          }
+        },
+        {
+          "name": "Indian Portfolio",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/stocks/in/portfolio",
+            "description": "### API REFERENCE\n\n**Description:** Get user's Indian stocks portfolio (open positions only, matching crypto portfolio structure)\n**Rate Limit:** N/A\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"balance\": 149987.9,\n  \"positions\": [\n    {\n      \"symbol\": \"RELIANCE\",\n      \"quantity\": 20,\n      \"avgPrice\": 2500,\n      \"currentPrice\": 2500,\n      \"value\": 50000,\n      \"pnl\": 0,\n      \"pnlPercent\": \"0.00\",\n      \"tradeType\": \"BUY\",\n      \"warning\": \"Showing last cached price\"\n    }\n  ],\n  \"timestamp\": 1784227085210\n}\n```\n"
+          }
+        },
+        {
+          "name": "Upstox Live Quote",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/upstox/quote/{{crypto_order_symbol}}",
+            "description": "### API REFERENCE\n\n**Description:** Fetch real-time stock quote from Upstox API.\n**Rate Limit:** 30 requests/minute\n**Authentication:** ❌ Public\n\n**Success Response Example:**\n```json\n{\n  \"success\": true,\n  \"data\": {\n    \"symbol\": \"RELIANCE\",\n    \"lastPrice\": 2450.5,\n    \"change\": 12.3,\n    \"changePercent\": 0.5\n  }\n}\n```\n"
+          }
+        },
+        {
+          "name": "Upstox OHLC Candlesticks",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/upstox/ohlc/{{crypto_order_symbol}}",
+            "description": "### API REFERENCE\n\n**Description:** Fetch OHLC (Open, High, Low, Close) candlestick data from Upstox. Supports interval query param (e.g. 1m, 5m, 15m, 1d).\n**Rate Limit:** 30 requests/minute\n**Authentication:** ❌ Public\n\n**Success Response Example:**\n```json\n{\n  \"success\": true,\n  \"data\": [\n    [1717000000, 2440.0, 2455.0, 2438.0, 2450.5, 50000]\n  ]\n}\n```\n"
+          }
+        },
+        {
+          "name": "Upstox Options Chain",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/upstox/options/{{crypto_order_symbol}}",
+            "description": "### API REFERENCE\n\n**Description:** Fetch live options chain data from Upstox API.\n**Rate Limit:** 30 requests/minute\n**Authentication:** ❌ Public\n\n**Success Response Example:**\n```json\n{\n  \"success\": true,\n  \"data\": {\n    \"underlying\": \"RELIANCE\",\n    \"expiryDates\": [\"2026-07-30\"],\n    \"calls\": [],\n    \"puts\": []\n  }\n}\n```\n"
           }
         }
       ]
@@ -1058,7 +1196,8 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{base_url}}/api/news/latest"
+            "url": "{{base_url}}/api/news/latest",
+            "description": "### API REFERENCE\n\n**Description:** Latest financial news\n**Rate Limit:** ** 40 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"success\": true,\n  \"meta\": {\n    \"found\": 5474,\n    \"returned\": 20,\n    \"limit\": 20,\n    \"page\": 1\n  },\n  \"data\": [\n    {\n      \"uuid\": \"7be57f71-7af5-42ca-ad19-7c7f6f22b574\",\n      \"title\": \"Tech Stock Surge: AAPL & MSFT Lead Market Rally\",\n      \"description\": \"Apple and Microsoft shares rally on strong earnings reports...\",\n      \"url\": \"https://example.com/article\",\n      \"image_url\": \"https://example.com/image.jpg\",\n      \"published_at\": \"2026-05-02T08:21:33.000000Z\",\n      \"source\": \"cnbc.com\",\n      \"language\": \"en\",\n      \"entities\": [\n        {\n          \"symbol\": \"AAPL\",\n          \"name\": \"Apple Inc.\",\n          \"sentiment_score\": 0.75\n        }\n      ]\n    }\n  ],\n  \"timestamp\": \"2026-05-02T08:30:00.000Z\"\n}\n\n**cURL Example:**\n```\n"
           }
         },
         {
@@ -1066,7 +1205,8 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{base_url}}/api/news/search?q=bitcoin"
+            "url": "{{base_url}}/api/news/search?q=bitcoin",
+            "description": "### API REFERENCE\n\n**Description:** Search news by keyword\n**Rate Limit:** ** 40 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"success\": true,\n  \"meta\": {\n    \"found\": 456,\n    \"returned\": 10,\n    \"limit\": 10,\n    \"page\": 1\n  },\n  \"data\": [...]\n}\n\n**Error Response (400):**\n\n{\n  \"message\": \"Search query (q) is required\"\n}\n\n**cURL Example:**\n```\n"
           }
         },
         {
@@ -1074,7 +1214,8 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{base_url}}/api/news/symbols?symbols=BTC,ETH"
+            "url": "{{base_url}}/api/news/symbols?symbols=BTC,ETH",
+            "description": "### API REFERENCE\n\n**Description:** News for specific symbols\n**Rate Limit:** ** 40 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"success\": true,\n  \"meta\": {\n    \"found\": 234,\n    \"returned\": 15,\n    \"limit\": 15,\n    \"page\": 1\n  },\n  \"data\": [...]\n}\n\n**cURL Example:**\n```\n"
           }
         },
         {
@@ -1082,7 +1223,8 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{base_url}}/api/news/trending"
+            "url": "{{base_url}}/api/news/trending",
+            "description": "### API REFERENCE\n\n**Description:** Top trending articles\n**Rate Limit:** ** 40 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
           }
         },
         {
@@ -1090,7 +1232,8 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{base_url}}/api/news/date-range?from=2026-05-01&to=2026-05-26"
+            "url": "{{base_url}}/api/news/date-range?from=2026-05-01&to=2026-05-26",
+            "description": "### API REFERENCE\n\n**Description:** News by date range\n**Rate Limit:** ** 40 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"success\": true,\n  \"meta\": {\n    \"found\": 120,\n    \"returned\": 10,\n    \"limit\": 10,\n    \"page\": 1\n  },\n  \"data\": [...]\n}\n\n**cURL Example:**\n```\n"
           }
         },
         {
@@ -1098,7 +1241,8 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{base_url}}/api/news/crypto"
+            "url": "{{base_url}}/api/news/crypto",
+            "description": "### API REFERENCE\n\n**Description:** Cryptocurrency news\n**Rate Limit:** ** 40 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"success\": true,\n  \"meta\": {\n    \"found\": 892,\n    \"returned\": 20,\n    \"limit\": 20,\n    \"page\": 1\n  },\n  \"data\": [...]\n}\n\n**cURL Example:**\n```\n"
           }
         },
         {
@@ -1106,7 +1250,8 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{base_url}}/api/news/stocks"
+            "url": "{{base_url}}/api/news/stocks",
+            "description": "### API REFERENCE\n\n**Description:** Stock market news\n**Rate Limit:** ** 40 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"success\": true,\n  \"meta\": {\n    \"found\": 1234,\n    \"returned\": 20,\n    \"limit\": 20,\n    \"page\": 1\n  },\n  \"data\": [...]\n}\n\n**cURL Example:**\n```\n"
           }
         },
         {
@@ -1114,7 +1259,8 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{base_url}}/api/news/advanced"
+            "url": "{{base_url}}/api/news/advanced",
+            "description": "### API REFERENCE\n\n**Description:** Advanced search with filters\n**Rate Limit:** ** 40 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"success\": true,\n  \"meta\": {\n    \"found\": 567,\n    \"returned\": 15,\n    \"limit\": 15,\n    \"page\": 1\n  },\n  \"data\": [...]\n}\n\n**Combined Request Example:**\n```\n"
           }
         },
         {
@@ -1300,7 +1446,8 @@
                 "value": "Bearer {{auth_token}}"
               }
             ],
-            "url": "{{base_url}}/api/admin/market-hours"
+            "url": "{{base_url}}/api/admin/market-hours",
+            "description": "### API REFERENCE\n\n**Description:** All market hours (admin)\n**Rate Limit:** N/A\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
           }
         },
         {
@@ -1313,7 +1460,8 @@
                 "value": "Bearer {{auth_token}}"
               }
             ],
-            "url": "{{base_url}}/api/admin/market-hours/{{market_type}}"
+            "url": "{{base_url}}/api/admin/market-hours/{{market_type}}",
+            "description": "### API REFERENCE\n\n**Description:** Market hours by type\n**Rate Limit:** N/A\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
           }
         },
         {
@@ -1326,7 +1474,8 @@
                 "value": "Bearer {{auth_token}}"
               }
             ],
-            "url": "{{base_url}}/api/admin/market-holidays"
+            "url": "{{base_url}}/api/admin/market-holidays",
+            "description": "### API REFERENCE\n\n**Description:** All holidays (admin)\n**Rate Limit:** N/A\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
           }
         },
         {
@@ -1339,7 +1488,8 @@
                 "value": "Bearer {{auth_token}}"
               }
             ],
-            "url": "{{base_url}}/api/admin/market-holidays"
+            "url": "{{base_url}}/api/admin/market-holidays",
+            "description": "### API REFERENCE\n\n**Description:** Create holiday\n**Rate Limit:** N/A\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
           }
         },
         {
@@ -1352,7 +1502,8 @@
                 "value": "Bearer {{auth_token}}"
               }
             ],
-            "url": "{{base_url}}/api/admin/market-holidays/bulk-create"
+            "url": "{{base_url}}/api/admin/market-holidays/bulk-create",
+            "description": "### API REFERENCE\n\n**Description:** Bulk create holidays\n**Rate Limit:** N/A\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
           }
         },
         {
@@ -1373,7 +1524,8 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{base_url}}/api/market-hours/status/{{market_type}}"
+            "url": "{{base_url}}/api/market-hours/status/{{market_type}}",
+            "description": "### API REFERENCE\n\n**Description:** Check market status\n**Rate Limit:** N/A\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"success\": true,\n  \"data\": {\n    \"market_type\": \"indian_stock\",\n    \"market_name\": \"NSE Equity\",\n    \"is_open\": true,\n    \"current_time\": \"14:30:00\",\n    \"open_time\": \"09:15:00\",\n    \"close_time\": \"15:30:00\",\n    \"timezone\": \"Asia/Kolkata\",\n    \"time_remaining\": \"01:00:00\",\n    \"next_opening\": \"2026-05-08T09:15:00+05:30\",\n    \"message\": \"Market is currently open\"\n  }\n}\n\n**cURL Example:**\n```\n"
           }
         },
         {
@@ -1381,7 +1533,8 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{base_url}}/api/market-holidays/check/{{market_type}}"
+            "url": "{{base_url}}/api/market-holidays/check/{{market_type}}",
+            "description": "### API REFERENCE\n\n**Description:** Check today holiday\n**Rate Limit:** N/A\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"success\": true,\n  \"is_holiday\": false,\n  \"market_type\": \"indian_stock\",\n  \"today\": \"2026-05-07\",\n  \"message\": \"Market is open today\"\n}\n\n**cURL Example:**\n```\n"
           }
         },
         {
@@ -1389,7 +1542,8 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{base_url}}/api/market-holidays/{{market_type}}"
+            "url": "{{base_url}}/api/market-holidays/{{market_type}}",
+            "description": "### API REFERENCE\n\n**Description:** Public holidays list\n**Rate Limit:** N/A\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"success\": true,\n  \"market_type\": \"indian_stock\",\n  \"year\": \"2026\",\n  \"count\": 15,\n  \"data\": [\n    {\n      \"holiday_date\": \"2026-01-26\",\n      \"holiday_name\": \"Republic Day\",\n      \"description\": \"National holiday\",\n      \"closure_type\": \"FULL_DAY\"\n    },\n    {\n      \"holiday_date\": \"2026-08-15\",\n      \"holiday_name\": \"Independence Day\",\n      \"description\": \"National holiday\",\n      \"closure_type\": \"FULL_DAY\"\n    }\n  ]\n}\n\n**cURL Example:**\n```\n"
           }
         },
         {
@@ -1406,6 +1560,94 @@
             "method": "GET",
             "header": [],
             "url": "{{base_url}}/api/debug/upstox/instruments"
+          }
+        },
+        {
+          "name": "Update Market Hours (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/market-hours/1",
+            "description": "### API REFERENCE\n\n**Description:** Update start and end times for a specific market type (Admin only).\n**Rate Limit:** N/A\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Request Body:**\n```json\n{\n  \"openTime\": \"09:15\",\n  \"closeTime\": \"15:30\",\n  \"isEnabled\": true\n}\n```\n\n**Success Response Example:**\n```json\n{\n  \"success\": true,\n  \"message\": \"Market hours updated successfully\"\n}\n```\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"openTime\": \"09:15\",\n  \"closeTime\": \"15:30\",\n  \"isEnabled\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Get Market Hours History (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/market-hours/1/history",
+            "description": "### API REFERENCE\n\n**Description:** Get historical logs of market hours configuration updates (Admin only).\n**Rate Limit:** N/A\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"success\": true,\n  \"data\": []\n}\n```\n"
+          }
+        },
+        {
+          "name": "Get Market Holiday by ID (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/market-holidays/1",
+            "description": "### API REFERENCE\n\n**Description:** Retrieve a specific market holiday entry details (Admin only).\n**Rate Limit:** N/A\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"success\": true,\n  \"data\": {\n    \"id\": 1,\n    \"name\": \"Christmas\",\n    \"date\": \"2026-12-25\",\n    \"marketType\": \"NSE\"\n  }\n}\n```\n"
+          }
+        },
+        {
+          "name": "Update Market Holiday (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/market-holidays/1",
+            "description": "### API REFERENCE\n\n**Description:** Update details of an existing market holiday (Admin only).\n**Rate Limit:** N/A\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Request Body:**\n```json\n{\n  \"name\": \"Updated Holiday Name\",\n  \"date\": \"2026-12-25\",\n  \"marketType\": \"NSE\"\n}\n```\n\n**Success Response Example:**\n```json\n{\n  \"success\": true,\n  \"message\": \"Market holiday updated successfully\"\n}\n```\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Holiday Name\",\n  \"date\": \"2026-12-25\",\n  \"marketType\": \"NSE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Delete Market Holiday (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/market-holidays/1",
+            "description": "### API REFERENCE\n\n**Description:** Delete a market holiday by ID (Admin only).\n**Rate Limit:** N/A\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"success\": true,\n  \"message\": \"Market holiday deleted successfully\"\n}\n```\n"
           }
         }
       ]
@@ -1746,6 +1988,263 @@
             }
           },
           "response": []
+        }
+      ]
+    },
+    {
+      "name": "Crypto Futures Advanced",
+      "item": [
+        {
+          "name": "Get Current Mark Price",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/crypto/mark-price/{{crypto_order_symbol}}",
+            "description": "### API REFERENCE\n\n**Description:** ** Get fair mark price (from weighted orderbook, not last trade price) for accurate liquidation calculations\n**Rate Limit:** ** 30/min\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"symbol\": \"BTCUSDT\",\n  \"markPrice\": 45234.5,\n  \"lastPrice\": 45200.0,\n  \"bidPrice\": 45220.25,\n  \"askPrice\": 45250.75,\n  \"markPriceDifference\": 34.5,\n  \"markPriceDifferencePercent\": \"0.08\",\n  \"updatedAt\": \"2026-05-14T10:30:00Z\"\n}\n\n**Use Case:** Get fair mark price (from weighted orderbook, not last trade price) for accurate liquidation calculations\n\n**cURL Example:**\n```\n"
+          }
+        },
+        {
+          "name": "Get Mark Price History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/crypto/mark-price/{{crypto_order_symbol}}/history?limit=100&interval=5m",
+            "description": "### API REFERENCE\n\n**Description:** Mark price history\n**Rate Limit:** ** 30/min\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
+          }
+        },
+        {
+          "name": "Get Current Funding Rate",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/crypto/funding/rates/{{crypto_order_symbol}}",
+            "description": "### API REFERENCE\n\n**Description:** ** Check current funding rate before opening positions\n**Rate Limit:** ** 30/min\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"symbol\": \"BTCUSDT\",\n  \"fundingRate\": 0.00008,\n  \"fundingRatePercent\": \"0.008\",\n  \"markPrice\": 45234.5,\n  \"nextSettlementTime\": \"2026-05-14T16:00:00Z\",\n  \"longPositions\": 1250,\n  \"shortPositions\": 980,\n  \"imbalancePercent\": \"12.05\",\n  \"settlementCycle\": \"8h\"\n}\n\n**Use Case:** Check current funding rate before opening positions\n\n**cURL Example:**\n```\n"
+          }
+        },
+        {
+          "name": "Get Funding Payment History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/crypto/funding/payments?limit=50&symbol=BTCUSDT",
+            "description": "### API REFERENCE\n\n**Description:** Get funding payment history\n**Rate Limit:** ** -\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"data\": [\n    {\n      \"id\": 123,\n      \"positionId\": 84,\n      \"symbol\": \"BTCUSDT\",\n      \"side\": \"LONG\",\n      \"fundingAmount\": -40.5,\n      \"fundingRate\": 0.00008,\n      \"quantity\": 1.0,\n      \"settlementTime\": \"2026-05-14T08:00:00Z\",\n      \"paidAt\": \"2026-05-14T08:00:15Z\"\n    }\n  ],\n  \"total\": 24,\n  \"page\": 1\n}\n\n**Fields:**\n\n- `fundingAmount`: Negative = user paid, Positive = user received\n- `fundingRate`: Settlement rate for this period (% per 8h)\n- `settlementTime`: When this funding period settled\n\n**cURL Example:**\n```\n"
+          }
+        },
+        {
+          "name": "Predict Funding Payment",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/crypto/funding/predict/{{position_id}}",
+            "description": "### API REFERENCE\n\n**Description:** ** See how much funding will be charged before next settlement\n**Rate Limit:** ** -\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"positionId\": 84,\n  \"symbol\": \"BTCUSDT\",\n  \"side\": \"LONG\",\n  \"quantity\": 1.0,\n  \"currentFundingRate\": 0.00008,\n  \"predictedPayment\": -40.5,\n  \"nextSettlementTime\": \"2026-05-14T16:00:00Z\",\n  \"timeUntilSettlement\": \"5h 30m\"\n}\n\n**Use Case:** See how much funding will be charged before next settlement\n\n**cURL Example:**\n```\n"
+          }
+        },
+        {
+          "name": "Set Take Profit Target",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/crypto/positions/{{position_id}}/take-profit",
+            "description": "### API REFERENCE\n\n**Description:** ** Auto-close position when price reaches target (exits on market close order)\n**Rate Limit:** ** 5/min\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"success\": true,\n  \"message\": \"Take profit set successfully\",\n  \"positionId\": 84,\n  \"targetPrice\": 50000.0,\n  \"currentPrice\": 45234.5,\n  \"profitIfExecuted\": 47652.5,\n  \"profitPercentage\": \"10.51\"\n}\n\n**Use Case:** Auto-close position when price reaches target (exits on market close order)\n\n**cURL Example:**\n```\n"
+          }
+        },
+        {
+          "name": "Set Stop Loss Level",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/crypto/positions/{{position_id}}/stop-loss",
+            "description": "### API REFERENCE\n\n**Description:** ** Auto-close position if price falls below level (limits losses)\n**Rate Limit:** ** 5/min\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"success\": true,\n  \"message\": \"Stop loss set successfully\",\n  \"positionId\": 84,\n  \"stopPrice\": 40000.0,\n  \"currentPrice\": 45234.5,\n  \"lossIfExecuted\": -5234.5,\n  \"lossPercentage\": \"-11.56\"\n}\n\n**Use Case:** Auto-close position if price falls below level (limits losses)\n\n**cURL Example:**\n```\n"
+          }
+        },
+        {
+          "name": "Cancel Take Profit",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/crypto/positions/{{position_id}}/take-profit",
+            "description": "### API REFERENCE\n\n**Description:** Cancel take profit\n**Rate Limit:** ** 5/min\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"success\": true,\n  \"message\": \"Take profit cancelled\",\n  \"positionId\": 84\n}\n\n**cURL Example:**\n```\n"
+          }
+        },
+        {
+          "name": "Cancel Stop Loss",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/crypto/positions/{{position_id}}/stop-loss",
+            "description": "### API REFERENCE\n\n**Description:** Cancel stop loss\n**Rate Limit:** ** 5/min\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
+          }
+        },
+        {
+          "name": "Get Trigger Execution History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/crypto/triggers/history?limit=50",
+            "description": "### API REFERENCE\n\n**Description:** ** Review past trigger executions and profits/losses\n**Rate Limit:** ** -\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
+          }
+        },
+        {
+          "name": "Switch Margin Mode",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/crypto/positions/{{position_id}}/margin-mode",
+            "description": "### API REFERENCE\n\n**Description:** ** Switch between:\n**Rate Limit:** ** 5/min\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"success\": true,\n  \"message\": \"Margin mode changed to ISOLATED\",\n  \"positionId\": 84,\n  \"marginMode\": \"ISOLATED\",\n  \"isolatedMargin\": 5000.0,\n  \"maxLoss\": 5000.0\n}\n\n**Fields:**\n\n- `mode`: \"ISOLATED\" or \"CROSS\"\n- `isolatedMargin`: Required for ISOLATED mode (amount to lock for this position)\n\n**Use Case:** Switch between:\n\n- **ISOLATED**: Each position has separate margin (max loss = isolated amount)\n- **CROSS**: Positions share user balance (default)\n\n**cURL Example:**\n```\n"
+          }
+        },
+        {
+          "name": "Get Margin Utilization",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/crypto/margin-utilization",
+            "description": "### API REFERENCE\n\n**Description:** ** Monitor total margin usage across all positions\n**Rate Limit:** ** -\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
+          }
+        },
+        {
+          "name": "Enable Hedge Mode",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/crypto/hedge-mode/enable",
+            "description": "### API REFERENCE\n\n**Description:** ** Enable ability to hold LONG + SHORT positions for same symbol\n**Rate Limit:** ** 5/min\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"success\": true,\n  \"message\": \"Hedge mode enabled\",\n  \"hedgeMode\": true,\n  \"note\": \"You can now have LONG and SHORT positions simultaneously for the same symbol\"\n}\n\n**Use Case:** Enable ability to hold LONG + SHORT positions for same symbol\n\n**cURL Example:**\n```\n"
+          }
+        },
+        {
+          "name": "Disable Hedge Mode",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/crypto/hedge-mode/disable",
+            "description": "### API REFERENCE\n\n**Description:** Disable hedge mode\n**Rate Limit:** ** 5/min\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
+          }
+        },
+        {
+          "name": "Get Hedge Mode Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/crypto/hedge-mode/status",
+            "description": "### API REFERENCE\n\n**Description:** Get hedge mode status\n**Rate Limit:** ** -\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
+          }
+        },
+        {
+          "name": "Update Reduce-Only Flag",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/crypto/positions/{{position_id}}/reduce-only",
+            "description": "### API REFERENCE\n\n**Description:** ** Prevent accidental position increases (forces partial closes only)\n**Rate Limit:** ** 5/min\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
+          }
+        },
+        {
+          "name": "Get Maker/Taker Fees",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/crypto/fees/config/{{crypto_order_symbol}}",
+            "description": "### API REFERENCE\n\n**Description:** ** See fee structure before placing orders\n**Rate Limit:** ** 30/min\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"symbol\": \"BTCUSDT\",\n  \"makerFeeRate\": -0.0002,\n  \"makerFeePercent\": \"-0.02%\",\n  \"takerFeeRate\": 0.0004,\n  \"takerFeePercent\": \"0.04%\",\n  \"fundingRateBase\": 0.00001,\n  \"note\": \"Maker fee negative (rebate), taker fee positive (cost)\"\n}\n\n**Use Case:** See fee structure before placing orders\n\n**cURL Example:**\n```\n"
+          }
+        },
+        {
+          "name": "Get Aggregated Position (One-Way Mode)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/crypto/positions/aggregated/{{crypto_order_symbol}}",
+            "description": "### API REFERENCE\n\n**Description:** ** See net position combining all orders for symbol\n**Rate Limit:** ** -\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n**Success Response Example:**\n```json\n{\n  \"symbol\": \"BTCUSDT\",\n  \"hedgeMode\": true,\n  \"mode\": \"HEDGE\",\n  \"longPosition\": {\n    \"quantity\": 1.0,\n    \"averageEntry\": 44000.0,\n    \"pnl\": 11234.5,\n    \"leverage\": 10\n  },\n  \"shortPosition\": {\n    \"quantity\": 0.5,\n    \"averageEntry\": 46000.0,\n    \"pnl\": -3882.25,\n    \"leverage\": 10\n  },\n  \"netPosition\": 0.5,\n  \"netSide\": \"LONG\",\n  \"combinedPnl\": 7352.25\n}\n\n**Use Case:** See net position combining all orders for symbol\n\n**cURL Example:**\n```\n"
+          }
         }
       ]
     }

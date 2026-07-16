@@ -123,7 +123,8 @@ import {
   getPerformanceMetrics,
   updateIndianStock,
   getIndianStockOrders,
-  processPendingIndianOrders
+  processPendingIndianOrders,
+  getIndianStockPortfolio
 } from "../modules/stocks/indian-trade.controller.js";
 import {
   buyIndianStockSchema,
@@ -359,6 +360,7 @@ apiRouter.get("/stocks/in/positions", requireAuth, getIndianStockPositions);
 apiRouter.get("/stocks/in/positions/:positionId", requireAuth, getPositionDetails);
 apiRouter.post("/stocks/in/positions/:positionId/exit", requireAuth, validateBody(exitPositionSchema), exitPosition);
 apiRouter.get("/stocks/in/performance", requireAuth, getPerformanceMetrics);
+apiRouter.get("/stocks/in/portfolio", requireAuth, getIndianStockPortfolio);
 
 // Parameterized Indian stock data routes (must come AFTER specific routes)
 apiRouter.get("/stocks/in/:symbol/intraday", getIndianStockIntradayData);

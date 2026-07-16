@@ -775,3 +775,106 @@ export async function updateIndianStock(req, res) {
   });
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// GET PORTFOLIO (open positions only, matching crypto portfolio schema)
+// ═══════════════════════════════════════════════════════════════════════════
+
+export async function getIndianStockPortfolio(req, res) {
+  const userId = req.user?.id;
+
+  if (!userId) {
+    return res.status(401).json({ message: "User not authenticated" });
+  }
+
+  try {
+    // 1. Get user balance
+    const userResult = await sql(
+      `SELECT balance FROM users WHERE id = $1`,
+      [userId]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const balance = parseFloat(userResult.rows[0].balance);
+
+    // 2. Get active positions grouped by symbol and trade_type
+    const result = await sql(
+      `
+        SELECT 
+          symbol,
+          trade_type,
+          SUM(quantity) as quantity,
+          SUM(quantity * entry_price) / SUM(quantity) as entry_price
+        FROM indian_stock_positions
+        WHERE user_id = $1 AND status = 'ACTIVE'
+        GROUP BY symbol, trade_type
+      `,
+      [userId]
+    );
+
+    const positions = result.rows || [];
+
+    // 3. Fetch live market prices for all active positions and compute stats
+    const portfolio = await Promise.all(
+      positions.map(async (position) => {
+        let currentPrice = parseFloat(position.current_price || position.entry_price || 0);
+        let liveFetchFailed = false;
+
+        try {
+          const priceData = await getIndianStockPrice(position.symbol);
+          currentPrice = parseFloat(priceData.price || priceData.currentPrice || currentPrice);
+        } catch (error) {
+          console.error(`[Indian Stock Portfolio] Failed to fetch price for ${position.symbol}:`, error.message);
+          liveFetchFailed = true;
+        }
+
+        const entryPrice = parseFloat(position.entry_price);
+        const quantity = parseInt(position.quantity);
+        
+        let value = 0;
+        let pnl = 0;
+        let pnlPercent = 0;
+
+        if (position.trade_type === 'BUY') {
+          value = quantity * currentPrice;
+          pnl = (currentPrice - entryPrice) * quantity;
+          pnlPercent = entryPrice > 0 ? ((currentPrice - entryPrice) / entryPrice) * 100 : 0;
+        } else { // SELL (Short Position)
+          value = quantity * currentPrice;
+          pnl = (entryPrice - currentPrice) * quantity;
+          pnlPercent = entryPrice > 0 ? ((entryPrice - currentPrice) / entryPrice) * 100 : 0;
+        }
+
+        const resultObj = {
+          symbol: position.symbol,
+          quantity,
+          avgPrice: entryPrice,
+          currentPrice,
+          value: parseFloat(value.toFixed(2)),
+          pnl: parseFloat(pnl.toFixed(2)),
+          pnlPercent: pnlPercent.toFixed(2),
+          tradeType: position.trade_type
+        };
+
+        if (liveFetchFailed) {
+          resultObj.warning = "Showing last cached price";
+        }
+
+        return resultObj;
+      })
+    );
+
+    return res.json({
+      balance,
+      positions: portfolio,
+      timestamp: Date.now()
+    });
+  } catch (error) {
+    console.error("Get Indian stocks portfolio error:", error);
+    return res.status(500).json({ message: "Failed to fetch portfolio", error: error.message });
+  }
+}
+
+
