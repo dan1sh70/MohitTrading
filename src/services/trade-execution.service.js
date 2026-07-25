@@ -55,11 +55,14 @@ export async function placeOrder(userId, symbol, side, orderType, quantity, pric
     
     const userBalance = parseFloat(userResult.rows[0].balance || 0);
     
-    // For market orders, get current price
+    // Fetch live market price to evaluate orders
+    const priceData = await getCryptoPrice(symbol);
+    const livePrice = parseFloat(priceData.price);
+    
+    // For market orders, execution price is live price. For limit, it's the requested price (for margin calc)
     let executionPrice = price;
     if (orderType === 'MARKET') {
-      const priceData = await getCryptoPrice(symbol);
-      executionPrice = parseFloat(priceData.price);
+      executionPrice = livePrice;
     }
     
     // Calculate required margin
@@ -93,25 +96,28 @@ export async function placeOrder(userId, symbol, side, orderType, quantity, pric
     
     // For market orders, execute immediately
     if (orderType === 'MARKET') {
-      return await executeMarketOrder(orderId, userId, symbol, side, quantity, executionPrice, leverage, tradingMode);
+      return await executeMarketOrder(orderId, userId, symbol, side, quantity, livePrice, leverage, tradingMode);
     }
     
-    // For limit orders, add to orderbook
-    if (orderType === 'LIMIT') {
-      await addOrderToBook(symbol, side, orderId, userId, price, quantity, Date.now());
+    // For limit, stop-loss, take-profit orders, evaluate against live price immediately
+    if (['LIMIT', 'STOP_LOSS', 'TAKE_PROFIT'].includes(orderType)) {
+      let shouldExecute = false;
       
-      // Try to match against existing orders
-      const incomingOrder = {
-        orderId,
-        userId,
-        symbol,
-        side,
-        price,
-        quantity,
-        createdAt: Date.now()
-      };
+      if (orderType === 'LIMIT') {
+        if (side === 'BUY' && livePrice <= price) shouldExecute = true;
+        if (side === 'SELL' && livePrice >= price) shouldExecute = true;
+      } else if (orderType === 'STOP_LOSS') {
+        if (side === 'BUY' && livePrice >= price) shouldExecute = true;
+        if (side === 'SELL' && livePrice <= price) shouldExecute = true;
+      } else if (orderType === 'TAKE_PROFIT') {
+        if (side === 'BUY' && livePrice <= price) shouldExecute = true;
+        if (side === 'SELL' && livePrice >= price) shouldExecute = true;
+      }
       
-      return await attemptOrderMatching(incomingOrder, leverage, tradingMode);
+      if (shouldExecute) {
+        // Execute immediately at the live market price
+        return await executeMarketOrder(orderId, userId, symbol, side, quantity, livePrice, leverage, tradingMode);
+      }
     }
     
     return {
@@ -614,8 +620,72 @@ export async function cancelOrder(userId, orderId) {
   }
 }
 
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ * PENDING ORDERS POLLING (PAPER TRADING AUTO-MATCHING)
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+export async function processPendingCryptoOrders(livePrices) {
+  if (!livePrices || livePrices.length === 0) return;
+  
+  const priceMap = new Map();
+  for (const p of livePrices) {
+    priceMap.set(p.symbol, parseFloat(p.price));
+  }
+  
+  try {
+    const result = await sql(
+      `SELECT * FROM crypto_orders 
+       WHERE status = 'OPEN' AND order_type IN ('LIMIT', 'STOP_LOSS', 'TAKE_PROFIT')`
+    );
+    
+    // In our DB wrapper, result could be the array of rows directly, or { rows: [...] }
+    const pendingOrders = result.rows || result || [];
+    if (pendingOrders.length === 0) return;
+    
+    for (const order of pendingOrders) {
+      const livePrice = priceMap.get(order.symbol);
+      if (!livePrice) continue;
+      
+      const targetPrice = parseFloat(order.price);
+      let shouldExecute = false;
+      
+      if (order.order_type === 'LIMIT') {
+        if (order.side === 'BUY' && livePrice <= targetPrice) shouldExecute = true;
+        if (order.side === 'SELL' && livePrice >= targetPrice) shouldExecute = true;
+      } else if (order.order_type === 'STOP_LOSS') {
+        if (order.side === 'BUY' && livePrice >= targetPrice) shouldExecute = true;
+        if (order.side === 'SELL' && livePrice <= targetPrice) shouldExecute = true;
+      } else if (order.order_type === 'TAKE_PROFIT') {
+        if (order.side === 'BUY' && livePrice <= targetPrice) shouldExecute = true;
+        if (order.side === 'SELL' && livePrice >= targetPrice) shouldExecute = true;
+      }
+      
+      if (shouldExecute) {
+        try {
+          await executeMarketOrder(
+            order.id, 
+            order.user_id, 
+            order.symbol, 
+            order.side, 
+            parseFloat(order.remaining_quantity || order.original_quantity), 
+            livePrice, 
+            order.leverage, 
+            order.trading_mode
+          );
+        } catch (execError) {
+          console.error(`[TradeExecution] Failed to auto-execute pending order ${order.id}:`, execError.message);
+        }
+      }
+    }
+  } catch (error) {
+    console.error(`[TradeExecution] Error processing pending crypto orders:`, error.message);
+  }
+}
+
 export default {
   placeOrder,
   closePosition,
-  cancelOrder
+  cancelOrder,
+  processPendingCryptoOrders
 };

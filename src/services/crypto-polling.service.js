@@ -1,6 +1,7 @@
 import { cacheSet, redis } from "../db/redis.js";
 import { broadcastPriceUpdate } from "./websocket.service.js";
 import { getSupportedSymbols } from "../modules/crypto/crypto.service.js";
+import { processPendingCryptoOrders } from "./trade-execution.service.js";
 
 const BINANCE_REST_API = "https://api.binance.com/api/v3";
 
@@ -278,6 +279,9 @@ async function pollCryptoData() {
     const prices = await fetchAllPricesFromBinance();
     if (prices) {
       await cacheAllPrices(prices);
+      
+      // Auto-match paper trading limit orders against new live prices
+      await processPendingCryptoOrders(prices);
     }
 
     // Fetch stats
