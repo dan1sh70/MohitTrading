@@ -138,34 +138,30 @@ export async function updatePositionPnL(positionId, currentPrice) {
     const position = result[0];
     
     // Calculate new unrealised P&L
-    const unrealisedPnL = calculateUnrealisedPnL(
-      position.entry_price,
-      currentPrice,
-      position.quantity,
-      position.leverage,
-      position.side
-    );
-    
-    const unrealisedPnLPercent = calculateUnrealisedPnLPercent(unrealisedPnL, position.margin_used);
-    
-    // Calculate liquidation price
-    const liquidationPrice = calculateLiquidationPrice(
-      position.entry_price,
-      position.leverage,
-      position.side
-    );
+    const ep = parseFloat(position.entry_price) || 0;
+    const qty = parseFloat(position.quantity) || 0;
+    const lev = parseFloat(position.leverage) || 1;
+    const mu = parseFloat(position.margin_used) || 0;
+    const cp = parseFloat(currentPrice) || 0;
+
+    const unrealisedPnL = calculateUnrealisedPnL(ep, cp, qty, lev, position.side);
+    const unrealisedPnLPercent = calculateUnrealisedPnLPercent(unrealisedPnL, mu);
+    const liquidationPrice = calculateLiquidationPrice(ep, lev, position.side);
     
     // Calculate margin ratio
     const userBalance = await sql(
       `SELECT balance FROM users WHERE id = $1`,
       [position.user_id]
     );
+    const equity = parseFloat(userBalance[0]?.balance || 0);
     
-    const marginRatio = calculateMarginRatio(
-      userBalance[0].balance,
-      unrealisedPnL,
-      position.margin_used
-    );
+    const marginRatio = calculateMarginRatio(equity, unrealisedPnL, mu);
+    
+    // Sanitize values to prevent 'NaN' SQL errors
+    const safePnL = isNaN(unrealisedPnL) ? 0 : unrealisedPnL;
+    const safePnLPercent = isNaN(unrealisedPnLPercent) ? 0 : unrealisedPnLPercent;
+    const safeLiqPrice = isNaN(liquidationPrice) ? 0 : liquidationPrice;
+    const safeMarginRatio = isNaN(marginRatio) ? 0 : (marginRatio === Infinity ? 9999 : marginRatio);
     
     // Update position
     await sql(
@@ -178,11 +174,11 @@ export async function updatePositionPnL(positionId, currentPrice) {
            last_update = NOW()
        WHERE id = $6`,
       [
-        currentPrice,
-        unrealisedPnL,
-        unrealisedPnLPercent,
-        liquidationPrice,
-        marginRatio,
+        cp,
+        safePnL,
+        safePnLPercent,
+        safeLiqPrice,
+        safeMarginRatio,
         positionId
       ]
     );

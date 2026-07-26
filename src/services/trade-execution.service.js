@@ -561,7 +561,8 @@ export async function closePosition(userId, positionId, closingPrice = null) {
     
     // Return margin to user
     const userBalanceRes = await sql(`SELECT balance FROM users WHERE id = $1`, [userId]);
-    const newBalance = parseFloat(userBalanceRes.rows?.[0]?.balance || 0) + position.margin_used + pnl;
+    const marginUsed = parseFloat(position.margin_used) || 0;
+    const newBalance = parseFloat(userBalanceRes.rows?.[0]?.balance || 0) + marginUsed + pnl;
     
     await sql(`UPDATE users SET balance = $1 WHERE id = $2`, [newBalance, userId]);
     
