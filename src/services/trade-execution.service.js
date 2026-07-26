@@ -510,7 +510,8 @@ export async function closePosition(userId, positionId, closingPrice = null) {
         exitPrice,
         position.leverage,
         position.trading_mode,
-        'FILLED'
+        'FILLED',
+        'GTC' // time_in_force
       ]
     );
     
