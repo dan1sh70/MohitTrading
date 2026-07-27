@@ -863,6 +863,43 @@ export async function getReportCard(req, res) {
   }
 }
 
+/**
+ * GET /api/crypto/history
+ * Get comprehensive history of orders, positions, and trades
+ */
+export async function getHistory(req, res) {
+  const userId = req.user.id;
+  const limit = parseInt(req.query.limit) || 100;
+
+  try {
+    const ordersRes = await sql(`SELECT * FROM crypto_orders WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2`, [userId, limit]);
+    const positionsRes = await sql(`SELECT * FROM crypto_positions WHERE user_id = $1 ORDER BY entry_time DESC LIMIT $2`, [userId, limit]);
+    const tradesRes = await sql(`SELECT * FROM crypto_trades WHERE user_id = $1 ORDER BY exit_time DESC LIMIT $2`, [userId, limit]);
+    
+    // Also fetch fills for order execution history
+    const fillsRes = await sql(
+      `SELECT cof.* FROM crypto_order_fills cof 
+       JOIN crypto_orders co ON cof.order_id = co.id 
+       WHERE co.user_id = $1 
+       ORDER BY cof.fill_time DESC LIMIT $2`, 
+      [userId, limit]
+    );
+
+    return res.json({
+      success: true,
+      data: {
+        orders: ordersRes.rows || ordersRes,
+        positions: positionsRes.rows || positionsRes,
+        trades: tradesRes.rows || tradesRes,
+        fills: fillsRes.rows || fillsRes
+      }
+    });
+  } catch (error) {
+    console.error(`Get history error: ${error.message}`);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+}
+
 export default {
   placeBuyOrder,
   placeSellOrder,
@@ -874,6 +911,7 @@ export default {
   getCryptoPerformance,
   calculateCryptoPerformance,
   getTrades,
+  getHistory,
   checkPositionLiquidation,
   getAccountBalance,
   getOrderbook,

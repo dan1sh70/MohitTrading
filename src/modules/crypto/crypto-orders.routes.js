@@ -29,7 +29,7 @@ import {
   switchMarginModeSchema,
   updateReduceOnlyFlag
 } from './crypto-futures.controller.js';
-import { calculateCryptoPerformance, cancelOrderEndpoint, checkPositionLiquidation, closePositionEndpoint, closePositionSchema, getAccountBalance, getCryptoPerformance, getOrderbook, getOrders, getPortfolioHealth, getPositionDetails, getPositions, getReportCard, getRiskMeter, getTrades, placeBuyOrder, placeBuyOrderSchema, placeSellOrder, placeSellOrderSchema } from './crypto-orders.controller.js';
+import { calculateCryptoPerformance, cancelOrderEndpoint, checkPositionLiquidation, closePositionEndpoint, closePositionSchema, getAccountBalance, getCryptoPerformance, getOrderbook, getOrders, getPortfolioHealth, getPositionDetails, getPositions, getReportCard, getRiskMeter, getTrades, getHistory, placeBuyOrder, placeBuyOrderSchema, placeSellOrder, placeSellOrderSchema } from './crypto-orders.controller.js';
 
 const router = express.Router();
 
@@ -144,6 +144,13 @@ router.get('/report-card', getReportCard);
  * Query: limit? (default: 50)
  */
 router.get('/trades', getTrades);
+
+/**
+ * GET /api/crypto/history
+ * Get comprehensive history (orders, positions, trades, fills)
+ * Query: limit? (default: 100)
+ */
+router.get('/history', getHistory);
 
 // ───────────────────────────────────────────────────────────────────────────
 // ACCOUNT & BALANCE
