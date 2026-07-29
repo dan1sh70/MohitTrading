@@ -28,7 +28,7 @@ import { getCryptoPrice } from "../modules/crypto/crypto.service.js";
 /**
  * Place a new order (market or limit)
  */
-export async function placeOrder(userId, symbol, side, orderType, quantity, price = null, leverage = 1, tradingMode = 'SPOT') {
+export async function placeOrder(userId, symbol, side, orderType, quantity, price = null, leverage = 1, tradingMode = 'SPOT', takeProfit = null, stopLoss = null) {
   try {
     // Validate inputs
     if (!['BUY', 'SELL'].includes(side)) {
@@ -96,7 +96,7 @@ export async function placeOrder(userId, symbol, side, orderType, quantity, pric
     
     // For market orders, execute immediately
     if (orderType === 'MARKET') {
-      return await executeMarketOrder(orderId, userId, symbol, side, quantity, livePrice, leverage, tradingMode);
+      return await executeMarketOrder(orderId, userId, symbol, side, quantity, livePrice, leverage, tradingMode, takeProfit, stopLoss);
     }
     
     // For limit, stop-loss, take-profit orders, evaluate against live price immediately
@@ -116,7 +116,7 @@ export async function placeOrder(userId, symbol, side, orderType, quantity, pric
       
       if (shouldExecute) {
         // Execute immediately at the live market price
-        return await executeMarketOrder(orderId, userId, symbol, side, quantity, livePrice, leverage, tradingMode);
+        return await executeMarketOrder(orderId, userId, symbol, side, quantity, livePrice, leverage, tradingMode, takeProfit, stopLoss);
       }
     }
     
@@ -141,7 +141,7 @@ export async function placeOrder(userId, symbol, side, orderType, quantity, pric
 /**
  * Execute market order immediately at current price
  */
-async function executeMarketOrder(orderId, userId, symbol, side, quantity, executionPrice, leverage, tradingMode) {
+async function executeMarketOrder(orderId, userId, symbol, side, quantity, executionPrice, leverage, tradingMode, takeProfit = null, stopLoss = null) {
   try {
     // For spot: settle immediately AND create a position record so it shows in portfolio
     if (tradingMode === 'SPOT') {
@@ -159,12 +159,12 @@ async function executeMarketOrder(orderId, userId, symbol, side, quantity, execu
       const positionResult = await sql(
         `INSERT INTO crypto_positions 
          (user_id, symbol, side, entry_price, quantity, leverage, margin_used, 
-          liquidation_price, entry_time, status, trading_mode)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), 'ACTIVE', $9)
+          liquidation_price, entry_time, status, trading_mode, take_profit, stop_loss)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), 'ACTIVE', $9, $10, $11)
          RETURNING id`,
         [
           userId, symbol, side === 'BUY' ? 'LONG' : 'SHORT', executionPrice, quantity,
-          1, costOrProceeds, 0, tradingMode
+          1, costOrProceeds, 0, tradingMode, takeProfit, stopLoss
         ]
       );
       
@@ -208,12 +208,12 @@ async function executeMarketOrder(orderId, userId, symbol, side, quantity, execu
       const positionResult = await sql(
         `INSERT INTO crypto_positions 
          (user_id, symbol, side, entry_price, quantity, leverage, margin_used, 
-          liquidation_price, entry_time, status, trading_mode)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), 'ACTIVE', $9)
+          liquidation_price, entry_time, status, trading_mode, take_profit, stop_loss)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), 'ACTIVE', $9, $10, $11)
          RETURNING id`,
         [
           userId, symbol, side === 'BUY' ? 'LONG' : 'SHORT', executionPrice, quantity,
-          leverage, requiredMargin, liquidationPrice, tradingMode
+          leverage, requiredMargin, liquidationPrice, tradingMode, takeProfit, stopLoss
         ]
       );
       
