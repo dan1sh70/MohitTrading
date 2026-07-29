@@ -38,8 +38,10 @@ export const placeBuyOrderSchema = z.object({
   leverage: z.coerce.number().min(1).max(100).default(1),
   takeProfit: optionalNumber,
   stopLoss: optionalNumber,
+  take_profit: optionalNumber,
+  stop_loss: optionalNumber,
   tradingMode: z.enum(['SPOT', 'FUTURES', 'OPTIONS']).default('SPOT'),
-  orderType: z.enum(['MARKET', 'LIMIT']).default('MARKET')
+  orderType: z.enum(['MARKET', 'LIMIT', 'STOP_LOSS', 'TAKE_PROFIT']).default('MARKET')
 });
 
 export const placeSellOrderSchema = z.object({
@@ -49,8 +51,10 @@ export const placeSellOrderSchema = z.object({
   leverage: z.coerce.number().min(1).max(100).default(1),
   takeProfit: optionalNumber,
   stopLoss: optionalNumber,
+  take_profit: optionalNumber,
+  stop_loss: optionalNumber,
   tradingMode: z.enum(['SPOT', 'FUTURES', 'OPTIONS']).default('SPOT'),
-  orderType: z.enum(['MARKET', 'LIMIT']).default('MARKET')
+  orderType: z.enum(['MARKET', 'LIMIT', 'STOP_LOSS', 'TAKE_PROFIT']).default('MARKET')
 });
 
 export const closePositionSchema = z.object({
@@ -69,8 +73,11 @@ export const closePositionSchema = z.object({
  * Place a BUY order
  */
 export async function placeBuyOrder(req, res) {
-  const { symbol, quantity, price, leverage, tradingMode, orderType, takeProfit, stopLoss } = req.validatedBody || req.body;
+  const { symbol, quantity, price, leverage, tradingMode, orderType, takeProfit, stopLoss, take_profit, stop_loss } = req.validatedBody || req.body;
   const userId = req.user.id;
+  
+  const finalTakeProfit = takeProfit ?? take_profit;
+  const finalStopLoss = stopLoss ?? stop_loss;
   
   try {
     const result = await placeOrder(
@@ -82,8 +89,8 @@ export async function placeBuyOrder(req, res) {
       price,
       leverage,
       tradingMode,
-      takeProfit,
-      stopLoss
+      finalTakeProfit,
+      finalStopLoss
     );
     
     return res.json({
@@ -106,8 +113,11 @@ export async function placeBuyOrder(req, res) {
  * Place a SELL order
  */
 export async function placeSellOrder(req, res) {
-  const { symbol, quantity, price, leverage, tradingMode, orderType, takeProfit, stopLoss } = req.validatedBody || req.body;
+  const { symbol, quantity, price, leverage, tradingMode, orderType, takeProfit, stopLoss, take_profit, stop_loss } = req.validatedBody || req.body;
   const userId = req.user.id;
+  
+  const finalTakeProfit = takeProfit ?? take_profit;
+  const finalStopLoss = stopLoss ?? stop_loss;
   
   try {
     const result = await placeOrder(
@@ -119,8 +129,8 @@ export async function placeSellOrder(req, res) {
       price,
       leverage,
       tradingMode,
-      takeProfit,
-      stopLoss
+      finalTakeProfit,
+      finalStopLoss
     );
     
     return res.json({
