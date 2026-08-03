@@ -149,7 +149,7 @@ export function calculateTradefinityMetrics(positions, accountEquity = 1000000, 
     // 9. Risk Per Trade Fix (Point 9)
     let maxLoss = marginUsed; // Fallback
     if (stopLoss > 0 && entryPrice > 0) {
-      maxLoss = Math.abs(entryPrice - stopLoss) * quantity * leverage;
+      maxLoss = Math.abs(entryPrice - stopLoss) * quantity;
     }
     const riskPct = accountEquity > 0 ? (maxLoss / accountEquity) * 100 : 0;
     totalRiskPctSum += riskPct;

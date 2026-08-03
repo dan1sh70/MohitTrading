@@ -279,10 +279,14 @@ SELECT
     p.quantity,
     p.entry_price,
     p.mark_price as current_price,
-    CASE
-        WHEN p.side = 'LONG' THEN (p.mark_price - p.entry_price) * p.quantity * p.leverage
-        WHEN p.side = 'SHORT' THEN (p.entry_price - p.mark_price) * p.quantity * p.leverage
-    END as unrealised_pnl,
+    COALESCE(
+        CASE 
+        WHEN p.side = 'LONG' THEN (p.mark_price - p.entry_price) * p.quantity
+        WHEN p.side = 'SHORT' THEN (p.entry_price - p.mark_price) * p.quantity
+        ELSE 0 
+        END, 
+        0
+      ) as unrealised_pnl,
     p.funding_paid,
     p.margin_used,
     p.liquidation_price,

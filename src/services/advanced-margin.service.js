@@ -300,9 +300,9 @@ export async function getAggregatedPosition(userId, symbol) {
     let totalMargin = 0;
     
     if (dominantSide === 'LONG') {
-      unrealisedPnL = (markPrice - avgEntryPrice) * totalQuantity * positions[0].leverage;
+      unrealisedPnL = (markPrice - avgEntryPrice) * totalQuantity;
     } else {
-      unrealisedPnL = (avgEntryPrice - markPrice) * totalQuantity * positions[0].leverage;
+      unrealisedPnL = (avgEntryPrice - markPrice) * totalQuantity;
     }
     
     for (const pos of positions) {

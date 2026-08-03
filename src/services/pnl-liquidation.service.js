@@ -21,11 +21,12 @@ const MARGIN_WARNING_THRESHOLD = 0.15; // 15% margin ratio = warning
  * P&L CALCULATIONS
  * ─────────────────────────────────────────────────────────────────────────────
  * 
- * For LONG positions:
- *   Unrealised P&L = (Current Price - Entry Price) × Quantity × Leverage
- *   
- * For SHORT positions:
- *   Unrealised P&L = (Entry Price - Current Price) × Quantity × Leverage
+ * For Futures/Spot:
+ * LONG position:
+ *   Unrealised P&L = (Current Price - Entry Price) × Quantity
+ * 
+ * SHORT position:
+ *   Unrealised P&L = (Entry Price - Current Price) × Quantity
  *
  * Liquidation Price:
  *   For LONG: LP = Entry Price × (1 - 1/Leverage + (Fees % / Leverage))
@@ -49,9 +50,9 @@ export function calculateUnrealisedPnL(entryPrice, currentPrice, quantity, lever
   const priceDifference = currentPrice - entryPrice;
   
   if (side === 'LONG') {
-    return priceDifference * quantity * leverage;
+    return priceDifference * quantity;
   } else if (side === 'SHORT') {
-    return -priceDifference * quantity * leverage;
+    return -priceDifference * quantity;
   }
   
   return 0;

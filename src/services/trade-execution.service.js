@@ -520,9 +520,9 @@ export async function closePosition(userId, positionId, closingPrice = null) {
     // Calculate P&L
     let pnl = 0;
     if (position.side === 'LONG') {
-      pnl = (exitPrice - position.entry_price) * position.quantity * position.leverage;
+      pnl = (exitPrice - position.entry_price) * position.quantity;
     } else {
-      pnl = (position.entry_price - exitPrice) * position.quantity * position.leverage;
+      pnl = (position.entry_price - exitPrice) * position.quantity;
     }
     
     // Update position
