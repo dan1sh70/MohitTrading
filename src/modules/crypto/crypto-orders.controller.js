@@ -26,16 +26,34 @@ import {
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
+const parseNumber = (val) => {
+  if (typeof val === 'string') {
+    const stripped = val.replace(/,/g, '');
+    return stripped === '' ? undefined : Number(stripped);
+  }
+  return Number(val);
+};
+
 const optionalNumber = z.preprocess(
-  (val) => (val === '' || val === null || val === undefined ? undefined : Number(val)),
+  (val) => (val === '' || val === null || val === undefined ? undefined : parseNumber(val)),
   z.number().positive("Value must be positive").optional()
+);
+
+const requiredNumber = z.preprocess(
+  (val) => parseNumber(val),
+  z.number().positive("Value must be positive")
+);
+
+const leverageNumber = z.preprocess(
+  (val) => (val === '' || val === null || val === undefined ? 1 : parseNumber(val)),
+  z.number().min(1).max(100).default(1)
 );
 
 export const placeBuyOrderSchema = z.object({
   symbol: z.string().min(3).max(20).toUpperCase(),
-  quantity: z.coerce.number().positive("Quantity must be positive"),
+  quantity: requiredNumber,
   price: optionalNumber,
-  leverage: z.coerce.number().min(1).max(100).default(1),
+  leverage: leverageNumber,
   takeProfit: optionalNumber,
   stopLoss: optionalNumber,
   take_profit: optionalNumber,
@@ -46,9 +64,9 @@ export const placeBuyOrderSchema = z.object({
 
 export const placeSellOrderSchema = z.object({
   symbol: z.string().min(3).max(20).toUpperCase(),
-  quantity: z.coerce.number().positive("Quantity must be positive"),
+  quantity: requiredNumber,
   price: optionalNumber,
-  leverage: z.coerce.number().min(1).max(100).default(1),
+  leverage: leverageNumber,
   takeProfit: optionalNumber,
   stopLoss: optionalNumber,
   take_profit: optionalNumber,

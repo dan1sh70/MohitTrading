@@ -23,12 +23,20 @@ import {
   getAggregatedPosition as getAggregatedPositionService
 } from "../../services/advanced-margin.service.js";
 
+const parseNumber = (val) => {
+  if (typeof val === 'string') {
+    const stripped = val.replace(/,/g, '');
+    return stripped === '' ? undefined : Number(stripped);
+  }
+  return Number(val);
+};
+
 export const setTakeProfitSchema = z.object({
-  targetPrice: z.number().positive("Target price must be positive")
+  targetPrice: z.preprocess((val) => parseNumber(val), z.number().positive("Target price must be positive"))
 });
 
 export const setStopLossSchema = z.object({
-  stopPrice: z.number().positive("Stop price must be positive")
+  stopPrice: z.preprocess((val) => parseNumber(val), z.number().positive("Stop price must be positive"))
 });
 
 export const switchMarginModeSchema = z.object({
