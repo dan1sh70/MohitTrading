@@ -180,8 +180,8 @@ export async function closeTrade(req, res) {
  */
 export async function resetAccount(req, res) {
   const userId = req.user.id;
-  // Convert 10 Lakhs INR (~$12,048) to a typical USD balance. We use $12,000 for standard paper trading equivalent
-  const DEFAULT_BALANCE = 12000; 
+  // Convert 10 Lakhs INR to USD. We use $10,000 for standard paper trading equivalent
+  const DEFAULT_BALANCE = 10000; 
 
   try {
     // Get current user info for audit log
@@ -226,9 +226,16 @@ export async function resetAccount(req, res) {
       await sql(`DELETE FROM crypto_liquidations WHERE user_id = $1`, [userId]);
       await sql(`DELETE FROM crypto_funding_payments WHERE user_id = $1`, [userId]);
       await sql(`DELETE FROM trigger_events WHERE user_id = $1`, [userId]);
-      console.log(`[ResetAccount] Successfully cleared all crypto tables for user ${userId}`);
+      
+      // Also delete from new unified tables
+      await sql(`DELETE FROM unified_positions WHERE user_id = $1`, [userId]);
+      await sql(`DELETE FROM unified_orders WHERE user_id = $1`, [userId]);
+      await sql(`DELETE FROM unified_trades WHERE user_id = $1`, [userId]);
+      await sql(`DELETE FROM unified_performance WHERE user_id = $1`, [userId]);
+      
+      console.log(`[ResetAccount] Successfully cleared all tables for user ${userId}`);
     } catch (cryptoErr) {
-      console.error("[ResetAccount] Error clearing crypto tables:", cryptoErr.message);
+      console.error("[ResetAccount] Error clearing tables:", cryptoErr.message);
     }
 
     // Reset user balance to default
@@ -268,6 +275,58 @@ export async function resetAccount(req, res) {
     return res.status(500).json({
       success: false,
       message: "Failed to reset account: " + error.message
+    });
+  }
+}
+
+/**
+ * POST /api/auth/add-funds
+ * Adds simulated funds to the user's paper trading balance
+ */
+export async function addFunds(req, res) {
+  const userId = req.user.id;
+  const { amount } = req.body;
+
+  if (!amount || isNaN(amount) || amount <= 0) {
+    return res.status(400).json({ success: false, message: "Please provide a valid positive amount." });
+  }
+
+  try {
+    const userResult = await sql(`SELECT balance FROM users WHERE id = $1`, [userId]);
+    if (userResult.rowCount === 0) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    const currentBalance = parseFloat(userResult.rows[0].balance);
+    const newBalance = currentBalance + parseFloat(amount);
+
+    await sql(`UPDATE users SET balance = $1 WHERE id = $2`, [newBalance, userId]);
+
+    // Write audit log
+    await writeAuditLog({
+      actorUserId: userId,
+      action: "ADD_FUNDS",
+      targetType: "user",
+      targetId: String(userId),
+      details: {
+        addedAmount: amount,
+        previousBalance: currentBalance,
+        newBalance: newBalance
+      }
+    });
+
+    return res.json({
+      success: true,
+      message: `Successfully added $${amount} to your balance.`,
+      data: {
+        newBalance
+      }
+    });
+  } catch (error) {
+    console.error("Add funds error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to add funds: " + error.message
     });
   }
 }

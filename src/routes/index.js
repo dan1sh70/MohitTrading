@@ -49,8 +49,10 @@ import {
   closeTrade,
   createTrade,
   listTrades,
-  resetAccount
+  resetAccount,
+  addFunds
 } from "../modules/trades/trades.controller.js";
+import { getLeaderboard } from "../modules/trades/leaderboard.controller.js";
 import {
   getAllPrices,
   getPrice,
@@ -299,6 +301,12 @@ apiRouter.use("/crypto", cryptoOrdersRouter);
 
 // Reset account endpoint - clears all trades, positions, performance data and resets balance
 apiRouter.post("/auth/reset-account", requireAuth, resetAccount);
+
+// Add funds endpoint
+apiRouter.post("/auth/add-funds", requireAuth, addFunds);
+
+// Leaderboard endpoint
+apiRouter.get("/leaderboard", getLeaderboard);
 
 // ========== STOCKS & FOREX ENDPOINTS ==========
 
