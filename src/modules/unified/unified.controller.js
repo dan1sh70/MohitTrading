@@ -90,6 +90,7 @@ export async function placeBuyOrder(req, res) {
   try {
     const result = await placeOrder(
       userId,
+      assetClass,
       symbol,
       'BUY',
       orderType || 'MARKET',
@@ -132,6 +133,7 @@ export async function placeSellOrder(req, res) {
   try {
     const result = await placeOrder(
       userId,
+      assetClass,
       symbol,
       'SELL',
       orderType || 'MARKET',
