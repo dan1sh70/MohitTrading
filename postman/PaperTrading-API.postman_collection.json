@@ -2278,6 +2278,766 @@
           }
         }
       ]
+    },
+    {
+      "name": "Indian Stock Orders",
+      "item": [
+        {
+          "name": "Place Buy Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"symbol\": \"BTCUSDT\",\n  \"quantity\": 1,\n  \"price\": 65000,\n  \"leverage\": 2,\n  \"tradingMode\": \"SPOT\",\n  \"orderType\": \"LIMIT\"\n}"
+            },
+            "url": "{{base_url}}/api/indian/orders/buy",
+            "description": "### API REFERENCE\n\n**Description:** Place buy order (Market/Limit)\n**Rate Limit:** ** 5 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
+          }
+        },
+        {
+          "name": "Place Sell Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"symbol\": \"BTCUSDT\",\n  \"quantity\": 1,\n  \"price\": 65500,\n  \"leverage\": 2,\n  \"tradingMode\": \"SPOT\",\n  \"orderType\": \"LIMIT\"\n}"
+            },
+            "url": "{{base_url}}/api/indian/orders/sell",
+            "description": "### API REFERENCE\n\n**Description:** Place sell order (Market/Limit)\n**Rate Limit:** ** 5 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
+          }
+        },
+        {
+          "name": "Get Orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/indian/orders",
+            "description": "### API REFERENCE\n\n**Description:** Get all orders with filter\n**Rate Limit:** ** -\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
+          }
+        },
+        {
+          "name": "Cancel Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/indian/orders/{{order_id}}/cancel",
+            "description": "### API REFERENCE\n\n**Description:** Cancel open order\n**Rate Limit:** ** 5 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
+          }
+        },
+        {
+          "name": "Get Positions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/indian/orders/positions",
+            "description": "### API REFERENCE\n\n**Description:** Get all active positions\n**Rate Limit:** ** -\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
+          }
+        },
+        {
+          "name": "Get Position Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/indian/orders/positions/{{position_id}}",
+            "description": "### API REFERENCE\n\n**Description:** Get position details\n**Rate Limit:** ** -\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
+          }
+        },
+        {
+          "name": "Close Position",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"positionId\": 1,\n  \"closingPrice\": 65250\n}"
+            },
+            "url": "{{base_url}}/api/indian/orders/positions/{{position_id}}/close",
+            "description": "### API REFERENCE\n\n**Description:** Close position\n**Rate Limit:** ** 5 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
+          }
+        },
+        {
+          "name": "Liquidation Check",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/indian/orders/positions/{{position_id}}/liquidation-check",
+            "description": "### API REFERENCE\n\n**Description:** Check & auto-liquidate\n**Rate Limit:** ** -\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
+          }
+        },
+        {
+          "name": "Performance",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/indian/orders/performance",
+            "description": "### API REFERENCE\n\n**Description:** Get performance metrics\n**Rate Limit:** ** -\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
+          }
+        },
+        {
+          "name": "Portfolio Health",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/indian/orders/portfolio-health"
+          }
+        },
+        {
+          "name": "Risk Meter",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/indian/orders/risk-meter"
+          }
+        },
+        {
+          "name": "Report Card",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/indian/orders/report-card"
+          }
+        },
+        {
+          "name": "Trades",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/indian/orders/trades"
+          }
+        },
+        {
+          "name": "History",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/indian/orders/history"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Forex Orders",
+      "item": [
+        {
+          "name": "Place Buy Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"symbol\": \"BTCUSDT\",\n  \"quantity\": 1,\n  \"price\": 65000,\n  \"leverage\": 2,\n  \"tradingMode\": \"SPOT\",\n  \"orderType\": \"LIMIT\"\n}"
+            },
+            "url": "{{base_url}}/api/forex/orders/buy",
+            "description": "### API REFERENCE\n\n**Description:** Place buy order (Market/Limit)\n**Rate Limit:** ** 5 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
+          }
+        },
+        {
+          "name": "Place Sell Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"symbol\": \"BTCUSDT\",\n  \"quantity\": 1,\n  \"price\": 65500,\n  \"leverage\": 2,\n  \"tradingMode\": \"SPOT\",\n  \"orderType\": \"LIMIT\"\n}"
+            },
+            "url": "{{base_url}}/api/forex/orders/sell",
+            "description": "### API REFERENCE\n\n**Description:** Place sell order (Market/Limit)\n**Rate Limit:** ** 5 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
+          }
+        },
+        {
+          "name": "Get Orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/forex/orders",
+            "description": "### API REFERENCE\n\n**Description:** Get all orders with filter\n**Rate Limit:** ** -\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
+          }
+        },
+        {
+          "name": "Cancel Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/forex/orders/{{order_id}}/cancel",
+            "description": "### API REFERENCE\n\n**Description:** Cancel open order\n**Rate Limit:** ** 5 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
+          }
+        },
+        {
+          "name": "Get Positions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/forex/orders/positions",
+            "description": "### API REFERENCE\n\n**Description:** Get all active positions\n**Rate Limit:** ** -\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
+          }
+        },
+        {
+          "name": "Get Position Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/forex/orders/positions/{{position_id}}",
+            "description": "### API REFERENCE\n\n**Description:** Get position details\n**Rate Limit:** ** -\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
+          }
+        },
+        {
+          "name": "Close Position",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"positionId\": 1,\n  \"closingPrice\": 65250\n}"
+            },
+            "url": "{{base_url}}/api/forex/orders/positions/{{position_id}}/close",
+            "description": "### API REFERENCE\n\n**Description:** Close position\n**Rate Limit:** ** 5 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
+          }
+        },
+        {
+          "name": "Liquidation Check",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/forex/orders/positions/{{position_id}}/liquidation-check",
+            "description": "### API REFERENCE\n\n**Description:** Check & auto-liquidate\n**Rate Limit:** ** -\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
+          }
+        },
+        {
+          "name": "Performance",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/forex/orders/performance",
+            "description": "### API REFERENCE\n\n**Description:** Get performance metrics\n**Rate Limit:** ** -\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
+          }
+        },
+        {
+          "name": "Portfolio Health",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/forex/orders/portfolio-health"
+          }
+        },
+        {
+          "name": "Risk Meter",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/forex/orders/risk-meter"
+          }
+        },
+        {
+          "name": "Report Card",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/forex/orders/report-card"
+          }
+        },
+        {
+          "name": "Trades",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/forex/orders/trades"
+          }
+        },
+        {
+          "name": "History",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/forex/orders/history"
+          }
+        }
+      ]
+    },
+    {
+      "name": "US Stock Orders",
+      "item": [
+        {
+          "name": "Place Buy Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"symbol\": \"BTCUSDT\",\n  \"quantity\": 1,\n  \"price\": 65000,\n  \"leverage\": 2,\n  \"tradingMode\": \"SPOT\",\n  \"orderType\": \"LIMIT\"\n}"
+            },
+            "url": "{{base_url}}/api/us/orders/buy",
+            "description": "### API REFERENCE\n\n**Description:** Place buy order (Market/Limit)\n**Rate Limit:** ** 5 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
+          }
+        },
+        {
+          "name": "Place Sell Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"symbol\": \"BTCUSDT\",\n  \"quantity\": 1,\n  \"price\": 65500,\n  \"leverage\": 2,\n  \"tradingMode\": \"SPOT\",\n  \"orderType\": \"LIMIT\"\n}"
+            },
+            "url": "{{base_url}}/api/us/orders/sell",
+            "description": "### API REFERENCE\n\n**Description:** Place sell order (Market/Limit)\n**Rate Limit:** ** 5 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
+          }
+        },
+        {
+          "name": "Get Orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/us/orders",
+            "description": "### API REFERENCE\n\n**Description:** Get all orders with filter\n**Rate Limit:** ** -\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
+          }
+        },
+        {
+          "name": "Cancel Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/us/orders/{{order_id}}/cancel",
+            "description": "### API REFERENCE\n\n**Description:** Cancel open order\n**Rate Limit:** ** 5 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
+          }
+        },
+        {
+          "name": "Get Positions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/us/orders/positions",
+            "description": "### API REFERENCE\n\n**Description:** Get all active positions\n**Rate Limit:** ** -\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
+          }
+        },
+        {
+          "name": "Get Position Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/us/orders/positions/{{position_id}}",
+            "description": "### API REFERENCE\n\n**Description:** Get position details\n**Rate Limit:** ** -\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
+          }
+        },
+        {
+          "name": "Close Position",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"positionId\": 1,\n  \"closingPrice\": 65250\n}"
+            },
+            "url": "{{base_url}}/api/us/orders/positions/{{position_id}}/close",
+            "description": "### API REFERENCE\n\n**Description:** Close position\n**Rate Limit:** ** 5 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
+          }
+        },
+        {
+          "name": "Liquidation Check",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/us/orders/positions/{{position_id}}/liquidation-check",
+            "description": "### API REFERENCE\n\n**Description:** Check & auto-liquidate\n**Rate Limit:** ** -\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
+          }
+        },
+        {
+          "name": "Performance",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/us/orders/performance",
+            "description": "### API REFERENCE\n\n**Description:** Get performance metrics\n**Rate Limit:** ** -\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
+          }
+        },
+        {
+          "name": "Portfolio Health",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/us/orders/portfolio-health"
+          }
+        },
+        {
+          "name": "Risk Meter",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/us/orders/risk-meter"
+          }
+        },
+        {
+          "name": "Report Card",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/us/orders/report-card"
+          }
+        },
+        {
+          "name": "Trades",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/us/orders/trades"
+          }
+        },
+        {
+          "name": "History",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/us/orders/history"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Commodity Orders",
+      "item": [
+        {
+          "name": "Place Buy Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"symbol\": \"BTCUSDT\",\n  \"quantity\": 1,\n  \"price\": 65000,\n  \"leverage\": 2,\n  \"tradingMode\": \"SPOT\",\n  \"orderType\": \"LIMIT\"\n}"
+            },
+            "url": "{{base_url}}/api/commodity/orders/buy",
+            "description": "### API REFERENCE\n\n**Description:** Place buy order (Market/Limit)\n**Rate Limit:** ** 5 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
+          }
+        },
+        {
+          "name": "Place Sell Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"symbol\": \"BTCUSDT\",\n  \"quantity\": 1,\n  \"price\": 65500,\n  \"leverage\": 2,\n  \"tradingMode\": \"SPOT\",\n  \"orderType\": \"LIMIT\"\n}"
+            },
+            "url": "{{base_url}}/api/commodity/orders/sell",
+            "description": "### API REFERENCE\n\n**Description:** Place sell order (Market/Limit)\n**Rate Limit:** ** 5 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
+          }
+        },
+        {
+          "name": "Get Orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/commodity/orders",
+            "description": "### API REFERENCE\n\n**Description:** Get all orders with filter\n**Rate Limit:** ** -\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
+          }
+        },
+        {
+          "name": "Cancel Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/commodity/orders/{{order_id}}/cancel",
+            "description": "### API REFERENCE\n\n**Description:** Cancel open order\n**Rate Limit:** ** 5 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
+          }
+        },
+        {
+          "name": "Get Positions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/commodity/orders/positions",
+            "description": "### API REFERENCE\n\n**Description:** Get all active positions\n**Rate Limit:** ** -\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
+          }
+        },
+        {
+          "name": "Get Position Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/commodity/orders/positions/{{position_id}}",
+            "description": "### API REFERENCE\n\n**Description:** Get position details\n**Rate Limit:** ** -\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
+          }
+        },
+        {
+          "name": "Close Position",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"positionId\": 1,\n  \"closingPrice\": 65250\n}"
+            },
+            "url": "{{base_url}}/api/commodity/orders/positions/{{position_id}}/close",
+            "description": "### API REFERENCE\n\n**Description:** Close position\n**Rate Limit:** ** 5 requests/minute\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
+          }
+        },
+        {
+          "name": "Liquidation Check",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/commodity/orders/positions/{{position_id}}/liquidation-check",
+            "description": "### API REFERENCE\n\n**Description:** Check & auto-liquidate\n**Rate Limit:** ** -\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
+          }
+        },
+        {
+          "name": "Performance",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/commodity/orders/performance",
+            "description": "### API REFERENCE\n\n**Description:** Get performance metrics\n**Rate Limit:** ** -\n**Authentication:** 🔒 Required (JWT Bearer Token)\n\n"
+          }
+        },
+        {
+          "name": "Portfolio Health",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/commodity/orders/portfolio-health"
+          }
+        },
+        {
+          "name": "Risk Meter",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/commodity/orders/risk-meter"
+          }
+        },
+        {
+          "name": "Report Card",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/commodity/orders/report-card"
+          }
+        },
+        {
+          "name": "Trades",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/commodity/orders/trades"
+          }
+        },
+        {
+          "name": "History",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/commodity/orders/history"
+          }
+        }
+      ]
     }
   ]
 }
