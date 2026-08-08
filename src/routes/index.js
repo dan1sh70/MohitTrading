@@ -289,15 +289,24 @@ apiRouter.get("/crypto/trending/all", cryptoPriceLimiter, getTrending);
 apiRouter.get("/crypto/top-10/ranked", cryptoPriceLimiter, getTop10Ranked);
 apiRouter.get("/crypto/all/stats", cryptoPriceLimiter, getAllStats);
 
+import { placeBuyOrderSchema, placeSellOrderSchema, placeBuyOrder, placeSellOrder } from "../modules/crypto/crypto-orders.controller.js";
+import createUnifiedRouter from "../modules/unified/unified.routes.js";
+
 // Crypto trading endpoints (authenticated, rate limited)
-apiRouter.post("/crypto/buy", requireAuth, cryptoTradingLimiter, validateBody(buyTradeSchema), buyCrypto);
-apiRouter.post("/crypto/sell", requireAuth, cryptoTradingLimiter, validateBody(sellTradeSchema), sellCrypto);
+apiRouter.post("/crypto/buy", requireAuth, cryptoTradingLimiter, validateBody(placeBuyOrderSchema), placeBuyOrder);
+apiRouter.post("/crypto/sell", requireAuth, cryptoTradingLimiter, validateBody(placeSellOrderSchema), placeSellOrder);
 apiRouter.get("/crypto/portfolio", requireAuth, getPortfolio);
 apiRouter.get("/crypto/closed-positions", requireAuth, getClosedPositions);
 apiRouter.get("/crypto/trades", requireAuth, getUserTrades);
 
 // Crypto Orders API (new trading system with matching engine)
 apiRouter.use("/crypto", cryptoOrdersRouter);
+
+// Unified Trading Engine for other asset classes (using the Crypto engine logic)
+apiRouter.use("/indian/orders", createUnifiedRouter('INDIAN_STOCK'));
+apiRouter.use("/forex/orders", createUnifiedRouter('FOREX'));
+apiRouter.use("/us/orders", createUnifiedRouter('US_STOCK'));
+apiRouter.use("/commodity/orders", createUnifiedRouter('COMMODITY'));
 
 // Reset account endpoint - clears all trades, positions, performance data and resets balance
 apiRouter.post("/auth/reset-account", requireAuth, resetAccount);

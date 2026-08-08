@@ -130,3 +130,21 @@ CREATE TABLE IF NOT EXISTS unified_performance (
     avg_holding_time INT NOT NULL DEFAULT 0,
     PRIMARY KEY(user_id, asset_class)
 );
+
+CREATE TABLE IF NOT EXISTS unified_order_fills (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    order_id INT NOT NULL,
+    user_id INT NOT NULL,
+    asset_class ENUM('CRYPTO', 'INDIAN_STOCK', 'FOREX', 'COMMODITY', 'OPTION') NOT NULL,
+    symbol VARCHAR(20) NOT NULL,
+    side ENUM('BUY', 'SELL') NOT NULL,
+    quantity DECIMAL(18,8) NOT NULL,
+    price DECIMAL(18,8) NOT NULL,
+    fee DECIMAL(18,8) NOT NULL DEFAULT 0,
+    fee_asset VARCHAR(10) DEFAULT 'USDT',
+    is_maker BOOLEAN NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_fills_order (order_id),
+    INDEX idx_fills_user (user_id),
+    INDEX idx_fills_asset_class (asset_class)
+);

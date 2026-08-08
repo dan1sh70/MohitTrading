@@ -5,20 +5,9 @@
 
 import { sql } from "../../db/mysql.js";
 import { z } from "zod";
-import {
-  placeOrder,
-  closePosition,
-  cancelOrder
-} from "../../services/trade-execution.service.js";
-import {
-  getCryptoPrice,
-  getCryptoStats
-} from "./crypto.service.js";
-import {
-  updatePositionPnL,
-  checkLiquidation,
-  liquidatePosition
-} from "../../services/pnl-liquidation.service.js";
+import { placeOrder, closePosition, cancelOrder } from "../../services/unified-execution.service.js";
+import { getUnifiedPrice } from "./unified.service.js";
+import { updatePositionPnL, checkLiquidation, liquidatePosition } from "../../services/pnl-liquidation.service.js";
 
 /**
  * ─────────────────────────────────────────────────────────────────────────────
@@ -93,6 +82,7 @@ export const closePositionSchema = z.object({
 export async function placeBuyOrder(req, res) {
   const { symbol, quantity, price, leverage, tradingMode, orderType, takeProfit, stopLoss, take_profit, stop_loss } = req.validatedBody || req.body;
   const userId = req.user.id;
+  const assetClass = req.assetClass || "CRYPTO";
   
   const finalTakeProfit = takeProfit ?? take_profit;
   const finalStopLoss = stopLoss ?? stop_loss;
@@ -134,6 +124,7 @@ export async function placeBuyOrder(req, res) {
 export async function placeSellOrder(req, res) {
   const { symbol, quantity, price, leverage, tradingMode, orderType, takeProfit, stopLoss, take_profit, stop_loss } = req.validatedBody || req.body;
   const userId = req.user.id;
+  const assetClass = req.assetClass || "CRYPTO";
   
   const finalTakeProfit = takeProfit ?? take_profit;
   const finalStopLoss = stopLoss ?? stop_loss;
@@ -180,11 +171,12 @@ export async function placeSellOrder(req, res) {
  */
 export async function getPositions(req, res) {
   const userId = req.user.id;
+  const assetClass = req.assetClass || "CRYPTO";
   
   try {
     const positions = await sql(
-      `SELECT * FROM crypto_positions 
-       WHERE user_id = $1 AND status = 'ACTIVE'
+      `SELECT * FROM unified_positions 
+       WHERE user_id = $1 AND asset_class = '${assetClass}' AND status = 'ACTIVE'
        ORDER BY entry_time DESC`,
       [userId]
     );
@@ -193,7 +185,7 @@ export async function getPositions(req, res) {
     const positionsWithPrices = await Promise.all(
       positions.rows.map(async (position) => {
         try {
-          const priceData = await getCryptoPrice(position.symbol);
+          const priceData = await getUnifiedPrice(position.symbol);
           const currentPrice = parseFloat(priceData.price);
           
           // Calculate unrealised PnL dynamically
@@ -253,10 +245,11 @@ export async function getPositions(req, res) {
 export async function getPositionDetails(req, res) {
   const positionId = parseInt(req.params.positionId);
   const userId = req.user.id;
+  const assetClass = req.assetClass || "CRYPTO";
   
   try {
     const positions = await sql(
-      `SELECT * FROM crypto_positions WHERE id = $1 AND user_id = $2`,
+      `SELECT * FROM unified_positions WHERE id = $1 AND user_id = $2 AND asset_class = '${assetClass}'`,
       [positionId, userId]
     );
     
@@ -270,7 +263,7 @@ export async function getPositionDetails(req, res) {
     const position = positions.rows[0];
     
     // Get current price and update P&L
-    const priceData = await getCryptoPrice(position.symbol);
+    const priceData = await getUnifiedPrice(position.symbol);
     const currentPrice = parseFloat(priceData.price);
     
     const pnlResult = await updatePositionPnL(positionId, currentPrice);
@@ -300,6 +293,7 @@ export async function getPositionDetails(req, res) {
 export async function closePositionEndpoint(req, res) {
   const positionId = parseInt(req.params.positionId);
   const userId = req.user.id;
+  const assetClass = req.assetClass || "CRYPTO";
   const { closingPrice } = req.validatedBody || req.body;
   
   try {
@@ -332,10 +326,11 @@ export async function closePositionEndpoint(req, res) {
  */
 export async function getOrders(req, res) {
   const userId = req.user.id;
+  const assetClass = req.assetClass || "CRYPTO";
   const status = req.query.status; // optional filter
   
   try {
-    let query = `SELECT * FROM crypto_orders WHERE user_id = $1`;
+    let query = `SELECT * FROM unified_orders WHERE user_id = $1 AND asset_class = '${assetClass}'`;
     const params = [userId];
     
     if (status) {
@@ -369,6 +364,7 @@ export async function getOrders(req, res) {
 export async function cancelOrderEndpoint(req, res) {
   const orderId = parseInt(req.params.orderId);
   const userId = req.user.id;
+  const assetClass = req.assetClass || "CRYPTO";
   
   try {
     const result = await cancelOrder(userId, orderId);
@@ -398,14 +394,15 @@ export async function cancelOrderEndpoint(req, res) {
  * GET /api/crypto/performance
  * Get user's crypto trading performance metrics
  */
-export async function getCryptoPerformance(req, res) {
+export async function getUnifiedPerformance(req, res) {
   const userId = req.user.id;
+  const assetClass = req.assetClass || "CRYPTO";
   
   try {
-    const performance = await sql(`SELECT * FROM crypto_performance WHERE user_id = $1`, [userId]);
+    const performance = await sql(`SELECT * FROM unified_performance WHERE user_id = $1 AND asset_class = '${assetClass}'`, [userId]);
     
     // Generate dynamic full 21-field Report Card
-    const trades = await sql(`SELECT symbol, net_pnl as pnl, fees_paid as charges, margin_used, entry_time, exit_time, duration_seconds FROM crypto_trades WHERE user_id = $1 AND exit_time IS NOT NULL ORDER BY exit_time DESC`, [userId]);
+    const trades = await sql(`SELECT symbol, net_pnl as pnl, fees_paid as charges, margin_used, entry_time, exit_time, duration_seconds FROM unified_trades WHERE user_id = $1 AND asset_class = '${assetClass}' AND exit_time IS NOT NULL ORDER BY exit_time DESC`, [userId]);
     const userBalanceResult = await sql(`SELECT balance FROM users WHERE id = $1`, [userId]);
     const accountEquity = userBalanceResult.length > 0 ? parseFloat(userBalanceResult[0].balance) : 10000;
     
@@ -414,13 +411,13 @@ export async function getCryptoPerformance(req, res) {
     const metrics = calculateTradefinityMetrics(trades.rows || trades, accountEquity, 0, 0);
     
     // Calculate Percentile & Ranking
-    const rankResult = await sql(`SELECT COUNT(*) as total_users FROM crypto_performance WHERE total_trades > 0`);
-    const belowResult = await sql(`SELECT COUNT(*) as users_below FROM crypto_performance WHERE overall_score < $1 AND total_trades > 0`, [metrics.overallScore]);
+    const rankResult = await sql(`SELECT COUNT(*) as total_users FROM unified_performance WHERE total_trades > 0`);
+    const belowResult = await sql(`SELECT COUNT(*) as users_below FROM unified_performance WHERE overall_score < $1 AND total_trades > 0`, [metrics.overallScore]);
     
     const totalUsers = parseInt((rankResult.rows || rankResult)[0]?.total_users || 1);
     const usersBelow = parseInt((belowResult.rows || belowResult)[0]?.users_below || 0);
     const percentile_rank = totalUsers > 0 ? parseFloat(((usersBelow / totalUsers) * 100).toFixed(2)) : 0;
-    const higherResult = await sql(`SELECT COUNT(*) as users_above FROM crypto_performance WHERE overall_score > $1 AND total_trades > 0`, [metrics.overallScore]);
+    const higherResult = await sql(`SELECT COUNT(*) as users_above FROM unified_performance WHERE overall_score > $1 AND total_trades > 0`, [metrics.overallScore]);
     const global_rank = parseInt((higherResult.rows || higherResult)[0]?.users_above || 0) + 1;
     
     // Calculate Improvement
@@ -513,12 +510,13 @@ export async function calculateCryptoPerformance(req, res) {
  */
 export async function getTrades(req, res) {
   const userId = req.user.id;
+  const assetClass = req.assetClass || "CRYPTO";
   const limit = parseInt(req.query.limit) || 50;
   
   try {
     const trades = await sql(
-      `SELECT * FROM crypto_trades 
-       WHERE user_id = $1 
+      `SELECT * FROM unified_trades 
+       WHERE user_id = $1 AND asset_class = '${assetClass}' 
        ORDER BY exit_time DESC 
        LIMIT $2`,
       [userId, limit]
@@ -552,10 +550,11 @@ export async function getTrades(req, res) {
 export async function checkPositionLiquidation(req, res) {
   const positionId = parseInt(req.params.positionId);
   const userId = req.user.id;
+  const assetClass = req.assetClass || "CRYPTO";
   
   try {
     const positions = await sql(
-      `SELECT symbol FROM crypto_positions WHERE id = $1 AND user_id = $2`,
+      `SELECT symbol FROM unified_positions WHERE id = $1 AND user_id = $2 AND asset_class = '${assetClass}'`,
       [positionId, userId]
     );
     
@@ -566,7 +565,7 @@ export async function checkPositionLiquidation(req, res) {
       });
     }
     
-    const priceData = await getCryptoPrice(positions[0].symbol);
+    const priceData = await getUnifiedPrice(positions[0].symbol);
     const currentPrice = parseFloat(priceData.price);
     
     const result = await checkLiquidation(positionId, currentPrice);
@@ -604,6 +603,7 @@ export async function checkPositionLiquidation(req, res) {
  */
 export async function getAccountBalance(req, res) {
   const userId = req.user.id;
+  const assetClass = req.assetClass || "CRYPTO";
   
   try {
     const user = await sql(`SELECT balance FROM users WHERE id = $1`, [userId]);
@@ -619,15 +619,15 @@ export async function getAccountBalance(req, res) {
     
     // Fetch active positions and calculate unrealised PnL dynamically from live prices
     const positions = await sql(
-      `SELECT symbol, side, entry_price, quantity, margin_used FROM crypto_positions 
-       WHERE user_id = $1 AND status = 'ACTIVE'`,
+      `SELECT symbol, side, entry_price, quantity, margin_used FROM unified_positions 
+       WHERE user_id = $1 AND asset_class = '${assetClass}' AND status = 'ACTIVE'`,
       [userId]
     );
     
     let totalUnrealisedPnL = 0;
     for (const pos of (positions.rows || [])) {
       try {
-        const priceData = await getCryptoPrice(pos.symbol);
+        const priceData = await getUnifiedPrice(pos.symbol);
         const currentPrice = parseFloat(priceData.price);
         const entryPrice = parseFloat(pos.entry_price);
         const quantity = parseFloat(pos.quantity);
@@ -710,7 +710,7 @@ export async function getOrderbook(req, res) {
 async function _runTradefinityForUser(userId) {
   const trades = await sql(
     `SELECT symbol, net_pnl as pnl, fees_paid as charges, margin_used, entry_time, exit_time, duration_seconds, leverage, status
-     FROM crypto_trades WHERE user_id = $1 AND exit_time IS NOT NULL
+     FROM unified_trades WHERE user_id = $1 AND asset_class = '${assetClass}' AND exit_time IS NOT NULL
      ORDER BY exit_time DESC`,
     [userId]
   );
@@ -735,7 +735,7 @@ export async function getPortfolioHealth(req, res) {
     // Fetch active positions for live exposure breakdown
     const positions = await sql(
       `SELECT symbol, side, margin_used, entry_price, quantity
-       FROM crypto_positions WHERE user_id = $1 AND status = 'ACTIVE'`,
+       FROM unified_positions WHERE user_id = $1 AND asset_class = '${assetClass}' AND status = 'ACTIVE'`,
       [req.user.id]
     );
 
@@ -784,7 +784,7 @@ export async function getRiskMeter(req, res) {
     // Fetch active positions for live margin ratio
     const positions = await sql(
       `SELECT margin_used, margin_ratio, liquidation_price, leverage, symbol, side
-       FROM crypto_positions WHERE user_id = $1 AND status = 'ACTIVE'`,
+       FROM unified_positions WHERE user_id = $1 AND asset_class = '${assetClass}' AND status = 'ACTIVE'`,
       [req.user.id]
     );
 
@@ -838,14 +838,14 @@ export async function getReportCard(req, res) {
     const { metrics } = await _runTradefinityForUser(req.user.id);
 
     // Percentile and ranking
-    const rankResult = await sql(`SELECT COUNT(*) as total_users FROM crypto_performance WHERE total_trades > 0`);
-    const belowResult = await sql(`SELECT COUNT(*) as users_below FROM crypto_performance WHERE overall_score < $1 AND total_trades > 0`, [metrics.overallScore]);
+    const rankResult = await sql(`SELECT COUNT(*) as total_users FROM unified_performance WHERE total_trades > 0`);
+    const belowResult = await sql(`SELECT COUNT(*) as users_below FROM unified_performance WHERE overall_score < $1 AND total_trades > 0`, [metrics.overallScore]);
 
     const totalUsers = parseInt((rankResult.rows || rankResult)[0]?.total_users || 1);
     const usersBelow = parseInt((belowResult.rows || belowResult)[0]?.users_below || 0);
     const percentileRank = totalUsers > 0 ? parseFloat(((usersBelow / totalUsers) * 100).toFixed(2)) : 0;
 
-    const higherResult = await sql(`SELECT COUNT(*) as users_above FROM crypto_performance WHERE overall_score > $1 AND total_trades > 0`, [metrics.overallScore]);
+    const higherResult = await sql(`SELECT COUNT(*) as users_above FROM unified_performance WHERE overall_score > $1 AND total_trades > 0`, [metrics.overallScore]);
     const globalRank = parseInt((higherResult.rows || higherResult)[0]?.users_above || 0) + 1;
 
     return res.json({
@@ -912,17 +912,18 @@ export async function getReportCard(req, res) {
  */
 export async function getHistory(req, res) {
   const userId = req.user.id;
+  const assetClass = req.assetClass || "CRYPTO";
   const limit = parseInt(req.query.limit) || 100;
 
   try {
-    const ordersRes = await sql(`SELECT * FROM crypto_orders WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2`, [userId, limit]);
-    const positionsRes = await sql(`SELECT * FROM crypto_positions WHERE user_id = $1 ORDER BY entry_time DESC LIMIT $2`, [userId, limit]);
-    const tradesRes = await sql(`SELECT * FROM crypto_trades WHERE user_id = $1 ORDER BY exit_time DESC LIMIT $2`, [userId, limit]);
+    const ordersRes = await sql(`SELECT * FROM unified_orders WHERE user_id = $1 AND asset_class = '${assetClass}' ORDER BY created_at DESC LIMIT $2`, [userId, limit]);
+    const positionsRes = await sql(`SELECT * FROM unified_positions WHERE user_id = $1 AND asset_class = '${assetClass}' ORDER BY entry_time DESC LIMIT $2`, [userId, limit]);
+    const tradesRes = await sql(`SELECT * FROM unified_trades WHERE user_id = $1 AND asset_class = '${assetClass}' ORDER BY exit_time DESC LIMIT $2`, [userId, limit]);
     
     // Also fetch fills for order execution history
     const fillsRes = await sql(
       `SELECT cof.* FROM crypto_order_fills cof 
-       JOIN crypto_orders co ON cof.order_id = co.id 
+       JOIN unified_orders co ON cof.order_id = co.id 
        WHERE co.user_id = $1 
        ORDER BY cof.fill_time DESC LIMIT $2`, 
       [userId, limit]
@@ -951,7 +952,7 @@ export default {
   closePositionEndpoint,
   getOrders,
   cancelOrderEndpoint,
-  getCryptoPerformance,
+  getUnifiedPerformance,
   calculateCryptoPerformance,
   getTrades,
   getHistory,

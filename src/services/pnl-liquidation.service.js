@@ -123,12 +123,12 @@ export function calculateRequiredMargin(quantity, entryPrice, leverage) {
 /**
  * Update position P&L with latest market price
  */
-export async function updatePositionPnL(positionId, currentPrice) {
+export async function updatePositionPnL(positionId, assetClass, currentPrice) {
   try {
     const result = await sql(
       `SELECT 
         id, user_id, side, entry_price, quantity, leverage, margin_used, realised_pnl
-      FROM crypto_positions WHERE id = $1`,
+      FROM unified_positions WHERE id = $1 AND asset_class = '${assetClass}'`,
       [positionId]
     );
     
@@ -151,7 +151,7 @@ export async function updatePositionPnL(positionId, currentPrice) {
     
     // Calculate margin ratio
     const userBalance = await sql(
-      `SELECT balance FROM users WHERE id = $1`,
+      `SELECT balance FROM users WHERE id = $1 AND asset_class = '${assetClass}'`,
       [position.user_id]
     );
     const equity = parseFloat(userBalance[0]?.balance || 0);
@@ -166,7 +166,7 @@ export async function updatePositionPnL(positionId, currentPrice) {
     
     // Update position
     await sql(
-      `UPDATE crypto_positions 
+      `UPDATE unified_positions 
        SET current_price = $1, 
            unrealised_pnl = $2, 
            unrealised_pnl_percent = $3,
@@ -210,12 +210,12 @@ export async function updatePositionPnL(positionId, currentPrice) {
  * Check if position should be liquidated
  * ✅ NOW USES MARK PRICE instead of last trade price
  */
-export async function checkLiquidation(positionId) {
+export async function checkLiquidation(positionId, assetClass) {
   try {
     const result = await sql(
       `SELECT id, user_id, symbol, side, entry_price, quantity, leverage, 
               margin_used, status
-       FROM crypto_positions WHERE id = $1`,
+       FROM unified_positions WHERE id = $1 AND asset_class = '${assetClass}'`,
       [positionId]
     );
     
@@ -239,7 +239,7 @@ export async function checkLiquidation(positionId) {
     
     // Get user balance
     const userResult = await sql(
-      `SELECT balance FROM users WHERE id = $1`,
+      `SELECT balance FROM users WHERE id = $1 AND asset_class = '${assetClass}'`,
       [position.user_id]
     );
     
@@ -299,7 +299,7 @@ export async function liquidatePosition(positionId, liquidationPrice) {
   try {
     const result = await sql(
       `SELECT id, user_id, symbol, side, entry_price, quantity, leverage, margin_used, realised_pnl
-       FROM crypto_positions WHERE id = $1 AND status = 'ACTIVE'`,
+       FROM unified_positions WHERE id = $1 AND asset_class = '${assetClass}' AND status = 'ACTIVE'`,
       [positionId]
     );
     
@@ -323,7 +323,7 @@ export async function liquidatePosition(positionId, liquidationPrice) {
     
     // Close position
     await sql(
-      `UPDATE crypto_positions 
+      `UPDATE unified_positions 
        SET status = 'LIQUIDATED',
            exit_time = NOW(),
            exit_price = $1,
@@ -356,7 +356,7 @@ export async function liquidatePosition(positionId, liquidationPrice) {
     
     // Deduct loss from user balance
     const userBalance = await sql(
-      `SELECT balance FROM users WHERE id = $1`,
+      `SELECT balance FROM users WHERE id = $1 AND asset_class = '${assetClass}'`,
       [position.user_id]
     );
     
@@ -423,7 +423,7 @@ export async function chargeFundingCost(userId, positionId, fundingCost) {
   try {
     // Update balance
     const userBalance = await sql(
-      `SELECT balance FROM users WHERE id = $1`,
+      `SELECT balance FROM users WHERE id = $1 AND asset_class = '${assetClass}'`,
       [userId]
     );
     
@@ -436,7 +436,7 @@ export async function chargeFundingCost(userId, positionId, fundingCost) {
     
     // Update position
     await sql(
-      `UPDATE crypto_positions 
+      `UPDATE unified_positions 
        SET funding_paid = funding_paid + $1
        WHERE id = $2`,
       [fundingCost, positionId]
@@ -479,7 +479,7 @@ export async function chargeFundingCost(userId, positionId, fundingCost) {
 /**
  * Calculate and update user's crypto performance metrics
  */
-export async function updateCryptoPerformance(userId) {
+export async function updateCryptoPerformance(userId, positions = null) {
   try {
     // Get all closed trades, mapping to Tradefinity expected schema
     const trades = await sql(
@@ -491,7 +491,7 @@ export async function updateCryptoPerformance(userId) {
         entry_time, 
         exit_time,
         duration_seconds
-       FROM crypto_trades WHERE user_id = $1 AND exit_time IS NOT NULL
+       FROM unified_trades WHERE user_id = $1 AND asset_class = '${assetClass}' AND exit_time IS NOT NULL
        ORDER BY exit_time DESC`,
       [userId]
     );
@@ -499,7 +499,7 @@ export async function updateCryptoPerformance(userId) {
     if (trades.length === 0) {
       // Initialize performance
       await sql(
-        `INSERT INTO crypto_performance (user_id, total_trades, overall_grade)
+        `INSERT INTO unified_performance (user_id, total_trades, overall_grade)
          VALUES ($1, 0, 'D')
          ON DUPLICATE KEY UPDATE total_trades = 0`,
         [userId]
@@ -509,7 +509,7 @@ export async function updateCryptoPerformance(userId) {
     
     // Fetch user balance
     const userBalanceResult = await sql(
-      `SELECT balance FROM users WHERE id = $1`, [userId]
+      `SELECT balance FROM users WHERE id = $1 AND asset_class = '${assetClass}'`, [userId]
     );
     const accountEquity = userBalanceResult.length > 0 ? parseFloat(userBalanceResult[0].balance) : 10000;
 
@@ -522,7 +522,7 @@ export async function updateCryptoPerformance(userId) {
     
     // Update or insert
     await sql(
-      `INSERT INTO crypto_performance 
+      `INSERT INTO unified_performance 
        (user_id, total_trades, total_realised_pnl, winning_trades, losing_trades, 
         win_rate, avg_profit, avg_loss, profit_factor, consistency_score, 
         risk_meter, portfolio_health, win_loss_ratio,
@@ -583,3 +583,4 @@ export default {
   chargeFundingCost,
   updateCryptoPerformance
 };
+export const updateUnifiedPerformance = updateCryptoPerformance;

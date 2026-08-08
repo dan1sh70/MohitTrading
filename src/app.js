@@ -38,6 +38,16 @@ app.get("/health", (req, res) => {
 
 app.use("/api", apiRouter);
 
+// 404 handler for API routes
+app.use("/api", (req, res) => {
+  res.status(404).json({ success: false, message: `Route not found: ${req.method} ${req.originalUrl}` });
+});
+
+// Default 404 handler for other routes
+app.use((req, res) => {
+  res.status(404).json({ success: false, message: `Route not found: ${req.method} ${req.originalUrl}` });
+});
+
 app.use((error, _req, res, _next) => {
   console.error(error);
   const status = error.status || 500;

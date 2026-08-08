@@ -207,6 +207,11 @@ export async function resetAccount(req, res) {
     );
 
     const tablesToDelete = [
+      'unified_orders',
+      'unified_positions',
+      'unified_trades',
+      'unified_performance',
+      'unified_order_fills',
       'trades',
       'indian_stock_positions',
       'indian_stock_performance',
