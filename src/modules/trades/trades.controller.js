@@ -206,37 +206,43 @@ export async function resetAccount(req, res) {
       [userId]
     );
 
-    // Delete all trades for the user
-    await sql(`DELETE FROM trades WHERE user_id = $1`, [userId]);
+    const tablesToDelete = [
+      'trades',
+      'indian_stock_positions',
+      'indian_stock_performance',
+      'us_stock_positions',
+      'us_stock_performance',
+      'forex_positions',
+      'forex_performance',
+      'commodity_positions',
+      'commodity_performance',
+      'crypto_positions',
+      'crypto_orders',
+      'crypto_order_fills',
+      'crypto_trades',
+      'crypto_performance',
+      'crypto_balance_history',
+      'crypto_liquidations',
+      'crypto_funding_payments',
+      'trigger_events',
+      'unified_positions',
+      'unified_orders',
+      'unified_trades',
+      'unified_performance'
+    ];
 
-    // Delete all indian stock positions for the user
-    await sql(`DELETE FROM indian_stock_positions WHERE user_id = $1`, [userId]);
-
-    // Delete indian stock performance data for the user
-    await sql(`DELETE FROM indian_stock_performance WHERE user_id = $1`, [userId]);
-
-    // Delete all crypto positions, orders, trades, fills, and performance for the user
-    try {
-      await sql(`DELETE FROM crypto_positions WHERE user_id = $1`, [userId]);
-      await sql(`DELETE FROM crypto_orders WHERE user_id = $1`, [userId]);
-      await sql(`DELETE FROM crypto_order_fills WHERE user_id = $1`, [userId]);
-      await sql(`DELETE FROM crypto_trades WHERE user_id = $1`, [userId]);
-      await sql(`DELETE FROM crypto_performance WHERE user_id = $1`, [userId]);
-      await sql(`DELETE FROM crypto_balance_history WHERE user_id = $1`, [userId]);
-      await sql(`DELETE FROM crypto_liquidations WHERE user_id = $1`, [userId]);
-      await sql(`DELETE FROM crypto_funding_payments WHERE user_id = $1`, [userId]);
-      await sql(`DELETE FROM trigger_events WHERE user_id = $1`, [userId]);
-      
-      // Also delete from new unified tables
-      await sql(`DELETE FROM unified_positions WHERE user_id = $1`, [userId]);
-      await sql(`DELETE FROM unified_orders WHERE user_id = $1`, [userId]);
-      await sql(`DELETE FROM unified_trades WHERE user_id = $1`, [userId]);
-      await sql(`DELETE FROM unified_performance WHERE user_id = $1`, [userId]);
-      
-      console.log(`[ResetAccount] Successfully cleared all tables for user ${userId}`);
-    } catch (cryptoErr) {
-      console.error("[ResetAccount] Error clearing tables:", cryptoErr.message);
+    for (const table of tablesToDelete) {
+      try {
+        await sql(`DELETE FROM ${table} WHERE user_id = $1`, [userId]);
+      } catch (err) {
+        // Ignore errors for tables that might not exist yet
+        if (!err.message.includes("doesn't exist")) {
+          console.error(`[ResetAccount] Error clearing ${table}:`, err.message);
+        }
+      }
     }
+    
+    console.log(`[ResetAccount] Successfully cleared all tables for user ${userId}`);
 
     // Reset user balance to default
     await sql(
