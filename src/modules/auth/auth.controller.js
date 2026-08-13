@@ -9,7 +9,7 @@ export async function login(req, res) {
     const { email, password } = req.validatedBody;
 
     const userResult = await sql(
-      `SELECT id, full_name, email, role, password_hash FROM users WHERE email = $1`,
+      `SELECT id, full_name, email, role, password_hash, created_at FROM users WHERE email = $1`,
       [email]
     );
 
@@ -41,7 +41,8 @@ export async function login(req, res) {
         id: user.id,
         name: user.full_name,
         email: user.email,
-        role: user.role
+        role: user.role,
+        dateJoined: user.created_at
       }
     });
   } catch (error) {
@@ -122,7 +123,7 @@ export async function register(req, res) {
     }
 
     const newUserResult = await sql(
-      `SELECT id, full_name, email, role, referral_code, diamonds FROM users WHERE id = $1`,
+      `SELECT id, full_name, email, role, referral_code, diamonds, created_at FROM users WHERE id = $1`,
       [newUserId]
     );
 
@@ -146,7 +147,8 @@ export async function register(req, res) {
         email: newUser.email,
         role: newUser.role,
         referralCode: newUser.referral_code,
-        diamonds: newUser.diamonds
+        diamonds: newUser.diamonds,
+        dateJoined: newUser.created_at
       }
     });
   } catch (error) {
