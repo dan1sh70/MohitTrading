@@ -181,7 +181,7 @@ export async function closeTrade(req, res) {
 export async function resetAccount(req, res) {
   const userId = req.user.id;
   // Convert 10 Lakhs INR to USD. We use $10,000 for standard paper trading equivalent
-  const DEFAULT_BALANCE = 10000; 
+  const DEFAULT_BALANCE = 10000;
 
   try {
     // Get current user info for audit log
@@ -246,7 +246,7 @@ export async function resetAccount(req, res) {
         }
       }
     }
-    
+
     console.log(`[ResetAccount] Successfully cleared all tables for user ${userId}`);
 
     // Reset user balance to default

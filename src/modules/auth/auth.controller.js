@@ -72,7 +72,7 @@ export async function logout(req, res) {
 
 export async function register(req, res) {
   try {
-    const { fullName, email, password } = req.validatedBody;
+    const { fullName, email, password, referralCode } = req.validatedBody;
     const role = "trader"; // Always register as a trader
 
     const existingUser = await sql(
@@ -84,18 +84,46 @@ export async function register(req, res) {
       return res.status(409).json({ message: "User already exists with this email" });
     }
 
+    let referredById = null;
+    let initialDiamonds = 0;
+
+    // Check if referral code is valid
+    if (referralCode) {
+      const referrerResult = await sql(
+        `SELECT id FROM users WHERE referral_code = $1`,
+        [referralCode]
+      );
+      if (referrerResult.rows.length > 0) {
+        referredById = referrerResult.rows[0].id;
+        initialDiamonds = 50; // Give referee a bonus
+      }
+    }
+
     const passwordHash = await bcrypt.hash(password, 12);
     const balance = role === "trader" ? 100000 : 0;
+    const newReferralCode = crypto.randomBytes(4).toString('hex').toLowerCase(); // Generate 8 char code
 
     const result = await sql(
-      `INSERT INTO users (full_name, email, role, password_hash, balance)
-       VALUES ($1, $2, $3, $4, $5)`,
-      [fullName, email, role, passwordHash, balance]
+      `INSERT INTO users (full_name, email, role, password_hash, balance, referral_code, referred_by_id, diamonds)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      [fullName, email, role, passwordHash, balance, newReferralCode, referredById, initialDiamonds]
     );
 
+    const newUserId = result.insertId; // Get the auto-incremented ID
+
+    // Reward the referrer
+    if (referredById) {
+      const REWARD_DIAMONDS = 100;
+      await sql(`UPDATE users SET diamonds = diamonds + $1 WHERE id = $2`, [REWARD_DIAMONDS, referredById]);
+      await sql(
+        `INSERT INTO referrals (referrer_id, referred_id, reward_diamonds) VALUES ($1, $2, $3)`,
+        [referredById, newUserId, REWARD_DIAMONDS]
+      );
+    }
+
     const newUserResult = await sql(
-      `SELECT id, full_name, email, role FROM users WHERE email = $1`,
-      [email]
+      `SELECT id, full_name, email, role, referral_code, diamonds FROM users WHERE id = $1`,
+      [newUserId]
     );
 
     const newUser = newUserResult.rows[0];
@@ -116,7 +144,9 @@ export async function register(req, res) {
         id: newUser.id,
         name: newUser.full_name,
         email: newUser.email,
-        role: newUser.role
+        role: newUser.role,
+        referralCode: newUser.referral_code,
+        diamonds: newUser.diamonds
       }
     });
   } catch (error) {

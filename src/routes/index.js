@@ -17,6 +17,7 @@ import {
   logout
 } from "../modules/auth/auth.controller.js";
 import { upstoxLogin, upstoxCallback, upstoxConnected } from "../modules/auth/upstox.controller.js";
+import { referralRouter } from "../modules/referral/referral.routes.js";
 import {
   createUser,
   getPositions,
@@ -209,6 +210,9 @@ apiRouter.post("/auth/logout", requireAuth, logout);
 apiRouter.post("/auth/forgot-password", loginLimiter, validateBody(forgotPasswordSchema), forgotPassword);
 apiRouter.post("/auth/reset-password", loginLimiter, validateBody(resetPasswordSchema), resetPassword);
 apiRouter.get("/auth/verify-reset-token/:token", verifyResetToken);
+
+// Referral routes
+apiRouter.use("/referrals", referralRouter);
 
 // Upstox OAuth routes
 apiRouter.get("/auth/upstox/login", upstoxLogin);
