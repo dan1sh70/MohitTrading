@@ -78,7 +78,8 @@ export async function getLeaderboard(req, res) {
     console.error("Leaderboard error:", error);
     return res.status(500).json({
       success: false,
-      message: "Failed to fetch leaderboard"
+      message: "Failed to fetch leaderboard: " + error.message,
+      stack: error.stack
     });
   }
 }
