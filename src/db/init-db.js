@@ -61,6 +61,18 @@ export async function initDb() {
   const cryptoMigrationPath = path.join(__dirname, "crypto-futures-migration.sql");
   await executeSqlFile(cryptoMigrationPath);
 
+  const unifiedTradingMigrationPath = path.join(__dirname, "unified-trading-schema.sql");
+  try {
+    await fs.stat(unifiedTradingMigrationPath);
+    await executeSqlFile(unifiedTradingMigrationPath);
+  } catch (e) {}
+
+  const referralMigrationPath = path.join(__dirname, "referral-migration.sql");
+  try {
+    await fs.stat(referralMigrationPath);
+    await executeSqlFile(referralMigrationPath);
+  } catch (e) {}
+
   // Fix: Ensure trading_type column exists in trades table
   try {
     await sql(`ALTER TABLE trades ADD COLUMN trading_type ENUM('indian_stock', 'crypto', 'other') NOT NULL DEFAULT 'crypto'`);
