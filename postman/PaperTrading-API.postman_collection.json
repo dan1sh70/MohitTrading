@@ -3087,6 +3087,34 @@
           }
         }
       ]
+    },
+    {
+      "name": "Referral",
+      "item": [
+        {
+          "name": "Get Referral Info",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/referrals",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "referrals"
+              ]
+            }
+          }
+        }
+      ]
     }
   ]
 }
