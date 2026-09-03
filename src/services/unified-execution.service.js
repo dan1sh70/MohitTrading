@@ -56,7 +56,7 @@ export async function placeOrder(userId, assetClass, symbol, side, orderType, qu
     const userBalance = parseFloat(userResult.rows[0].balance || 0);
     
     // Fetch live market price to evaluate orders
-    const priceData = await getUnifiedPrice(symbol);
+    const priceData = await getUnifiedPrice(symbol, assetClass);
     const livePrice = parseFloat(priceData.price);
     
     // For market orders, execution price is live price. For limit, it's the requested price (for margin calc)
@@ -488,7 +488,7 @@ export async function closePosition(userId, positionId, closingPrice = null) {
     // Use current market price if not specified
     let exitPrice = closingPrice;
     if (!exitPrice) {
-      const priceData = await getUnifiedPrice(position.symbol);
+      const priceData = await getUnifiedPrice(position.symbol, position.asset_class);
       exitPrice = parseFloat(priceData.price);
     }
     

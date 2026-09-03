@@ -187,7 +187,7 @@ export async function getPositions(req, res) {
     const positionsWithPrices = await Promise.all(
       positions.rows.map(async (position) => {
         try {
-          const priceData = await getUnifiedPrice(position.symbol);
+          const priceData = await getUnifiedPrice(position.symbol, position.asset_class);
           const currentPrice = parseFloat(priceData.price);
           
           // Calculate unrealised PnL dynamically
@@ -265,7 +265,7 @@ export async function getPositionDetails(req, res) {
     const position = positions.rows[0];
     
     // Get current price and update P&L
-    const priceData = await getUnifiedPrice(position.symbol);
+    const priceData = await getUnifiedPrice(position.symbol, position.asset_class);
     const currentPrice = parseFloat(priceData.price);
     
     const pnlResult = await updatePositionPnL(positionId, position.asset_class || 'CRYPTO', currentPrice);
@@ -567,7 +567,7 @@ export async function checkPositionLiquidation(req, res) {
       });
     }
     
-    const priceData = await getUnifiedPrice(positions[0].symbol);
+    const priceData = await getUnifiedPrice(positions[0].symbol, positions[0].asset_class);
     const currentPrice = parseFloat(priceData.price);
     
     const result = await checkLiquidation(positionId, currentPrice);
@@ -629,7 +629,7 @@ export async function getAccountBalance(req, res) {
     let totalUnrealisedPnL = 0;
     for (const pos of (positions.rows || [])) {
       try {
-        const priceData = await getUnifiedPrice(pos.symbol);
+        const priceData = await getUnifiedPrice(pos.symbol, pos.asset_class);
         const currentPrice = parseFloat(priceData.price);
         const entryPrice = parseFloat(pos.entry_price);
         const quantity = parseFloat(pos.quantity);
