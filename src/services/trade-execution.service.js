@@ -567,7 +567,7 @@ export async function closePosition(userId, positionId, closingPrice = null) {
     await sql(`UPDATE users SET balance = $1 WHERE id = $2`, [newBalance, userId]);
     
     // Update performance metrics
-    await updateCryptoPerformance(userId);
+    await updateCryptoPerformance(userId, 'CRYPTO');
     
     return {
       positionId,

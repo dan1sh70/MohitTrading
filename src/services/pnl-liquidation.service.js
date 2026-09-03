@@ -479,7 +479,7 @@ export async function chargeFundingCost(userId, positionId, fundingCost) {
 /**
  * Calculate and update user's crypto performance metrics
  */
-export async function updateCryptoPerformance(userId, positions = null) {
+export async function updateCryptoPerformance(userId, assetClass = 'CRYPTO', positions = null) {
   try {
     // Get all closed trades, mapping to Tradefinity expected schema
     const trades = await sql(
@@ -509,7 +509,7 @@ export async function updateCryptoPerformance(userId, positions = null) {
     
     // Fetch user balance
     const userBalanceResult = await sql(
-      `SELECT balance FROM users WHERE id = $1 AND asset_class = '${assetClass}'`, [userId]
+      `SELECT balance FROM users WHERE id = $1`, [userId]
     );
     const accountEquity = userBalanceResult.length > 0 ? parseFloat(userBalanceResult[0].balance) : 10000;
 
