@@ -499,10 +499,10 @@ export async function updateCryptoPerformance(userId, assetClass = 'CRYPTO', pos
     if (trades.length === 0) {
       // Initialize performance
       await sql(
-        `INSERT INTO unified_performance (user_id, total_trades, overall_grade)
-         VALUES ($1, 0, 'D')
+        `INSERT INTO unified_performance (user_id, asset_class, total_trades, overall_grade)
+         VALUES ($1, $2, 0, 'D')
          ON DUPLICATE KEY UPDATE total_trades = 0`,
-        [userId]
+        [userId, assetClass]
       );
       return;
     }
@@ -523,29 +523,27 @@ export async function updateCryptoPerformance(userId, assetClass = 'CRYPTO', pos
     // Update or insert
     await sql(
       `INSERT INTO unified_performance 
-       (user_id, total_trades, total_realised_pnl, winning_trades, losing_trades, 
-        win_rate, avg_profit, avg_loss, profit_factor, consistency_score, 
-        risk_meter, portfolio_health, win_loss_ratio,
-        overall_grade, overall_score, avg_trade_duration)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+       (user_id, asset_class, total_trades, total_realised_pnl, winning_trades, losing_trades, 
+        win_rate, avg_win, avg_loss, profit_factor, consistency_score, 
+        risk_meter, portfolio_health, overall_grade, avg_holding_time)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
        ON DUPLICATE KEY UPDATE
-       total_trades = $2,
-       total_realised_pnl = $3,
-       winning_trades = $4,
-       losing_trades = $5,
-       win_rate = $6,
-       avg_profit = $7,
-       avg_loss = $8,
-       profit_factor = $9,
-       consistency_score = $10,
-       risk_meter = $11,
-       portfolio_health = $12,
-       win_loss_ratio = $13,
+       total_trades = $3,
+       total_realised_pnl = $4,
+       winning_trades = $5,
+       losing_trades = $6,
+       win_rate = $7,
+       avg_win = $8,
+       avg_loss = $9,
+       profit_factor = $10,
+       consistency_score = $11,
+       risk_meter = $12,
+       portfolio_health = $13,
        overall_grade = $14,
-       overall_score = $15,
-       avg_trade_duration = $16`,
+       avg_holding_time = $15`,
       [
         userId, 
+        assetClass,
         metrics.totalTrades, 
         metrics.realisedPnl, 
         metrics.winningTrades, 
@@ -557,9 +555,7 @@ export async function updateCryptoPerformance(userId, assetClass = 'CRYPTO', pos
         metrics.consistencyScore,
         metrics.riskMeter,
         metrics.portfolioHealth,
-        metrics.winLossRatio,
         metrics.overallGrade, 
-        metrics.overallScore, 
         avgTradeDuration
       ]
     );
