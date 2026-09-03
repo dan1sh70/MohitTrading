@@ -268,7 +268,7 @@ export async function getPositionDetails(req, res) {
     const priceData = await getUnifiedPrice(position.symbol);
     const currentPrice = parseFloat(priceData.price);
     
-    const pnlResult = await updatePositionPnL(positionId, currentPrice);
+    const pnlResult = await updatePositionPnL(positionId, position.asset_class || 'CRYPTO', currentPrice);
     
     return res.json({
       success: true,
