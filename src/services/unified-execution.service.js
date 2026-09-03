@@ -84,7 +84,7 @@ export async function placeOrder(userId, assetClass, symbol, side, orderType, qu
       `INSERT INTO unified_orders 
        (user_id, asset_class, symbol, side, order_type, original_quantity, remaining_quantity,
         price, leverage, trading_mode, status, time_in_force, created_at)
-       VALUES ($1, $2, $3, $4, $4, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW())
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW())
        RETURNING id`,
       [
         userId, assetClass, symbol, side, orderType, quantity, quantity,
