@@ -173,9 +173,9 @@ async function executeMarketOrder(orderId, userId, assetClass, symbol, side, qua
       // Record order fill
       await sql(
         `INSERT INTO unified_order_fills 
-         (order_id, symbol, side, quantity, price, fill_time)
-         VALUES ($1, $2, $3, $4, $5, NOW())`,
-        [orderId, symbol, side, quantity, executionPrice]
+         (order_id, user_id, asset_class, symbol, side, quantity, price, created_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())`,
+        [orderId, userId, assetClass, symbol, side, quantity, executionPrice]
       );
       
       // Update order status
@@ -229,9 +229,9 @@ async function executeMarketOrder(orderId, userId, assetClass, symbol, side, qua
       // Record fill
       await sql(
         `INSERT INTO unified_order_fills 
-         (order_id, symbol, side, quantity, price, fill_time)
-         VALUES ($1, $2, $3, $4, $5, NOW())`,
-        [orderId, symbol, side, quantity, executionPrice]
+         (order_id, user_id, asset_class, symbol, side, quantity, price, created_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())`,
+        [orderId, userId, assetClass, symbol, side, quantity, executionPrice]
       );
       
       // Update order
@@ -497,12 +497,13 @@ export async function closePosition(userId, positionId, closingPrice = null) {
     // Create closing order
     const closingOrderResult = await sql(
       `INSERT INTO unified_orders 
-       (user_id, symbol, side, order_type, original_quantity, remaining_quantity,
+       (user_id, asset_class, symbol, side, order_type, original_quantity, remaining_quantity,
         position_id, price, leverage, trading_mode, status, time_in_force, created_at)
-       VALUES ($1, $2, $3, $4, $4, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW())
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW())
        RETURNING id`,
       [
         userId,
+        position.asset_class,
         position.symbol,
         position.side === 'LONG' ? 'SELL' : 'BUY', // Opposite of entry
         'MARKET',
@@ -548,12 +549,12 @@ export async function closePosition(userId, positionId, closingPrice = null) {
     
     await sql(
       `INSERT INTO unified_trades 
-       (user_id, position_id, symbol, trading_mode, entry_order_id, entry_price, entry_quantity,
+       (user_id, position_id, asset_class, symbol, trading_mode, entry_order_id, entry_price, entry_quantity,
         entry_time, exit_order_id, exit_price, exit_quantity, exit_time, net_pnl, pnl_percent,
         leverage, margin_used, duration_seconds)
-       VALUES ($1, $2, $3, $4, $4, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), $12, $13, $14, $15, $16)`,
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW(), $13, $14, $15, $16, $17)`,
       [
-        userId, positionId, position.symbol, position.trading_mode,
+        userId, positionId, position.asset_class, position.symbol, position.trading_mode,
         entryOrderId, position.entry_price, position.quantity, position.entry_time,
         closingOrderId, exitPrice, position.quantity,
         pnl, (pnl / position.margin_used) * 100,
@@ -670,6 +671,7 @@ export async function processPendingCryptoOrders(livePrices) {
           await executeMarketOrder(
             order.id, 
             order.user_id, 
+            order.asset_class || 'CRYPTO',
             order.symbol, 
             order.side, 
             parseFloat(order.remaining_quantity || order.original_quantity), 
