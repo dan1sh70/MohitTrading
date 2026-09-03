@@ -141,7 +141,7 @@ export async function placeOrder(userId, assetClass, symbol, side, orderType, qu
 /**
  * Execute market order immediately at current price
  */
-async function executeMarketOrder(orderId, userId, symbol, side, quantity, executionPrice, leverage, tradingMode, takeProfit = null, stopLoss = null) {
+async function executeMarketOrder(orderId, userId, assetClass, symbol, side, quantity, executionPrice, leverage, tradingMode, takeProfit = null, stopLoss = null) {
   try {
     // For spot: settle immediately AND create a position record so it shows in portfolio
     if (tradingMode === 'SPOT') {
@@ -158,12 +158,12 @@ async function executeMarketOrder(orderId, userId, symbol, side, quantity, execu
       // Create a position record so it appears in the Portfolio
       const positionResult = await sql(
         `INSERT INTO unified_positions 
-         (user_id, symbol, side, entry_price, quantity, leverage, margin_used, 
+         (user_id, asset_class, symbol, side, entry_price, quantity, leverage, margin_used, 
           liquidation_price, entry_time, status, trading_mode, take_profit, stop_loss)
-         VALUES ($1, $2, $3, $4, $4, $4, $5, $6, $7, $8, NOW(), 'ACTIVE', $9, $10, $11)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), 'ACTIVE', $10, $11, $12)
          RETURNING id`,
         [
-          userId, symbol, side === 'BUY' ? 'LONG' : 'SHORT', executionPrice, quantity,
+          userId, assetClass, symbol, side === 'BUY' ? 'LONG' : 'SHORT', executionPrice, quantity,
           1, costOrProceeds, 0, tradingMode, takeProfit, stopLoss
         ]
       );
@@ -174,7 +174,7 @@ async function executeMarketOrder(orderId, userId, symbol, side, quantity, execu
       await sql(
         `INSERT INTO unified_order_fills 
          (order_id, symbol, side, quantity, price, fill_time)
-         VALUES ($1, $2, $3, $4, $4, $4, $5, NOW())`,
+         VALUES ($1, $2, $3, $4, $5, NOW())`,
         [orderId, symbol, side, quantity, executionPrice]
       );
       
@@ -207,12 +207,12 @@ async function executeMarketOrder(orderId, userId, symbol, side, quantity, execu
       // Create position
       const positionResult = await sql(
         `INSERT INTO unified_positions 
-         (user_id, symbol, side, entry_price, quantity, leverage, margin_used, 
+         (user_id, asset_class, symbol, side, entry_price, quantity, leverage, margin_used, 
           liquidation_price, entry_time, status, trading_mode, take_profit, stop_loss)
-         VALUES ($1, $2, $3, $4, $4, $4, $5, $6, $7, $8, NOW(), 'ACTIVE', $9, $10, $11)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), 'ACTIVE', $10, $11, $12)
          RETURNING id`,
         [
-          userId, symbol, side === 'BUY' ? 'LONG' : 'SHORT', executionPrice, quantity,
+          userId, assetClass, symbol, side === 'BUY' ? 'LONG' : 'SHORT', executionPrice, quantity,
           leverage, requiredMargin, liquidationPrice, tradingMode, takeProfit, stopLoss
         ]
       );
@@ -230,7 +230,7 @@ async function executeMarketOrder(orderId, userId, symbol, side, quantity, execu
       await sql(
         `INSERT INTO unified_order_fills 
          (order_id, symbol, side, quantity, price, fill_time)
-         VALUES ($1, $2, $3, $4, $4, $4, $5, NOW())`,
+         VALUES ($1, $2, $3, $4, $5, NOW())`,
         [orderId, symbol, side, quantity, executionPrice]
       );
       
@@ -278,7 +278,7 @@ async function executeMarketOrder(orderId, userId, symbol, side, quantity, execu
 /**
  * Settle a single matched execution (adjusts balances and creates position records)
  */
-async function settleMatchExecution(userId, symbol, side, quantity, price, leverage, tradingMode, orderId) {
+async function settleMatchExecution(userId, assetClass, symbol, side, quantity, price, leverage, tradingMode, orderId) {
   const executionPrice = parseFloat(price);
   
   try {
@@ -294,12 +294,12 @@ async function settleMatchExecution(userId, symbol, side, quantity, price, lever
       
       const positionResult = await sql(
         `INSERT INTO unified_positions 
-         (user_id, symbol, side, entry_price, quantity, leverage, margin_used, 
+         (user_id, asset_class, symbol, side, entry_price, quantity, leverage, margin_used, 
           liquidation_price, entry_time, status, trading_mode)
-         VALUES ($1, $2, $3, $4, $4, $4, $5, $6, $7, $8, NOW(), 'ACTIVE', $9)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), 'ACTIVE', $10)
          RETURNING id`,
         [
-          userId, symbol, side === 'BUY' ? 'LONG' : 'SHORT', executionPrice, quantity,
+          userId, assetClass, symbol, side === 'BUY' ? 'LONG' : 'SHORT', executionPrice, quantity,
           1, costOrProceeds, 0, tradingMode
         ]
       );
@@ -318,12 +318,12 @@ async function settleMatchExecution(userId, symbol, side, quantity, price, lever
       
       const positionResult = await sql(
         `INSERT INTO unified_positions 
-         (user_id, symbol, side, entry_price, quantity, leverage, margin_used, 
+         (user_id, asset_class, symbol, side, entry_price, quantity, leverage, margin_used, 
           liquidation_price, entry_time, status, trading_mode)
-         VALUES ($1, $2, $3, $4, $4, $4, $5, $6, $7, $8, NOW(), 'ACTIVE', $9)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), 'ACTIVE', $10)
          RETURNING id`,
         [
-          userId, symbol, side === 'BUY' ? 'LONG' : 'SHORT', executionPrice, quantity,
+          userId, assetClass, symbol, side === 'BUY' ? 'LONG' : 'SHORT', executionPrice, quantity,
           leverage, requiredMargin, liquidationPrice, tradingMode
         ]
       );
@@ -375,6 +375,7 @@ async function attemptOrderMatching(incomingOrder, leverage, tradingMode) {
         // Settle for taker (incoming order)
         await settleMatchExecution(
           match.takerUserId,
+          incomingOrder.asset_class || incomingOrder.assetClass || 'CRYPTO',
           incomingOrder.symbol,
           match.takerSide,
           match.quantity,
@@ -397,6 +398,7 @@ async function attemptOrderMatching(incomingOrder, leverage, tradingMode) {
           
           await settleMatchExecution(
             match.makerUserId,
+            incomingOrder.asset_class || incomingOrder.assetClass || 'CRYPTO',
             incomingOrder.symbol,
             match.makerSide,
             match.quantity,
