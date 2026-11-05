@@ -73,6 +73,12 @@ export async function initDb() {
     await executeSqlFile(referralMigrationPath);
   } catch (e) {}
 
+  const discoverMigrationPath = path.join(__dirname, "discover-schema.sql");
+  try {
+    await fs.stat(discoverMigrationPath);
+    await executeSqlFile(discoverMigrationPath);
+  } catch (e) {}
+
   // Fix: Ensure trading_type column exists in trades table
   try {
     await sql(`ALTER TABLE trades ADD COLUMN trading_type ENUM('indian_stock', 'crypto', 'other') NOT NULL DEFAULT 'crypto'`);

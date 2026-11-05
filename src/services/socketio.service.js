@@ -28,18 +28,38 @@ export function initializeSocketIO(server, opts = {}) {
   }
 
   io.use((socket, next) => {
-    const token = socket.handshake.auth?.token || socket.handshake.query?.token;
-    // Simple auth placeholder - validate JWT in production
-    if (socket.handshake.query && socket.handshake.query.apiKey === process.env.PUBLIC_API_KEY) {
-      return next();
-    }
-    // Allow anonymous read-only connections if no token
+    // Allow connection
     return next();
   });
 
   io.on("connection", (socket) => {
     console.log(`[SocketIO] client connected: ${socket.id}`);
 
+    // Generic room subscriptions (market.indices, market.gainers, market.losers, market.heatmap, market.option-chain)
+    socket.on("SUBSCRIBE_CHANNEL", (payload) => {
+      try {
+        const { channel } = payload || {};
+        if (!channel) return;
+        socket.join(channel);
+        socket.emit("SUBSCRIBED_CHANNEL", { channel });
+        console.log(`[SocketIO] ${socket.id} joined channel ${channel}`);
+      } catch (err) {
+        console.error("[SocketIO] channel subscribe error", err.message);
+      }
+    });
+
+    socket.on("UNSUBSCRIBE_CHANNEL", (payload) => {
+      try {
+        const { channel } = payload || {};
+        if (!channel) return;
+        socket.leave(channel);
+        socket.emit("UNSUBSCRIBED_CHANNEL", { channel });
+      } catch (err) {
+        console.error("[SocketIO] channel unsubscribe error", err.message);
+      }
+    });
+
+    // Legacy symbol room subscriptions
     socket.on("SUBSCRIBE_SYMBOL", (payload) => {
       try {
         const { symbol } = payload || {};
@@ -47,7 +67,6 @@ export function initializeSocketIO(server, opts = {}) {
         const room = `sym:${symbol}`;
         socket.join(room);
         socket.emit("SUBSCRIBED", { symbol });
-        console.log(`[SocketIO] ${socket.id} joined ${room}`);
       } catch (err) {
         console.error("[SocketIO] subscribe error", err.message);
       }
@@ -74,7 +93,12 @@ export function initializeSocketIO(server, opts = {}) {
     });
   });
 
-  console.log("[SocketIO] initialized");
+  console.log("[SocketIO] initialized with Discover market broadcast channels");
+}
+
+export function broadcastToChannel(channel, event, payload) {
+  if (!io) return;
+  io.to(channel).emit(event, payload);
 }
 
 export function broadcastToSymbol(symbol, event, payload) {

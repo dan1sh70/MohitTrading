@@ -1,0 +1,261 @@
+{
+  "info": {
+    "name": "Paper Trading - Discover Module API Collection",
+    "description": "Production-ready Postman collection covering all 5 Stock Market Discover Modules: Option Chain, Top Gainers/Losers, FII/DII Data, Global Indices, and Market Heatmap.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Option Chain",
+      "item": [
+        {
+          "name": "Get Option Chain Symbols",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/v1/discover/option-chain/symbols", "host": ["{{base_url}}"], "path": ["api", "v1", "discover", "option-chain", "symbols"] }
+          }
+        },
+        {
+          "name": "Get Option Chain by Symbol",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/v1/discover/option-chain/NIFTY?expiry=2026-11-09", "host": ["{{base_url}}"], "path": ["api", "v1", "discover", "option-chain", "NIFTY"], "query": [{ "key": "expiry", "value": "2026-11-09" }] }
+          }
+        },
+        {
+          "name": "Get Option Expiries",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/v1/discover/option-chain/NIFTY/expiries", "host": ["{{base_url}}"], "path": ["api", "v1", "discover", "option-chain", "NIFTY", "expiries"] }
+          }
+        },
+        {
+          "name": "Get Option Contracts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/v1/discover/option-chain/NIFTY/contracts", "host": ["{{base_url}}"], "path": ["api", "v1", "discover", "option-chain", "NIFTY", "contracts"] }
+          }
+        },
+        {
+          "name": "Get Option Analytics (PCR, Max Pain, ATM)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/v1/discover/option-chain/NIFTY/analytics", "host": ["{{base_url}}"], "path": ["api", "v1", "discover", "option-chain", "NIFTY", "analytics"] }
+          }
+        },
+        {
+          "name": "Get Option Historical Snapshots",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/v1/discover/option-chain/NIFTY/history?limit=20", "host": ["{{base_url}}"], "path": ["api", "v1", "discover", "option-chain", "NIFTY", "history"], "query": [{ "key": "limit", "value": "20" }] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Top Gainers & Losers",
+      "item": [
+        {
+          "name": "Get Top Gainers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/v1/discover/gainers?limit=10&index=NIFTY 50", "host": ["{{base_url}}"], "path": ["api", "v1", "discover", "gainers"], "query": [{ "key": "limit", "value": "10" }, { "key": "index", "value": "NIFTY 50" }] }
+          }
+        },
+        {
+          "name": "Get Top Losers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/v1/discover/losers?limit=10&index=NIFTY 50", "host": ["{{base_url}}"], "path": ["api", "v1", "discover", "losers"], "query": [{ "key": "limit", "value": "10" }, { "key": "index", "value": "NIFTY 50" }] }
+          }
+        },
+        {
+          "name": "Get Gainers Filter Options",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/v1/discover/gainers/filters", "host": ["{{base_url}}"], "path": ["api", "v1", "discover", "gainers", "filters"] }
+          }
+        },
+        {
+          "name": "Get Losers Filter Options",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/v1/discover/losers/filters", "host": ["{{base_url}}"], "path": ["api", "v1", "discover", "losers", "filters"] }
+          }
+        },
+        {
+          "name": "Get Market Movers Overview",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/v1/discover/market-movers?limit=10", "host": ["{{base_url}}"], "path": ["api", "v1", "discover", "market-movers"], "query": [{ "key": "limit", "value": "10" }] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. FII & DII Data",
+      "item": [
+        {
+          "name": "Get FII / DII Summary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/v1/discover/fii-dii", "host": ["{{base_url}}"], "path": ["api", "v1", "discover", "fii-dii"] }
+          }
+        },
+        {
+          "name": "Get Daily FII / DII",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/v1/discover/fii-dii/daily", "host": ["{{base_url}}"], "path": ["api", "v1", "discover", "fii-dii", "daily"] }
+          }
+        },
+        {
+          "name": "Get Monthly FII / DII",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/v1/discover/fii-dii/monthly", "host": ["{{base_url}}"], "path": ["api", "v1", "discover", "fii-dii", "monthly"] }
+          }
+        },
+        {
+          "name": "Get FII / DII History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/v1/discover/fii-dii/history?limit=30", "host": ["{{base_url}}"], "path": ["api", "v1", "discover", "fii-dii", "history"], "query": [{ "key": "limit", "value": "30" }] }
+          }
+        },
+        {
+          "name": "Get FII / DII Analytics & Streaks",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/v1/discover/fii-dii/analytics", "host": ["{{base_url}}"], "path": ["api", "v1", "discover", "fii-dii", "analytics"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Global Indices",
+      "item": [
+        {
+          "name": "Get All Global Indices",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/v1/discover/global-indices", "host": ["{{base_url}}"], "path": ["api", "v1", "discover", "global-indices"] }
+          }
+        },
+        {
+          "name": "Get Indian Indices",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/v1/discover/global-indices/india", "host": ["{{base_url}}"], "path": ["api", "v1", "discover", "global-indices", "india"] }
+          }
+        },
+        {
+          "name": "Get International Indices",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/v1/discover/global-indices/international", "host": ["{{base_url}}"], "path": ["api", "v1", "discover", "global-indices", "international"] }
+          }
+        },
+        {
+          "name": "Get Single Index by Symbol",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/v1/discover/global-indices/NIFTY_50", "host": ["{{base_url}}"], "path": ["api", "v1", "discover", "global-indices", "NIFTY_50"] }
+          }
+        },
+        {
+          "name": "Get Index History (Candles)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/v1/discover/global-indices/NIFTY_50/history?interval=15m&range=5d", "host": ["{{base_url}}"], "path": ["api", "v1", "discover", "global-indices", "NIFTY_50", "history"], "query": [{ "key": "interval", "value": "15m" }, { "key": "range", "value": "5d" }] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Market Heatmap",
+      "item": [
+        {
+          "name": "Get Heatmap Overview",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/v1/discover/heatmap?category=NIFTY_50", "host": ["{{base_url}}"], "path": ["api", "v1", "discover", "heatmap"], "query": [{ "key": "category", "value": "NIFTY_50" }] }
+          }
+        },
+        {
+          "name": "Get NIFTY 50 Heatmap",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/v1/discover/heatmap/nifty-50", "host": ["{{base_url}}"], "path": ["api", "v1", "discover", "heatmap", "nifty-50"] }
+          }
+        },
+        {
+          "name": "Get NIFTY 100 Heatmap",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/v1/discover/heatmap/nifty-100", "host": ["{{base_url}}"], "path": ["api", "v1", "discover", "heatmap", "nifty-100"] }
+          }
+        },
+        {
+          "name": "Get NIFTY 500 Heatmap",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/v1/discover/heatmap/nifty-500", "host": ["{{base_url}}"], "path": ["api", "v1", "discover", "heatmap", "nifty-500"] }
+          }
+        },
+        {
+          "name": "Get Bank NIFTY Heatmap",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/v1/discover/heatmap/bank-nifty", "host": ["{{base_url}}"], "path": ["api", "v1", "discover", "heatmap", "bank-nifty"] }
+          }
+        },
+        {
+          "name": "Get Sector-wise Heatmap",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/v1/discover/heatmap/sectors", "host": ["{{base_url}}"], "path": ["api", "v1", "discover", "heatmap", "sectors"] }
+          }
+        },
+        {
+          "name": "Get Market Breadth (Adv/Dec)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/v1/discover/heatmap/market-breadth", "host": ["{{base_url}}"], "path": ["api", "v1", "discover", "heatmap", "market-breadth"] }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8808" }
+  ]
+}

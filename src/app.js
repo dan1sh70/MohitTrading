@@ -4,6 +4,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 import { env } from "./config/env.js";
 import { apiRouter } from "./routes/index.js";
+import { discoverRouter } from "./modules/discover/discover.routes.js";
 
 export const app = express();
 
@@ -36,6 +37,8 @@ app.get("/health", (req, res) => {
   res.json({ status: "ok", timestamp: Date.now() });
 });
 
+app.use("/api/v1/discover", discoverRouter);
+app.use("/api/discover", discoverRouter);
 app.use("/api", apiRouter);
 
 // 404 handler for API routes
