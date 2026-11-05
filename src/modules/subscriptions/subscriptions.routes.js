@@ -28,3 +28,4 @@ subscriptionsRouter.post("/renew", requireAuth, renewSubscriptionHandler);
 subscriptionsRouter.get("/payment-history", requireAuth, getPaymentHistoryHandler);
 
 export default subscriptionsRouter;
+

@@ -186,3 +186,4 @@ CREATE TABLE IF NOT EXISTS user_notifications (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_notif_user (user_id, is_read)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+

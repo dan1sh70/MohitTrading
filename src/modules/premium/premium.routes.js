@@ -20,3 +20,4 @@ premiumRouter.get("/usage", requireAuth, getPremiumUsageHandler);
 premiumRouter.get("/history", requireAuth, getPremiumHistoryHandler);
 
 export default premiumRouter;
+
