@@ -1,0 +1,306 @@
+{
+  "info": {
+    "name": "Paper Trading - Pro Zone, Subscriptions, Referral & Admin APIs",
+    "description": "Complete collection of Pro Zone business APIs: Subscriptions, Payments, Referral Engine, Premium Entitlements, Pro Zone Discover APIs, and Admin Management.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Subscriptions & Payments",
+      "item": [
+        {
+          "name": "Get Subscription Plans (Public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/v1/subscriptions/plans", "host": ["{{base_url}}"], "path": ["api", "v1", "subscriptions", "plans"] }
+          }
+        },
+        {
+          "name": "Get Subscription Plan By ID (Public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/v1/subscriptions/plans/2", "host": ["{{base_url}}"], "path": ["api", "v1", "subscriptions", "plans", "2"] }
+          }
+        },
+        {
+          "name": "Checkout Plan (Create Payment Order)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{user_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"planId\": 2\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/v1/subscriptions/checkout", "host": ["{{base_url}}"], "path": ["api", "v1", "subscriptions", "checkout"] }
+          }
+        },
+        {
+          "name": "Verify Payment & Unlock Pro Zone",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{user_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderId\": \"ORDER_1730792000_A1B2\",\n  \"paymentId\": \"pay_12345678\",\n  \"signature\": \"MOCK_VERIFIED_SIGNATURE\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/v1/subscriptions/verify-payment", "host": ["{{base_url}}"], "path": ["api", "v1", "subscriptions", "verify-payment"] }
+          }
+        },
+        {
+          "name": "Get Current Subscription",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{user_token}}" }],
+            "url": { "raw": "{{base_url}}/api/v1/subscriptions/current", "host": ["{{base_url}}"], "path": ["api", "v1", "subscriptions", "current"] }
+          }
+        },
+        {
+          "name": "Get Subscription History",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{user_token}}" }],
+            "url": { "raw": "{{base_url}}/api/v1/subscriptions/history", "host": ["{{base_url}}"], "path": ["api", "v1", "subscriptions", "history"] }
+          }
+        },
+        {
+          "name": "Cancel Subscription",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{user_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Testing cancellation policy\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/v1/subscriptions/cancel", "host": ["{{base_url}}"], "path": ["api", "v1", "subscriptions", "cancel"] }
+          }
+        },
+        {
+          "name": "Get Payment History & Invoices",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{user_token}}" }],
+            "url": { "raw": "{{base_url}}/api/v1/subscriptions/payment-history", "host": ["{{base_url}}"], "path": ["api", "v1", "subscriptions", "payment-history"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Premium User & Entitlements",
+      "item": [
+        {
+          "name": "Get Premium Status & Access Tier",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{user_token}}" }],
+            "url": { "raw": "{{base_url}}/api/v1/premium/status", "host": ["{{base_url}}"], "path": ["api", "v1", "premium", "status"] }
+          }
+        },
+        {
+          "name": "Get Feature Entitlements",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{user_token}}" }],
+            "url": { "raw": "{{base_url}}/api/v1/premium/entitlements", "host": ["{{base_url}}"], "path": ["api", "v1", "premium", "entitlements"] }
+          }
+        },
+        {
+          "name": "Get Available Premium Features",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/v1/premium/features", "host": ["{{base_url}}"], "path": ["api", "v1", "premium", "features"] }
+          }
+        },
+        {
+          "name": "Get Premium Usage & Quota",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{user_token}}" }],
+            "url": { "raw": "{{base_url}}/api/v1/premium/usage", "host": ["{{base_url}}"], "path": ["api", "v1", "premium", "usage"] }
+          }
+        },
+        {
+          "name": "Get Subscription Extension History",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{user_token}}" }],
+            "url": { "raw": "{{base_url}}/api/v1/premium/history", "host": ["{{base_url}}"], "path": ["api", "v1", "premium", "history"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Referral Management System",
+      "item": [
+        {
+          "name": "Get Referral Overview & Stats",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{user_token}}" }],
+            "url": { "raw": "{{base_url}}/api/v1/referral/overview", "host": ["{{base_url}}"], "path": ["api", "v1", "referral", "overview"] }
+          }
+        },
+        {
+          "name": "Get Referral Code",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{user_token}}" }],
+            "url": { "raw": "{{base_url}}/api/v1/referral/code", "host": ["{{base_url}}"], "path": ["api", "v1", "referral", "code"] }
+          }
+        },
+        {
+          "name": "Get Referral Share Link",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{user_token}}" }],
+            "url": { "raw": "{{base_url}}/api/v1/referral/link", "host": ["{{base_url}}"], "path": ["api", "v1", "referral", "link"] }
+          }
+        },
+        {
+          "name": "Get Referral History",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{user_token}}" }],
+            "url": { "raw": "{{base_url}}/api/v1/referral/history", "host": ["{{base_url}}"], "path": ["api", "v1", "referral", "history"] }
+          }
+        },
+        {
+          "name": "Get Referral Rewards Summary",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{user_token}}" }],
+            "url": { "raw": "{{base_url}}/api/v1/referral/rewards", "host": ["{{base_url}}"], "path": ["api", "v1", "referral", "rewards"] }
+          }
+        },
+        {
+          "name": "Get Referral Statistics",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{user_token}}" }],
+            "url": { "raw": "{{base_url}}/api/v1/referral/statistics", "host": ["{{base_url}}"], "path": ["api", "v1", "referral", "statistics"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Pro Zone Admin Management",
+      "item": [
+        {
+          "name": "Get Pro Zone Admin Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
+            "url": { "raw": "{{base_url}}/api/admin/pro-zone/dashboard", "host": ["{{base_url}}"], "path": ["api", "admin", "pro-zone", "dashboard"] }
+          }
+        },
+        {
+          "name": "Create Subscription Plan",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"planCode\": \"BIANNUAL_PRO\",\n  \"name\": \"Bi-Annual Pro\",\n  \"description\": \"6 Months of unlimited Pro Zone access\",\n  \"price\": 2199.00,\n  \"currency\": \"INR\",\n  \"durationDays\": 180,\n  \"isPopular\": true,\n  \"features\": [\"option_chain\", \"gainers_losers\", \"fii_dii\", \"global_indices\", \"market_heatmap\"]\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/admin/pro-zone/plans", "host": ["{{base_url}}"], "path": ["api", "admin", "pro-zone", "plans"] }
+          }
+        },
+        {
+          "name": "Grant Complimentary Pro Access",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": 1,\n  \"days\": 30,\n  \"reason\": \"VIP Customer Loyalty Reward\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/admin/pro-zone/grant-access", "host": ["{{base_url}}"], "path": ["api", "admin", "pro-zone", "grant-access"] }
+          }
+        },
+        {
+          "name": "Suspend User Pro Access",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Terms of Service violation\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/admin/pro-zone/suspend-user/1", "host": ["{{base_url}}"], "path": ["api", "admin", "pro-zone", "suspend-user", "1"] }
+          }
+        },
+        {
+          "name": "Process Admin Refund",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"transactionId\": 1,\n  \"reason\": \"Customer requested cancellation within 24 hours\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/admin/pro-zone/refund", "host": ["{{base_url}}"], "path": ["api", "admin", "pro-zone", "refund"] }
+          }
+        },
+        {
+          "name": "Get Referral Campaigns",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
+            "url": { "raw": "{{base_url}}/api/admin/referral/campaigns", "host": ["{{base_url}}"], "path": ["api", "admin", "referral", "campaigns"] }
+          }
+        },
+        {
+          "name": "Create Referral Campaign",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"campaignName\": \"Diwali Mega Referral Blitz\",\n  \"referrerRewardType\": \"PRO_DAYS\",\n  \"referrerRewardValue\": 14,\n  \"referredRewardType\": \"PRO_DAYS\",\n  \"referredRewardValue\": 7,\n  \"eligibilityCondition\": \"REGISTRATION\",\n  \"isActive\": true\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/admin/referral/campaigns", "host": ["{{base_url}}"], "path": ["api", "admin", "referral", "campaigns"] }
+          }
+        },
+        {
+          "name": "Get All Referral Audit Transactions",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
+            "url": { "raw": "{{base_url}}/api/admin/referral/transactions", "host": ["{{base_url}}"], "path": ["api", "admin", "referral", "transactions"] }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8808" },
+    { "key": "user_token", "value": "" },
+    { "key": "admin_token", "value": "" }
+  ]
+}

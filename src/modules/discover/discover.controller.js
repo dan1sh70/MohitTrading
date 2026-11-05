@@ -349,3 +349,4 @@ export async function getMarketBreadthHandler(req, res) {
     return sendError(res, err);
   }
 }
+

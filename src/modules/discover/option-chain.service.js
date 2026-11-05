@@ -477,3 +477,4 @@ export async function getOptionAnalyticsHistory(symbol, limit = 20) {
     recordedAt: r.created_at
   }));
 }
+

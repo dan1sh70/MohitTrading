@@ -119,3 +119,4 @@ export class YahooFinanceProvider {
 
 export const yahooProvider = new YahooFinanceProvider();
 providerManager.registerProvider("YAHOO_FINANCE", yahooProvider);
+

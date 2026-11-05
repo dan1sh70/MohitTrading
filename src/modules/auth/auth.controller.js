@@ -1,3 +1,4 @@
+import { ReferralService } from "../referral/referral.service.js";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { sql } from "../../db/mysql.js";
@@ -112,14 +113,23 @@ export async function register(req, res) {
 
     const newUserId = result.insertId; // Get the auto-incremented ID
 
-    // Reward the referrer
+    // Reward the referrer & referee via configurable Referral Engine
     if (referredById) {
       const REWARD_DIAMONDS = 100;
       await sql(`UPDATE users SET diamonds = diamonds + $1 WHERE id = $2`, [REWARD_DIAMONDS, referredById]);
-      await sql(
-        `INSERT INTO referrals (referrer_id, referred_id, reward_diamonds) VALUES ($1, $2, $3)`,
-        [referredById, newUserId, REWARD_DIAMONDS]
-      );
+      try {
+        await sql(
+          `INSERT INTO referrals (referrer_id, referred_id, reward_diamonds) VALUES ($1, $2, $3)`,
+          [referredById, newUserId, REWARD_DIAMONDS]
+        );
+      } catch (e) {}
+
+      // Trigger configurable Pro Zone referral rewards (e.g. Free Pro Days / Diamonds)
+      try {
+        await ReferralService.processReferralRegistration(referredById, newUserId);
+      } catch (err) {
+        console.warn("[Register Referral Reward Warning]:", err.message);
+      }
     }
 
     const newUserResult = await sql(

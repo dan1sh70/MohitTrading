@@ -5,6 +5,10 @@ import morgan from "morgan";
 import { env } from "./config/env.js";
 import { apiRouter } from "./routes/index.js";
 import { discoverRouter } from "./modules/discover/discover.routes.js";
+import { subscriptionsRouter } from "./modules/subscriptions/subscriptions.routes.js";
+import { premiumRouter } from "./modules/premium/premium.routes.js";
+import { referralRouter } from "./modules/referral/referral.routes.js";
+
 
 export const app = express();
 
@@ -39,6 +43,14 @@ app.get("/health", (req, res) => {
 
 app.use("/api/v1/discover", discoverRouter);
 app.use("/api/discover", discoverRouter);
+
+// Pro Zone Subscriptions, Premium User & Referral Routers
+app.use("/api/v1/subscriptions", subscriptionsRouter);
+app.use("/api/subscriptions", subscriptionsRouter);
+app.use("/api/v1/premium", premiumRouter);
+app.use("/api/premium", premiumRouter);
+app.use("/api/v1/referral", referralRouter);
+
 app.use("/api", apiRouter);
 
 // 404 handler for API routes

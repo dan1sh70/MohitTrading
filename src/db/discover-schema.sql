@@ -175,3 +175,4 @@ CREATE TABLE IF NOT EXISTS market_breadth_snapshots (
   recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_breadth_time (recorded_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+

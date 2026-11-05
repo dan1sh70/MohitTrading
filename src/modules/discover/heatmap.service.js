@@ -125,3 +125,4 @@ export async function getMarketBreadth() {
     timestamp: heatmap.timestamp
   };
 }
+

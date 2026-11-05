@@ -442,3 +442,4 @@ export async function getIndexHistory(symbol, interval = "15m", range = "5d") {
 
   return response;
 }
+

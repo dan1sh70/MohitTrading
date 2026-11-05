@@ -1,3 +1,15 @@
+import {
+  createSubscriptionPlan,
+  updateSubscriptionPlan,
+  getPremiumAdminDashboard,
+  grantComplimentaryProAccess,
+  suspendUserProAccess,
+  processAdminRefund,
+  getReferralCampaigns,
+  createReferralCampaign,
+  updateReferralCampaign,
+  getAllReferralTransactions
+} from "../modules/admin/pro-zone-admin.controller.js";
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import { validateBody } from "../middleware/validate.js";
@@ -453,6 +465,22 @@ apiRouter.get("/proxy-image", async (req, res) => {
 });
 
 // Admin endpoints (each requires auth + admin)
+
+// ═════════════════════════════════════════════════════════════════════════════
+// PRO ZONE, SUBSCRIPTIONS & REFERRAL ADMIN ROUTES
+// ═════════════════════════════════════════════════════════════════════════════
+apiRouter.get("/admin/pro-zone/dashboard", requireAuth, requireAdmin, getPremiumAdminDashboard);
+apiRouter.post("/admin/pro-zone/plans", requireAuth, requireAdmin, createSubscriptionPlan);
+apiRouter.put("/admin/pro-zone/plans/:id", requireAuth, requireAdmin, updateSubscriptionPlan);
+apiRouter.post("/admin/pro-zone/grant-access", requireAuth, requireAdmin, grantComplimentaryProAccess);
+apiRouter.post("/admin/pro-zone/suspend-user/:userId", requireAuth, requireAdmin, suspendUserProAccess);
+apiRouter.post("/admin/pro-zone/refund", requireAuth, requireAdmin, processAdminRefund);
+
+apiRouter.get("/admin/referral/campaigns", requireAuth, requireAdmin, getReferralCampaigns);
+apiRouter.post("/admin/referral/campaigns", requireAuth, requireAdmin, createReferralCampaign);
+apiRouter.put("/admin/referral/campaigns/:id", requireAuth, requireAdmin, updateReferralCampaign);
+apiRouter.get("/admin/referral/transactions", requireAuth, requireAdmin, getAllReferralTransactions);
+
 apiRouter.get("/admin/stats", requireAuth, requireAdmin, getStats);
 apiRouter.get("/admin/audit-logs", requireAuth, requireAdmin, listAuditLogs);
 apiRouter.get("/admin/users", requireAuth, requireAdmin, listUsers);
